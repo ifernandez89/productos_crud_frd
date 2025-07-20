@@ -27,6 +27,14 @@ export default function ProductFormPresentational({
           />
         </div>
         <div>
+          <Label className="block mb-1 font-medium">Marca</Label>
+          <textarea
+            placeholder="Marca"
+            {...register("marca")}
+            className="w-full border rounded p-2"
+          />
+        </div>
+        <div>
           <Label className="block mb-1 font-medium">Descripción</Label>
           <textarea
             placeholder="Descripción"

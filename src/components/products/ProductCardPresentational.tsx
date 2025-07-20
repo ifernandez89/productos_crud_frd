@@ -35,7 +35,6 @@ export function ProductCard({
           fill
           priority
           className="object-cover transition-transform duration-300 ease-in-out hover:scale-110"
-
         />
       </div>
       <CardContent>

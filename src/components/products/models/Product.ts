@@ -3,6 +3,7 @@ import { PriceStrategy } from "./PriceStrategies";
 export class Product {
   id?: number;
   name: string;
+  marca: string;
   description: string;
   price: number;
   image: string;
@@ -17,6 +18,7 @@ export class Product {
 
   constructor(
     name: string,
+    marca: string,
     description: string,
     price: number,
     image: string,
@@ -29,6 +31,7 @@ export class Product {
     }
   ) {
     this.name = name;
+    this.marca = marca;
     this.description = description;
     this.price = price;
     this.image = image;

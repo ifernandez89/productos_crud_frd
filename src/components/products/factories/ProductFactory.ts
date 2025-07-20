@@ -4,6 +4,7 @@ import { StrategyResolver } from "../models/StrategyResolver";
 
 interface ProductOptions {
   name: string;
+  marca: string;
   description: string;
   price: number;
   image: string;
@@ -18,6 +19,7 @@ export class ProductFactory {
   static createProduct(options: ProductOptions): Product {
     const {
       name,
+      marca,
       description,
       price,
       image,
@@ -28,7 +30,7 @@ export class ProductFactory {
       isOnSale,
     } = options;
 
-    const product = new Product(name, description, price, image, stock, {
+    const product = new Product(name, marca, description, price, image, stock, {
       id,
       isNew,
       isFeatured,

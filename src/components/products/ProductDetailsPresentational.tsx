@@ -23,6 +23,9 @@ export default function ProductDetails({
         <strong>Nombre:</strong> {decoratedName}
       </div>
       <div>
+        <strong>Marca:</strong> {product.marca}
+      </div>
+      <div>
         <strong>Descripcion:</strong> {product.description}
       </div>
 
