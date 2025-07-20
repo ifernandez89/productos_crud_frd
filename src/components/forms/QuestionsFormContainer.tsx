@@ -43,6 +43,19 @@ export default function ChatAgent() {
   const tiempoRef = useRef(0);
   const intervaloRef = useRef<NodeJS.Timeout | null>(null);
 
+  const preguntasFrecuentes = [
+    "¿Cuál es la capital de Francia?",
+    "¿Cómo funciona una red neuronal?",
+    "¿Puedes explicarme la teoría de la relatividad?",
+    "¿Cuáles son los síntomas del resfriado común?",
+    "¿Cómo puedo aprender a programar en Python?",
+    "¿Cuál es la diferencia entre inteligencia artificial y aprendizaje automático?",
+    "¿Puedes darme un resumen de la Revolución Francesa?",
+    "¿Cuáles son los beneficios del ejercicio regular?",
+    "¿Cómo se forma un arcoíris?",
+    "¿Puedes ayudarme a entender la fotosíntesis?"
+  ];
+
   const iniciarContador = () => {
     setTiempo(0);
     tiempoRef.current = 0;
@@ -66,13 +79,11 @@ export default function ChatAgent() {
 
   const onSubmit = handleSubmit(async (data) => {
     setLoading(true);
-    iniciarContador(); // Inicia el cronómetro al enviar la pregunta
-
+    iniciarContador();
     try {
       const respuesta = await hacerPregunta(data.pregunta, true);
-      const tiempoFinal = tiempoRef.current; // Captura del tiempo antes de resetear
-      detenerContador(); // Detiene el cronómetro justo después de recibir respuesta
-
+      const tiempoFinal = tiempoRef.current;
+      detenerContador();
       setHistorial((prev) => [
         ...prev,
         {
@@ -85,7 +96,6 @@ export default function ChatAgent() {
       const mensajeError = error instanceof Error ? error.message : "No se pudo obtener la respuesta del agente.";
       const tiempoFinal = tiempoRef.current;
       detenerContador();
-
       setHistorial((prev) => [
         ...prev,
         {
@@ -100,7 +110,7 @@ export default function ChatAgent() {
     }
   });
 
-  const formatTiempo = (segundos: number) => {
+  const formatTiempo = (segundos) => {
     const min = Math.floor(segundos / 60);
     const sec = segundos % 60;
     return `${min > 0 ? `${min}m ` : ""}${sec}s`;
@@ -108,7 +118,6 @@ export default function ChatAgent() {
 
   return (
     <div className="flex h-screen bg-black text-white">
-      {/* Columna Pregunta */}
       <div className="w-1/2 p-4 border-r border-gray-300">
         <Card className="h-full shadow-xl border-2 border-gray-500 bg-gray-100 text-black">
           <CardHeader>
@@ -129,10 +138,24 @@ export default function ChatAgent() {
                 {loading ? "Consultando..." : "Consultar al Agente"}
               </Button>
             </form>
+            <div className="mt-4">
+              <CardTitle className="text-lg font-bold">Preguntas Frecuentes</CardTitle>
+              <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                {preguntasFrecuentes.map((pregunta, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => reset({ pregunta })}
+                    className="text-left w-full p-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+                  >
+                    {pregunta}
+                  </button>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
-      {/* Columna Respuestas */}
       <div className="w-1/2 p-4 overflow-y-auto">
         <Card className="h-full shadow-xl border-2 border-gray-500 bg-gray-100 text-black">
           <CardHeader className="flex flex-col gap-2">
