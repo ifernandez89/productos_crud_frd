@@ -44,17 +44,17 @@ export default function ChatAgent() {
   const intervaloRef = useRef<NodeJS.Timeout | null>(null);
 
   const preguntasFrecuentes = [
-    "¿Cuál es la capital de Francia?",
-    "¿Cómo funciona una red neuronal?",
-    "¿Puedes explicarme la teoría de la relatividad?",
-    "¿Cuáles son los síntomas del resfriado común?",
-    "¿Cómo puedo aprender a programar en Python?",
-    "¿Cuál es la diferencia entre inteligencia artificial y aprendizaje automático?",
-    "¿Puedes darme un resumen de la Revolución Francesa?",
-    "¿Cuáles son los beneficios del ejercicio regular?",
-    "¿Cómo se forma un arcoíris?",
-    "¿Puedes ayudarme a entender la fotosíntesis?"
-  ];
+  "Proporciona un resumen sobre la capital de Francia.",
+  "Explica de manera resumida cómo funciona una red neuronal.",
+  "Ofrece una explicación concisa sobre la teoría de la relatividad.",
+  "Enumera brevemente los síntomas del resfriado común.",
+  "Proporciona una guía resumida para aprender a programar en Python.",
+  "Explica brevemente la diferencia entre inteligencia artificial y aprendizaje automático.",
+  "Ofrece un resumen histórico de la Revolución Francesa.",
+  "Enumera los beneficios más importantes del ejercicio regular.",
+  "Explica brevemente cómo se forma un arcoíris.",
+  "Proporciona una explicación resumida sobre el proceso de la fotosíntesis."
+];
 
   const iniciarContador = () => {
     setTiempo(0);
