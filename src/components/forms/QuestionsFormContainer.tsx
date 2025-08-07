@@ -43,17 +43,17 @@ export default function ChatAgent() {
   const tiempoRef = useRef(0);
   const intervaloRef = useRef<NodeJS.Timeout | null>(null);
 
-  const preguntasFrecuentes = [
-  "Proporciona un resumen sobre la capital de Francia.",
-  "Explica de manera resumida cómo funciona una red neuronal.",
-  "Ofrece una explicación concisa sobre la teoría de la relatividad.",
-  "Brevemente: como se trata el resfriado común?",
-  "Proporciona una guía resumida para aprender a programar en Typescript.",
-  "Explica brevemente la diferencia entre inteligencia artificial y aprendizaje automático.",
-  "Ofrece un resumen histórico de la Revolución Francesa.",
-  "Enumera los beneficios más importantes de dormir 8hs.",
-  "Explica brevemente cómo se forma un arcoíris.",
-  "Proporciona una explicación resumida sobre el proceso de la fotosíntesis."
+ const preguntasFrecuentes = [
+  "Resume en 3 oraciones la historia y características principales de París, capital de Francia.",
+  "Explica en pocas frases cómo funciona una red neuronal, de forma simple.",
+  "Describe en forma concisa qué es la teoría de la relatividad y por qué es importante.",
+  "¿Cómo se trata el resfriado común? Resume los pasos básicos.",
+  "Crea una guía breve para comenzar a programar en TypeScript, orientada a principiantes.",
+  "En pocas frases: ¿cuál es la diferencia entre inteligencia artificial y aprendizaje automático?",
+  "Resume los eventos clave y causas principales de la Revolución Francesa.",
+  "Enumera los principales beneficios de dormir al menos 8 horas por noche.",
+  "Explica de manera simple cómo se forma un arcoíris, en pocas frases.",
+  "Resume el proceso de fotosíntesis en lenguaje claro y sencillo."
 ];
 
   const iniciarContador = () => {
