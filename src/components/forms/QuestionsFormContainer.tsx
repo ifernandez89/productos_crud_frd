@@ -47,11 +47,11 @@ export default function ChatAgent() {
   "Proporciona un resumen sobre la capital de Francia.",
   "Explica de manera resumida cómo funciona una red neuronal.",
   "Ofrece una explicación concisa sobre la teoría de la relatividad.",
-  "Enumera brevemente los síntomas del resfriado común.",
-  "Proporciona una guía resumida para aprender a programar en Python.",
+  "Brevemente: como se trata el resfriado común?",
+  "Proporciona una guía resumida para aprender a programar en Typescript.",
   "Explica brevemente la diferencia entre inteligencia artificial y aprendizaje automático.",
   "Ofrece un resumen histórico de la Revolución Francesa.",
-  "Enumera los beneficios más importantes del ejercicio regular.",
+  "Enumera los beneficios más importantes de dormir 8hs.",
   "Explica brevemente cómo se forma un arcoíris.",
   "Proporciona una explicación resumida sobre el proceso de la fotosíntesis."
 ];
@@ -110,7 +110,7 @@ export default function ChatAgent() {
     }
   });
 
-  const formatTiempo = (segundos) => {
+  const formatTiempo = (segundos: number) => {
     const min = Math.floor(segundos / 60);
     const sec = segundos % 60;
     return `${min > 0 ? `${min}m ` : ""}${sec}s`;

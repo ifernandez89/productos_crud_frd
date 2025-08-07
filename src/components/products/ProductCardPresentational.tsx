@@ -39,6 +39,7 @@ export function ProductCard({
       </div>
       <CardContent>
         <p>{product.description}</p>
+        <p>{product.marca}</p>
       </CardContent>
     </Card>
   );
