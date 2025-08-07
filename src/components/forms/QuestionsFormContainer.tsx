@@ -117,9 +117,9 @@ export default function ChatAgent() {
   };
 
   return (
-    <div className="flex h-screen bg-black text-white">
+    <div className="flex h-screen bg-[#F9FAFB] text-[#1F2937]">
       <div className="w-1/2 p-4 border-r border-gray-300">
-        <Card className="h-full shadow-xl border-2 border-gray-500 bg-gray-100 text-black">
+        <Card className="h-full shadow-md border border-[#D1D5DB] bg-white">
           <CardHeader>
             <CardTitle className="text-lg font-bold">Consultá al Agente IA</CardTitle>
           </CardHeader>
@@ -133,7 +133,7 @@ export default function ChatAgent() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full text-sm bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                className="w-full text-sm bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold py-2 px-4 rounded"
               >
                 {loading ? "Consultando..." : "Consultar al Agente"}
               </Button>
@@ -146,7 +146,7 @@ export default function ChatAgent() {
                     key={idx}
                     type="button"
                     onClick={() => reset({ pregunta })}
-                    className="text-left w-full p-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+                    className="text-left w-full p-2 bg-[#E5E7EB] rounded hover:bg-[#D1D5DB] text-sm"
                   >
                     {pregunta}
                   </button>
@@ -157,7 +157,7 @@ export default function ChatAgent() {
         </Card>
       </div>
       <div className="w-1/2 p-4 overflow-y-auto">
-        <Card className="h-full shadow-xl border-2 border-gray-500 bg-gray-100 text-black">
+        <Card className="h-full shadow-md border border-[#D1D5DB] bg-[#F3F4F6]">
           <CardHeader className="flex flex-col gap-2">
             <CardTitle className="text-lg font-bold">Historial de Interacción</CardTitle>
             {loading && (
@@ -168,7 +168,7 @@ export default function ChatAgent() {
           </CardHeader>
           <CardContent className="space-y-4">
             {loading && (
-              <div className="flex flex-col items-center justify-center">
+              <div className="p-4 bg-white rounded-lg border border-[#D1D5DB] shadow-sm">
                 <LoadingSVG />
                 <p className="mt-2 text-gray-600">Cargando respuesta...</p>
               </div>
