@@ -44,16 +44,21 @@ export default function ChatAgent() {
   const intervaloRef = useRef<NodeJS.Timeout | null>(null);
 
  const preguntasFrecuentes = [
-  "Resume en 3 oraciones la historia y características principales de París, capital de Francia.",
-  "Explica en pocas frases cómo funciona una red neuronal, de forma simple.",
-  "Describe en forma concisa qué es la teoría de la relatividad y por qué es importante.",
-  "¿Cómo se trata el resfriado común? Resume los pasos básicos.",
-  "Crea una guía breve para comenzar a programar en TypeScript, orientada a principiantes.",
-  "En pocas frases: ¿cuál es la diferencia entre inteligencia artificial y aprendizaje automático?",
-  "Resume los eventos clave y causas principales de la Revolución Francesa.",
-  "Enumera los principales beneficios de dormir al menos 8 horas por noche.",
-  "Explica de manera simple cómo se forma un arcoíris, en pocas frases.",
-  "Resume el proceso de fotosíntesis en lenguaje claro y sencillo."
+  "¿Cómo reinicio mi router si no tengo acceso a internet?",
+  "Explica en pasos simples cómo liberar espacio en disco en Windows 10.",
+  "¿Qué debo hacer si mi computadora no enciende y no muestra señales de vida?",
+  "¿Cómo puedo saber si mi computadora tiene un virus y qué debo hacer?",
+  "¿Cuáles son los pasos para conectar una impresora a mi red Wi-Fi?",
+  "¿Cómo soluciono el error 'Pantalla Azul' en Windows?",
+  "¿Qué debo hacer si olvido la contraseña de mi cuenta de usuario en Windows?",
+  "¿Cómo actualizo los controladores de mi tarjeta gráfica?",
+  "¿Cuáles son los pasos para configurar una VPN en mi computadora?",
+  "¿Cómo puedo mejorar el rendimiento de mi computadora si va muy lenta?",
+  "¿Qué debo hacer si mi teclado o mouse no responden?",
+  "¿Cómo soluciono problemas de conexión a internet en mi laptop?",
+  "¿Cuáles son los pasos para hacer una copia de seguridad de mis archivos importantes?",
+  "¿Cómo puedo recuperar archivos eliminados accidentalmente?",
+  "¿Qué debo hacer si mi computadora se sobrecalienta frecuentemente?",
 ];
 
   const iniciarContador = () => {
