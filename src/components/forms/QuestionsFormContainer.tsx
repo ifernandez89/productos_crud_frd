@@ -43,23 +43,25 @@ export default function ChatAgent() {
   const tiempoRef = useRef(0);
   const intervaloRef = useRef<NodeJS.Timeout | null>(null);
 
- const preguntasFrecuentes = [
-  "¿Cómo reinicio mi router si no tengo acceso a internet?",
-  "Explica en pasos simples cómo liberar espacio en disco en Windows 10.",
-  "¿Qué debo hacer si mi computadora no enciende y no muestra señales de vida?",
-  "¿Cómo puedo saber si mi computadora tiene un virus y qué debo hacer?",
-  "¿Cuáles son los pasos para conectar una impresora a mi red Wi-Fi?",
-  "¿Cómo soluciono el error 'Pantalla Azul' en Windows?",
-  "¿Qué debo hacer si olvido la contraseña de mi cuenta de usuario en Windows?",
-  "¿Cómo actualizo los controladores de mi tarjeta gráfica?",
-  "¿Cuáles son los pasos para configurar una VPN en mi computadora?",
-  "¿Cómo puedo mejorar el rendimiento de mi computadora si va muy lenta?",
-  "¿Qué debo hacer si mi teclado o mouse no responden?",
-  "¿Cómo soluciono problemas de conexión a internet en mi laptop?",
-  "¿Cuáles son los pasos para hacer una copia de seguridad de mis archivos importantes?",
-  "¿Cómo puedo recuperar archivos eliminados accidentalmente?",
-  "¿Qué debo hacer si mi computadora se sobrecalienta frecuentemente?",
+const preguntasFrecuentes = [
+  "¿Cuál es el procedimiento oficial para presentar un expediente administrativo en la municipalidad?",
+  "Explica los pasos para digitalizar y archivar correctamente un decreto municipal según la normativa vigente.",
+  "Redacta un instructivo claro sobre cómo gestionar la pérdida o extravío de un documento oficial (ej. DNI, partida de nacimiento) ante el registro civil local.",
+  "¿Cómo se debe proceder para solicitar una copia certificada de una resolución administrativa ante la secretaría municipal?",
+  "Detalla los requisitos y pasos para presentar un anexo a un expediente judicial en trámite.",
+  "Explica de manera sencilla cómo subsanar un error en un documento legal ya presentado (ej. error en nombres, fechas o datos).",
+  "¿Qué pasos se deben seguir para solicitar la rectificación de un acta municipal?",
+  "Redacta una guía breve para gestionar la legalización de firmas en documentos públicos ante notario.",
+  "Explica cómo se debe organizar y presentar un expediente técnico para la aprobación de un proyecto de obra pública menor.",
+  "Proporciona una lista de recomendaciones para garantizar la validez legal de una separata municipal.",
+  "¿Cuál es el procedimiento para solicitar una constancia de no adeudo fiscal ante la tesorería municipal?",
+  "Detalla los pasos para presentar una apelación a una resolución administrativa desfavorable.",
+  "Explica cómo se debe gestionar la actualización de datos en un padrón municipal (ej. cambio de domicilio, estado civil).",
+  "Redacta un instructivo sobre cómo solicitar la baja o cancelación de un trámite administrativo en curso.",
+  "¿Qué documentación es necesaria para iniciar un expediente de regularización de tierras o propiedades en la localidad?",
+  "Explica cómo se debe proceder para presentar una denuncia administrativa por incumplimiento de normativas locales."
 ];
+
 
   const iniciarContador = () => {
     setTiempo(0);
