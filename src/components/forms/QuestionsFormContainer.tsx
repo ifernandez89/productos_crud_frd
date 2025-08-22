@@ -128,7 +128,7 @@ const preguntasFrecuentes = [
       <div className="w-1/2 p-4 border-r border-gray-300">
         <Card className="h-full shadow-md border border-[#D1D5DB] bg-white">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">Consultá al Agente IA</CardTitle>
+            <CardTitle className="text-lg font-bold">¿En qué puedo ayudarte?</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={onSubmit} className="space-y-4">
