@@ -37,7 +37,9 @@ export async function createProduct(productData: any) {
     body: JSON.stringify(productData),
   });
   const data = await res.json();
-  console.log(data);
+  if (!res.ok) {
+    throw new Error(data.message || 'Error al crear el producto');
+  }
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateProduct(id: string, newProduct: any) {

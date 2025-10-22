@@ -16,7 +16,7 @@ export default function ProductsForm({
   title: string;
   product?: Product;
 }>) {
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, formState: { errors }, } = useForm({
     defaultValues: {
       name: product?.name ?? "",
       description: product?.description ?? "",
@@ -64,6 +64,7 @@ export default function ProductsForm({
             register={register}
             onSubmit={onSubmit}
             isEditing={isEditing}
+            errors={errors}
           />
         </CardContent>
       </Card>
