@@ -1,5 +1,3 @@
-"use client";
-import React, { useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { getProducts } from "./services/products.api";
@@ -7,16 +5,8 @@ import { ProductListContainer } from "../components/products/ProductListContaine
 
 export const dynamic = "force-dynamic";
 
-function HomePage() {
-  const [products, setProducts] = useState([]);
-
-  React.useEffect(() => {
-    const fetchProducts = async () => {
-      const productsData = await getProducts();
-      setProducts(productsData);
-    };
-    fetchProducts();
-  }, []);
+async function HomePage() {
+  const products = await getProducts();
 
   return (
     <div>

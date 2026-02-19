@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import Image from "next/image";
 import { applyDecorators } from "@/utils/productDecorators";
+import { Product } from "./models/Product";
 
 const formatPrice = (price: number) =>
   price.toLocaleString("en-US", {
@@ -14,7 +15,7 @@ export function ProductCard({
   product,
   onView,
 }: Readonly<{
-  product: any;
+  product: Product;
   onView: () => void;
 }>) {
   const decoratedName = applyDecorators(product).render();

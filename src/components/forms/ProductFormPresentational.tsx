@@ -6,17 +6,32 @@ import Link from "next/link";
 import { UseFormRegister, FieldErrors } from "react-hook-form";
 import { Label } from "../ui/label";
 
+interface ProductFormData {
+  name: string;
+  marca: string;
+  description: string;
+  price: string | number;
+  image: string;
+  stock: string | number;
+  isFeatured?: boolean;
+  isOnSale?: boolean;
+  isNew?: boolean;
+}
+
+type ProductFormRegister = UseFormRegister<ProductFormData>;
+type ProductFormErrors = FieldErrors<ProductFormData>;
+
 export default function ProductFormPresentational({
   register,
   onSubmit,
   isEditing,
   errors,
-}: Readonly<{
-  register: UseFormRegister<any>;
+}: {
+  register: ProductFormRegister;
   onSubmit: () => void;
   isEditing: boolean;
-  errors: FieldErrors<any>;
-}>) {
+  errors: ProductFormErrors;
+}) {
   return (
     <form onSubmit={onSubmit} className="max-w-xl mx-auto space-y-6">
       <div className="grid grid-cols-1 gap-4">

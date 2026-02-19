@@ -2,13 +2,12 @@ import { getProduct } from "../../../services/products.api";
 import ProductFormContainer from "@/components/forms/ProductFormContainer";
 
 type PageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 
-async function ProductEditPage(props: Readonly<PageProps>) {
-  const params = await props.params;
-  const { id } = params;
+async function ProductEditPage(props: PageProps) {
+  const { id } = await props.params;
   const product = await getProduct(id);
 
   return (

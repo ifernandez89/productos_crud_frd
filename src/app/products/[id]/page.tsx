@@ -1,14 +1,24 @@
-// src/app/products/[id]/edit/page.tsx
+import { Metadata } from "next";
 import ProductDetailContainer from "@/components/products/ProductDetailsContainer";
 import { getProduct } from "@/app/services/products.api";
 
 type ProductParams = {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 };
 
-export default async function ProductEditPage(props: Readonly<ProductParams>) {
+export async function generateMetadata(
+  props: ProductParams
+): Promise<Metadata> {
+  const params = await props.params;
+  const product = await getProduct(params.id);
+  
+  return {
+    title: product ? `${product.name} - NextStore` : "Product Not Found",
+    description: product?.description || "Product details page",
+  };
+}
+
+export default async function ProductEditPage(props: ProductParams) {
   const params = await props.params;
   let product = null;
   if (!params?.id) {

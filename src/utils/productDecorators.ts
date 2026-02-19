@@ -1,4 +1,4 @@
-import { Product } from "@/components/products/models/productDeprecado";
+import { Product } from "@/components/products/models/Product";
 import {
   BaseProductDisplay,
   FeaturedProduct,

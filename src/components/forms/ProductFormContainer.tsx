@@ -19,6 +19,7 @@ export default function ProductsForm({
   const { register, handleSubmit, formState: { errors }, } = useForm({
     defaultValues: {
       name: product?.name ?? "",
+      marca: product?.marca ?? "",
       description: product?.description ?? "",
       price: product?.price ?? "",
       image: product?.image ?? "",
@@ -27,7 +28,7 @@ export default function ProductsForm({
       isOnSale: product?.isOnSale ?? false,
       isNew: product?.isNew ?? true,
     },
-  }); //aca puedo cargarle valores por defecto
+  });
 
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
