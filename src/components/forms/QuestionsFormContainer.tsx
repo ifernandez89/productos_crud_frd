@@ -87,46 +87,74 @@ export default function ChatAgent() {
   const historyBrowseIndexRef = useRef<number | null>(null);
   const draftBeforeHistoryRef = useRef("");
 
-  const preguntasFrecuentes = [
-    "¿Qué modelos de celulares tienes disponibles actualmente en stock?",
-    "¿Cuáles son los celulares más económicos que ofrecen y qué características incluyen?",
-    "¿Qué modelos tienen mayor capacidad de RAM y almacenamiento interno?",
-    "¿Cuáles son los celulares más caros que manejan y qué los diferencia de otros?",
-    "¿Qué opciones hay para comprar un celular con plan de financiamiento o cuotas?",
-    "¿Ofrecen garantía en los celulares? ¿Cuánto tiempo dura y qué cubre?",
-    "¿Qué marcas de celulares tienen mejor relación calidad-precio en este momento?",
-    "¿Cuáles son los celulares con mejor cámara según las especificaciones técnicas?",
-    "¿Tienen celulares reacondicionados o usados? ¿Qué garantía ofrecen en esos casos?",
-    "¿Qué accesorios (fundas, cargadores, audífonos) incluyen al comprar un celular nuevo?",
-    "¿Cómo puedo comparar las especificaciones técnicas entre dos modelos específicos?",
-    "¿Qué celulares son los más recomendados para gaming o uso intensivo?",
-    "¿Ofrecen servicio técnico o soporte postventa para los celulares que venden?",
-    "¿Cuáles son los celulares con mayor duración de batería según las pruebas?",
-    "¿Tienen opciones de celulares resistentes al agua o golpes?",
-    "¿Qué promociones o descuentos están vigentes en la compra de celulares esta semana?",
-    "¿Puedo cambiar mi celular usado por uno nuevo? ¿Cómo funciona el programa de canje?",
-    "¿Qué celulares son compatibles con redes 5G en la zona?",
-    "¿Cuáles son los celulares más vendidos en los últimos meses?",
-    "¿Cómo puedo saber si un celular es original o una copia al momento de comprarlo?",
+  type PreguntaFrecuente = {
+    categoria: string;
+    icono: string;
+    preguntas: string[];
+  };
+
+  const preguntasFrecuentes: PreguntaFrecuente[] = [
+    {
+      categoria: "Astronomía",
+      icono: "🌙",
+      preguntas: [
+        "¿En qué fase está la luna hoy?",
+        "¿Cuándo es la próxima luna llena?",
+        "¿A qué hora amanece hoy en Rosario?",
+        "¿A qué hora anochece hoy en Buenos Aires?",
+        "¿Cuándo es el próximo solsticio?",
+        "¿Cuándo hay un eclipse solar o lunar próximo?",
+        "¿Cómo está Saturno ahora, es visible desde Argentina?",
+        "¿Cuándo se puede ver Júpiter esta semana?",
+      ],
+    },
+    {
+      categoria: "Calendarios",
+      icono: "📅",
+      preguntas: [
+        "¿Qué fecha es hoy en el calendario Maya?",
+        "¿Cuál es mi kin maya del 15/06/1990?",
+        "¿Qué fecha es hoy en el calendario Hebreo?",
+        "¿Qué festividad hebrea cae esta semana?",
+      ],
+    },
+    {
+      categoria: "Matemáticas",
+      icono: "📐",
+      preguntas: [
+        "¿Cuánto es 25 * 4 + raíz de 16?",
+        "¿Cuánto es la derivada de x^2 + 3x?",
+        "¿Cuánto es la integral de sin(x)?",
+        "Resolvé: (5! + 2^8) / 4",
+      ],
+    },
+    {
+      categoria: "Celulares",
+      icono: "📱",
+      preguntas: [
+        "¿Qué modelos de celulares tienen disponibles en stock?",
+        "¿Cuáles son los celulares más económicos y qué características incluyen?",
+        "¿Qué modelos tienen mayor capacidad de RAM y almacenamiento?",
+        "¿Cuáles son los celulares con mejor cámara según especificaciones?",
+        "¿Qué opciones hay para comprar con financiamiento o cuotas?",
+        "¿Ofrecen garantía en los celulares? ¿Cuánto tiempo dura?",
+        "¿Tienen celulares reacondicionados o usados?",
+        "¿Qué celulares son compatibles con redes 5G?",
+        "¿Cuáles son los celulares más recomendados para gaming?",
+        "¿Cuáles son los celulares con mayor duración de batería?",
+      ],
+    },
   ];
 
   const accionesRapidas = [
-    {
-      label: "Clima",
-      pregunta: "¿Qué clima hace ahora en Buenos Aires, Argentina?",
-    },
-    {
-      label: "Feriados AR",
-      pregunta: "¿Cuáles son los próximos feriados en Argentina?",
-    },
-    {
-      label: "Hora local",
-      pregunta: "¿Qué hora local es ahora en Buenos Aires, Argentina?",
-    },
-    {
-      label: "Países",
-      pregunta: "Dame datos generales de Japón: capital, población y moneda.",
-    },
+    { label: "🌙 Luna", pregunta: "¿En qué fase está la luna hoy?" },
+    { label: "🌅 Amanecer", pregunta: "¿A qué hora amanece hoy en Buenos Aires?" },
+    { label: "🪐 Saturno", pregunta: "¿Cómo está Saturno ahora, es visible?" },
+    { label: "📅 Kin Maya", pregunta: "¿Qué fecha es hoy en el calendario Maya?" },
+    { label: "✡️ Hebreo", pregunta: "¿Qué fecha es hoy en el calendario Hebreo?" },
+    { label: "📐 Mate", pregunta: "¿Cuánto es la derivada de x^2 + 3x?" },
+    { label: "🌍 Solsticio", pregunta: "¿Cuándo es el próximo solsticio?" },
+    { label: "🕐 Hora", pregunta: "¿Qué hora local es ahora en Buenos Aires, Argentina?" },
   ];
 
   const iniciarContador = () => {
@@ -492,20 +520,20 @@ export default function ChatAgent() {
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Acciones rápidas
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {accionesRapidas.map((accion) => (
                       <button
                         key={accion.label}
                         type="button"
                         onClick={() => setQuickQuestion(accion.pregunta)}
-                        className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
+                        className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
                       >
                         {accion.label}
                       </button>
                     ))}
                   </div>
                   <p className="text-xs text-slate-500">
-                    Estas acciones usan la misma ruta de chat por intención, sin endpoints separados.
+                    Astronomía, calendarios, matemáticas y más — sin clave de API.
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -548,16 +576,23 @@ export default function ChatAgent() {
               <CardTitle className="text-lg font-bold">
                 Preguntas Frecuentes
               </CardTitle>
-              <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
-                {preguntasFrecuentes.map((pregunta, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => reset({ pregunta })}
-                    className="text-left w-full p-2 bg-[#E5E7EB] rounded hover:bg-[#D1D5DB] text-sm"
-                  >
-                    {pregunta}
-                  </button>
+              <div className="mt-2 space-y-3 max-h-72 overflow-y-auto pr-1">
+                {preguntasFrecuentes.map((grupo) => (
+                  <div key={grupo.categoria}>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1 px-1">
+                      {grupo.icono} {grupo.categoria}
+                    </p>
+                    {grupo.preguntas.map((pregunta, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => reset({ pregunta })}
+                        className="text-left w-full p-2 bg-[#E5E7EB] rounded hover:bg-[#D1D5DB] text-sm mb-1"
+                      >
+                        {pregunta}
+                      </button>
+                    ))}
+                  </div>
                 ))}
               </div>
             </div>
