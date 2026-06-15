@@ -221,21 +221,91 @@ export default function ChatAgent() {
     };
   }, []);
 
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+
+  // Nombres de voces masculinas conocidas, en orden de preferencia
+  const MALE_VOICE_NAMES = [
+    "Microsoft Pablo",        // Windows es-ES
+    "Microsoft Jorge",        // Windows es-MX / es-AR
+    "Google español",         // Chrome Android/Desktop es-ES
+    "Jorge",
+    "Pablo",
+    "Diego",
+    "Carlos",
+    "Ricardo",
+    "Miguel",
+    "Andrés",
+    "Enrique",
+  ];
+
+  // Palabras que indican voz femenina (para descartar)
+  const FEMALE_KEYWORDS = ["female", "femenina", "mujer", "woman", "laura", "helena",
+    "mónica", "monica", "paulina", "luciana", "isabela", "rosa", "sabina", "lupe"];
+
+  const selectMaleVoice = (): SpeechSynthesisVoice | null => {
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return null;
+
+    const esVoices = voices.filter((v) =>
+      v.lang.startsWith("es") || v.lang.startsWith("ES"),
+    );
+    const pool = esVoices.length ? esVoices : voices;
+
+    // 1. Buscar por nombre exacto conocido
+    for (const name of MALE_VOICE_NAMES) {
+      const match = pool.find((v) =>
+        v.name.toLowerCase().includes(name.toLowerCase()),
+      );
+      if (match) return match;
+    }
+
+    // 2. Descartar voces femeninas y devolver la primera restante
+    const nonFemale = pool.filter(
+      (v) => !FEMALE_KEYWORDS.some((kw) => v.name.toLowerCase().includes(kw)),
+    );
+    return nonFemale[0] ?? pool[0] ?? null;
+  };
+
+  const getOrLoadVoice = (callback: (voice: SpeechSynthesisVoice | null) => void) => {
+    if (voiceRef.current) {
+      callback(voiceRef.current);
+      return;
+    }
+    // Las voces pueden no estar cargadas aún en el primer render
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length) {
+      voiceRef.current = selectMaleVoice();
+      callback(voiceRef.current);
+    } else {
+      window.speechSynthesis.onvoiceschanged = () => {
+        voiceRef.current = selectMaleVoice();
+        window.speechSynthesis.onvoiceschanged = null;
+        callback(voiceRef.current);
+      };
+    }
+  };
+
   const reproducirAudio = (texto: string) => {
     if (!audioEnabled || !window.speechSynthesis) return;
 
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(texto);
-    utterance.lang = "es-ES";
-    utterance.rate = 1;
-    utterance.pitch = 1;
+    getOrLoadVoice((voice) => {
+      const utterance = new SpeechSynthesisUtterance(texto);
+      utterance.lang = "es-ES";
+      // Parámetros estilo JARVIS: voz grave, ritmo pausado y preciso
+      utterance.rate = 0.92;   // ligeramente más lento que normal
+      utterance.pitch = 0.75;  // más grave (0 = mínimo, 2 = máximo)
+      utterance.volume = 1;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+      if (voice) utterance.voice = voice;
 
-    window.speechSynthesis.speak(utterance);
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+    });
   };
 
   const detenerAudio = () => {
