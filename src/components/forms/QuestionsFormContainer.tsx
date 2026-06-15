@@ -78,7 +78,7 @@ export default function ChatAgent() {
   const [voiceInputSupported, setVoiceInputSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState("");
-  const tiempoRef = useRef(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const intervaloRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const shouldAutoSubmitRef = useRef(false);
@@ -203,6 +203,7 @@ export default function ChatAgent() {
   useEffect(() => {
     if (!audioEnabled && window.speechSynthesis) {
       window.speechSynthesis.cancel();
+      setIsSpeaking(false);
     }
   }, [audioEnabled]);
 
@@ -223,10 +224,16 @@ export default function ChatAgent() {
     if (!audioEnabled || !window.speechSynthesis) return;
 
     window.speechSynthesis.cancel();
+
     const utterance = new SpeechSynthesisUtterance(texto);
     utterance.lang = "es-ES";
     utterance.rate = 1;
     utterance.pitch = 1;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
     window.speechSynthesis.speak(utterance);
   };
 
@@ -234,6 +241,7 @@ export default function ChatAgent() {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
+    setIsSpeaking(false);
   };
 
   const clearQuestionHistoryBrowse = () => {
@@ -602,9 +610,22 @@ export default function ChatAgent() {
       <div className="w-1/2 p-4 overflow-y-auto">
         <Card className="h-full shadow-md border border-[#D1D5DB] bg-[#F3F4F6]">
           <CardHeader className="flex flex-col gap-2">
-            <CardTitle className="text-lg font-bold">
-              Historial de Interacción
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-bold">
+                Historial de Interacción
+              </CardTitle>
+              {isSpeaking && (
+                <button
+                  type="button"
+                  onClick={detenerAudio}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100 animate-pulse"
+                  aria-label="Detener audio de respuesta"
+                >
+                  <span aria-hidden="true">■</span>
+                  Detener audio
+                </button>
+              )}
+            </div>
             {loading && (
               <div className="text-sm text-gray-600">
                 ⏱️ Tiempo transcurrido: {formatTiempo(tiempo)}
