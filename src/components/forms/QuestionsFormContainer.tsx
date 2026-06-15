@@ -79,6 +79,7 @@ export default function ChatAgent() {
   const [isListening, setIsListening] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const tiempoRef = useRef(0);
   const intervaloRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const shouldAutoSubmitRef = useRef(false);
