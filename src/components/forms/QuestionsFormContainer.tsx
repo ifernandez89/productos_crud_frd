@@ -83,6 +83,9 @@ export default function ChatAgent() {
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const shouldAutoSubmitRef = useRef(false);
   const voiceBaseRef = useRef("");
+  const questionHistoryRef = useRef<string[]>([]);
+  const historyBrowseIndexRef = useRef<number | null>(null);
+  const draftBeforeHistoryRef = useRef("");
 
   const preguntasFrecuentes = [
     "¿Qué modelos de celulares tienes disponibles actualmente en stock?",
@@ -105,6 +108,25 @@ export default function ChatAgent() {
     "¿Qué celulares son compatibles con redes 5G en la zona?",
     "¿Cuáles son los celulares más vendidos en los últimos meses?",
     "¿Cómo puedo saber si un celular es original o una copia al momento de comprarlo?",
+  ];
+
+  const accionesRapidas = [
+    {
+      label: "Clima",
+      pregunta: "¿Qué clima hace ahora en Buenos Aires, Argentina?",
+    },
+    {
+      label: "Feriados AR",
+      pregunta: "¿Cuáles son los próximos feriados en Argentina?",
+    },
+    {
+      label: "Hora local",
+      pregunta: "¿Qué hora local es ahora en Buenos Aires, Argentina?",
+    },
+    {
+      label: "Países",
+      pregunta: "Dame datos generales de Japón: capital, población y moneda.",
+    },
   ];
 
   const iniciarContador = () => {
@@ -157,6 +179,10 @@ export default function ChatAgent() {
   }, [audioEnabled]);
 
   useEffect(() => {
+    questionHistoryRef.current = historial.map((item) => item.pregunta);
+  }, [historial]);
+
+  useEffect(() => {
     return () => {
       recognitionRef.current?.abort();
       detenerContador();
@@ -177,6 +203,81 @@ export default function ChatAgent() {
   const detenerAudio = () => {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
+    }
+  };
+
+  const clearQuestionHistoryBrowse = () => {
+    historyBrowseIndexRef.current = null;
+    draftBeforeHistoryRef.current = "";
+  };
+
+  const updateQuestionHistory = (nextIndex: number) => {
+    const questions = questionHistoryRef.current;
+    const nextQuestion = questions[nextIndex];
+
+    if (typeof nextQuestion !== "string") {
+      return;
+    }
+
+    historyBrowseIndexRef.current = nextIndex;
+    setValue("pregunta", nextQuestion, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+  };
+
+  const setQuickQuestion = (pregunta: string) => {
+    setValue("pregunta", pregunta, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+    clearQuestionHistoryBrowse();
+  };
+
+  const handleQuestionHistoryNavigation = (
+    event: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
+    const currentValue = getValues("pregunta") ?? "";
+    const cursorAtStart =
+      event.currentTarget.selectionStart === 0 &&
+      event.currentTarget.selectionEnd === 0;
+
+    if (event.key === "ArrowUp" && (currentValue.length === 0 || cursorAtStart)) {
+      event.preventDefault();
+
+      const questions = questionHistoryRef.current;
+      if (!questions.length) {
+        return;
+      }
+
+      if (historyBrowseIndexRef.current === null) {
+        draftBeforeHistoryRef.current = currentValue;
+        updateQuestionHistory(questions.length - 1);
+        return;
+      }
+
+      if (historyBrowseIndexRef.current > 0) {
+        updateQuestionHistory(historyBrowseIndexRef.current - 1);
+      }
+
+      return;
+    }
+
+    if (event.key === "ArrowDown" && historyBrowseIndexRef.current !== null) {
+      event.preventDefault();
+
+      const lastIndex = questionHistoryRef.current.length - 1;
+      if (historyBrowseIndexRef.current < lastIndex) {
+        updateQuestionHistory(historyBrowseIndexRef.current + 1);
+        return;
+      }
+
+      historyBrowseIndexRef.current = null;
+      setValue("pregunta", draftBeforeHistoryRef.current, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      draftBeforeHistoryRef.current = "";
     }
   };
 
@@ -306,6 +407,7 @@ export default function ChatAgent() {
       setLoading(false);
       reset();
       setVoiceMessage("");
+      clearQuestionHistoryBrowse();
     }
   });
 
@@ -376,8 +478,29 @@ export default function ChatAgent() {
                 <textarea
                   placeholder="Escribí tu texto, pregunta o tema a resumir..."
                   {...register("pregunta", { required: true })}
+                  onKeyDown={handleQuestionHistoryNavigation}
                   className="min-h-[120px] text-sm border border-gray-300 rounded p-2 w-full resize-none bg-gray-100 text-black"
                 />
+                <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Acciones rápidas
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {accionesRapidas.map((accion) => (
+                      <button
+                        key={accion.label}
+                        type="button"
+                        onClick={() => setQuickQuestion(accion.pregunta)}
+                        className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
+                      >
+                        {accion.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Estas acciones usan la misma ruta de chat por intención, sin endpoints separados.
+                  </p>
+                </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
                     type="submit"
