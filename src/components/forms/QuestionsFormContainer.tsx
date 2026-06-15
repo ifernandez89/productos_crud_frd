@@ -184,7 +184,9 @@ export default function ChatAgent() {
 
   useEffect(() => {
     return () => {
-      recognitionRef.current?.abort();
+      const recognition = recognitionRef.current;
+      recognitionRef.current = null;
+      recognition?.abort();
       detenerContador();
     };
   }, []);
@@ -302,17 +304,20 @@ export default function ChatAgent() {
     const recognition = new SpeechRecognitionConstructor();
     recognition.lang = "es-ES";
     recognition.interimResults = true;
-    recognition.continuous = false;
+    // continuous: true evita que el navegador corte por silencio
+    recognition.continuous = true;
 
     voiceBaseRef.current = getValues("pregunta")?.trim() ?? "";
-    shouldAutoSubmitRef.current = true;
-    setVoiceMessage("Escuchando... hablá tu pregunta y se enviará al terminar.");
+    // Ya NO auto-enviamos: el usuario decide cuándo enviar
+    shouldAutoSubmitRef.current = false;
+    setVoiceMessage("🎙️ Escuchando... hablá todo el tiempo que necesites. Presioná «Consultar» para enviar.");
 
     recognition.onstart = () => {
       setIsListening(true);
     };
 
     recognition.onresult = (event) => {
+      // Acumulamos todos los resultados (finales e intermedios)
       const transcript = Array.from(event.results)
         .map((result) => result[0].transcript)
         .join("")
@@ -330,7 +335,7 @@ export default function ChatAgent() {
 
     recognition.onerror = (event) => {
       setIsListening(false);
-      shouldAutoSubmitRef.current = false;
+      recognitionRef.current = null;
       setVoiceMessage(
         event.error === "not-allowed"
           ? "Necesitás permitir el micrófono para usar dictado por voz."
@@ -339,21 +344,18 @@ export default function ChatAgent() {
     };
 
     recognition.onend = () => {
+      // Si el navegador cortó por sí solo (sin que el usuario lo detenga),
+      // reiniciamos automáticamente para mantener la grabación activa
+      if (recognitionRef.current !== null) {
+        try {
+          recognition.start();
+          return;
+        } catch {
+          // Si falla el reinicio, damos por terminada la grabación
+        }
+      }
       setIsListening(false);
       recognitionRef.current = null;
-
-      if (!shouldAutoSubmitRef.current) {
-        return;
-      }
-
-      shouldAutoSubmitRef.current = false;
-      const preguntaDictada = getValues("pregunta")?.trim();
-      if (preguntaDictada) {
-        setVoiceMessage("Pregunta dictada. Enviando...");
-        void submitQuestion();
-      } else {
-        setVoiceMessage("No se detectó texto suficiente para enviar.");
-      }
     };
 
     recognitionRef.current = recognition;
@@ -362,14 +364,19 @@ export default function ChatAgent() {
       recognition.start();
     } catch {
       setIsListening(false);
-      shouldAutoSubmitRef.current = false;
+      recognitionRef.current = null;
       setVoiceMessage("No se pudo iniciar el dictado por voz.");
     }
   };
 
   const detenerEntradaPorVoz = () => {
-    shouldAutoSubmitRef.current = true;
-    recognitionRef.current?.stop();
+    // Guardamos referencia local y limpiamos el ref ANTES de llamar stop(),
+    // así el handler onend sabe que fue el usuario quien detuvo (no corte del navegador)
+    const recognition = recognitionRef.current;
+    recognitionRef.current = null;
+    recognition?.stop();
+    setIsListening(false);
+    setVoiceMessage("Grabación detenida. Podés editar el texto y luego presionar «Consultar».");
   };
 
   const submitQuestion = handleSubmit(async (data) => {
@@ -526,8 +533,8 @@ export default function ChatAgent() {
                 <p className="text-xs text-gray-600">
                   {voiceInputSupported
                     ? isListening
-                      ? "Hablá con naturalidad. Al detenerse, la pregunta se enviará automáticamente."
-                      : "Podés dictar tu pregunta con el micrófono y se completará en el campo de texto."
+                      ? "🎙️ Grabando... hablá todo el tiempo que necesites. Cuando termines, presioná «Detener» y luego «Consultar»."
+                      : "Podés dictar tu pregunta con el micrófono. La grabación continuará hasta que la detengas vos."
                     : "Este navegador no soporta dictado por voz, pero podés escribir tu pregunta manualmente."}
                 </p>
                 {voiceMessage && (
