@@ -11,6 +11,7 @@ interface Message {
   content: string;
   timestamp: Date;
   responseTime?: number; // en milisegundos
+  feedback?: "up" | "down"; // feedback del usuario
 }
 
 interface SpeechRecognitionEventLike extends Event {
@@ -51,6 +52,7 @@ export default function ChatInterface() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   // Check browser support
@@ -127,24 +129,108 @@ export default function ChatInterface() {
       const response = await hacerPregunta(inputValue, true);
       const endTime = performance.now(); // Rastrear tiempo fin
       const responseTime = endTime - startTime; // Calcular tiempo total
-      
+
+      // Añadir mensaje asistente vacío para streaming visual
+      const assistantId = (Date.now() + 1).toString();
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: assistantId,
         role: "assistant",
-        content: response,
+        content: "",
         timestamp: new Date(),
-        responseTime, // Agregar tiempo de respuesta
+        responseTime,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-      setIsTyping(false);
 
-      // Speak response if audio enabled
-      if (audioEnabled && !isSpeaking) {
-        speakText(response);
-      }
+      // Simular streaming token-level mostrando incrementalmente
+      const tokens = response.split(/(\s+)/); // conservar espacios
+      let accumulated = "";
+      const interval = 40; // ms por "token"
+      tokens.forEach((tok, idx) => {
+        setTimeout(() => {
+          accumulated += tok;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === assistantId ? { ...m, content: accumulated } : m))
+          );
+          // al final del stream
+          if (idx === tokens.length - 1) {
+            setIsTyping(false);
+            // Speak response if audio enabled
+            if (audioEnabled && !isSpeaking) {
+              speakText(response);
+            }
+          }
+        }, interval * idx);
+      });
     } catch (error) {
       console.error("Error:", error);
+      setIsTyping(false);
+    }
+  };
+
+  const handleFeedback = (messageId: string, type: "up" | "down") => {
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== messageId) return m;
+        // Toggle: if same feedback clicked again, remove it
+        if (m.feedback === type) {
+          return { ...m, feedback: undefined } as Message;
+        }
+        return { ...m, feedback: type };
+      })
+    );
+  };
+
+  const handleRegenerate = async (messageId: string) => {
+    if (isTyping) return;
+
+    const messageIndex = messages.findIndex((m) => m.id === messageId);
+    if (messageIndex === -1) return;
+
+    const previousUserMessage = [...messages]
+      .slice(0, messageIndex)
+      .reverse()
+      .find((m) => m.role === "user");
+
+    const prompt = previousUserMessage?.content?.trim();
+    if (!prompt) return;
+
+    setIsTyping(true);
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId ? { ...m, content: "", responseTime: undefined } : m
+      )
+    );
+
+    const startTime = performance.now();
+
+    try {
+      const response = await hacerPregunta(prompt, true);
+      const endTime = performance.now();
+      const responseTime = endTime - startTime;
+
+      const tokens = response.split(/(\s+)/);
+      let accumulated = "";
+      const interval = 40;
+
+      tokens.forEach((tok, idx) => {
+        setTimeout(() => {
+          accumulated += tok;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId ? { ...m, content: accumulated, responseTime } : m
+            )
+          );
+          if (idx === tokens.length - 1) {
+            setIsTyping(false);
+            if (audioEnabled && !isSpeaking) {
+              speakText(response);
+            }
+          }
+        }, interval * idx);
+      });
+    } catch (error) {
+      console.error("Error al regenerar:", error);
       setIsTyping(false);
     }
   };
@@ -177,22 +263,19 @@ export default function ChatInterface() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 px-6 py-4 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 px-4 py-3 backdrop-blur-sm sm:px-6">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="h-6 w-6 text-white"
-              >
-                <path d="M11.7 2.805a.75.75 0 01.6 0A27.2 27.2 0 0112 4.08c2.565.313 5.056.755 7.47 1.349a.75.75 0 01.531 1.145l-1.937 1.938a.75.75 0 00-.176.53c.24.804.461 1.625.66 2.46a.75.75 0 01-.721.996H3.889a.75.75 0 01-.721-.996c.199-.835.42-1.656.66-2.46a.75.75 0 00-.176-.53L.544 4.33a.75.75 0 01.531-1.145A27.2 27.2 0 0112 4.08c2.565.313 5.056.755 7.47 1.349z" />
-              </svg>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20">
+              <span className="text-base font-bold text-white">🧠</span>
             </div>
-            <h1 className="text-xl font-bold">Asistente IA</h1>
+            <div className="leading-tight">
+              <h1 className="text-base font-semibold text-slate-100 sm:text-lg">Jarvis</h1>
+              <p className="text-[11px] text-slate-400 sm:text-xs">Llama 3.2 3B • Local</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
+            <span className="hidden rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-300 sm:inline-flex">🟢 Local</span>
             <button
               onClick={() => setAudioEnabled(!audioEnabled)}
               className={`rounded-full p-2 transition-colors ${
@@ -228,6 +311,10 @@ export default function ChatInterface() {
             messages={messages}
             isTyping={isTyping}
             onClearChat={handleClearChat}
+            sidebarOpen={sidebarOpen}
+            onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+            onFeedback={handleFeedback}
+            onRegenerate={handleRegenerate}
           />
         )}
       </main>
