@@ -62,7 +62,7 @@ export function ChatMessage({ messageId, role, content, timestamp, isTyping = fa
       <div className="flex flex-1 flex-col gap-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-slate-100">
-            {isUser ? "Tú" : "Jarvis"}
+            {isUser ? "Tú" : "JarBees"}
           </span>
           <span className="text-[11px] text-slate-400">
             {formatRelativeTime(timestamp)}
@@ -109,7 +109,7 @@ export function ChatMessage({ messageId, role, content, timestamp, isTyping = fa
             <div className="space-y-2 rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-3">
               <div className="flex items-center gap-2 text-[13px] text-cyan-200">
                 <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-cyan-400" />
-                <span>Jarvis está escribiendo</span>
+                <span>JarBees está escribiendo</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-16 animate-pulse rounded-full bg-slate-700" />

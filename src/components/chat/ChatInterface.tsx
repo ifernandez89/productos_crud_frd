@@ -56,7 +56,7 @@ export default function ChatInterface() {
   const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
-  const workspaceName = "Jarvis Workspace";
+  const workspaceName = "JarBees Workspace";
   const documents = [
     "Manual de voz",
     "Guía de prompts",
@@ -307,7 +307,7 @@ export default function ChatInterface() {
               <span className="text-base font-bold text-white">🧠</span>
             </div>
             <div className="leading-tight">
-              <h1 className="text-base font-semibold text-slate-100 sm:text-lg">Jarvis</h1>
+              <h1 className="text-base font-semibold text-slate-100 sm:text-lg">JarBees</h1>
               <p className="text-[11px] text-slate-400 sm:text-xs">Llama 3.2 3B • Local</p>
             </div>
           </div>

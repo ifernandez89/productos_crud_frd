@@ -293,7 +293,7 @@ export default function ChatAgent() {
     getOrLoadVoice((voice) => {
       const utterance = new SpeechSynthesisUtterance(texto);
       utterance.lang = "es-ES";
-      // Parámetros estilo JARVIS: voz grave, ritmo pausado y preciso
+      // Parámetros estilo JarBees: voz grave, ritmo pausado y preciso
       utterance.rate = 0.92;   // ligeramente más lento que normal
       utterance.pitch = 0.75;  // más grave (0 = mínimo, 2 = máximo)
       utterance.volume = 1;

@@ -140,7 +140,7 @@ export function ChatPanel({
           <div className="flex h-full flex-col items-center justify-center px-4 text-center text-slate-300">
             <div className="mb-5 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-6 shadow-2xl shadow-slate-950/50">
               <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-2xl shadow-lg shadow-cyan-500/20">🧠</div>
-              <p className="text-xl font-semibold text-slate-100">Jarvis está listo</p>
+              <p className="text-xl font-semibold text-slate-100">JarBees está listo</p>
               <p className="mt-2 max-w-md text-sm text-slate-400">Haz una pregunta, pide ayuda o explora un tema. El tiempo de respuesta aparece automáticamente debajo de cada mensaje.</p>
             </div>
             <div className="mt-2 flex flex-wrap justify-center gap-2">
