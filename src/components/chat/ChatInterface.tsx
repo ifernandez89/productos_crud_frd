@@ -10,6 +10,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  responseTime?: number; // en milisegundos
 }
 
 interface SpeechRecognitionEventLike extends Event {
@@ -120,15 +121,19 @@ export default function ChatInterface() {
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsTyping(true);
+    const startTime = performance.now(); // Rastrear tiempo inicio
 
     try {
       const response = await hacerPregunta(inputValue, true);
+      const endTime = performance.now(); // Rastrear tiempo fin
+      const responseTime = endTime - startTime; // Calcular tiempo total
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: response,
         timestamp: new Date(),
+        responseTime, // Agregar tiempo de respuesta
       };
 
       setMessages((prev) => [...prev, assistantMessage]);

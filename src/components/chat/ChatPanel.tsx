@@ -7,6 +7,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  responseTime?: number; // en milisegundos
 }
 
 interface ChatPanelProps {
@@ -61,6 +62,7 @@ export function ChatPanel({ messages, isTyping, onClearChat }: ChatPanelProps) {
                 role={msg.role}
                 content={msg.content}
                 timestamp={msg.timestamp}
+                responseTime={msg.responseTime}
               />
             ))}
             {isTyping && (

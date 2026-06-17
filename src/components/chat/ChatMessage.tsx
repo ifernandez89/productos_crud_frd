@@ -5,9 +5,10 @@ interface ChatMessageProps {
   content: string;
   timestamp: Date;
   isTyping?: boolean;
+  responseTime?: number; // en milisegundos
 }
 
-export function ChatMessage({ role, content, timestamp, isTyping = false }: ChatMessageProps) {
+export function ChatMessage({ role, content, timestamp, isTyping = false, responseTime }: ChatMessageProps) {
   const isUser = role === "user";
 
   return (
@@ -36,6 +37,11 @@ export function ChatMessage({ role, content, timestamp, isTyping = false }: Chat
           <span className="text-xs text-slate-500">
             {timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
+          {!isUser && responseTime && !isTyping && (
+            <span className="text-xs px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+              ⚡ {(responseTime / 1000).toFixed(2)}s
+            </span>
+          )}
         </div>
 
         <div
