@@ -76,7 +76,7 @@ export function ChatPanel({ messages, isTyping, onClearChat, sidebarOpen, onTogg
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-6 sm:py-4">
+      <div className="flex-1 overflow-y-auto px-3 py-3 pb-28 sm:px-6 sm:py-4 sm:pb-32">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-4 text-center text-slate-300">
             <div className="mb-5 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-6 shadow-2xl shadow-slate-950/50">
