@@ -19,9 +19,25 @@ interface ChatPanelProps {
   onToggleSidebar: () => void;
   onFeedback: (messageId: string, type: "up" | "down") => void;
   onRegenerate: (messageId: string) => void;
+  workspaceName: string;
+  documents: string[];
+  memoryItems: string[];
+  sources: string[];
 }
 
-export function ChatPanel({ messages, isTyping, onClearChat, sidebarOpen, onToggleSidebar, onFeedback, onRegenerate }: ChatPanelProps) {
+export function ChatPanel({
+  messages,
+  isTyping,
+  onClearChat,
+  sidebarOpen,
+  onToggleSidebar,
+  onFeedback,
+  onRegenerate,
+  workspaceName,
+  documents,
+  memoryItems,
+  sources,
+}: ChatPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom
@@ -31,7 +47,7 @@ export function ChatPanel({ messages, isTyping, onClearChat, sidebarOpen, onTogg
 
   return (
     <div className="flex h-[calc(100vh-124px)] overflow-hidden">
-      <aside className={`border-r border-slate-800 bg-slate-950/90 backdrop-blur-sm transition-all duration-200 ${sidebarOpen ? "w-64" : "w-16"}`}>
+      <aside className={`border-r border-slate-800 bg-slate-950/90 backdrop-blur-sm transition-all duration-200 ${sidebarOpen ? "w-72" : "w-16"}`}>
         <div className="flex h-full flex-col p-3">
           <button
             type="button"
@@ -41,20 +57,63 @@ export function ChatPanel({ messages, isTyping, onClearChat, sidebarOpen, onTogg
           >
             ☰
           </button>
-          {sidebarOpen && (
-            <div className="space-y-2 text-sm text-slate-200">
-              <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Conversaciones</p>
-                <p className="mt-2 text-slate-100">Nueva charla</p>
+          {sidebarOpen ? (
+            <div className="space-y-4 text-sm text-slate-200">
+              <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Workspace</p>
+                    <p className="mt-2 text-slate-100">{workspaceName}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-700 bg-slate-950/80 px-2 py-1 text-[11px] text-slate-200 transition hover:border-cyan-500/40 hover:bg-slate-800"
+                  >
+                    Cambiar
+                  </button>
+                </div>
               </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Favoritos</p>
-                <p className="mt-2 text-slate-100">Astronomía • Matemática</p>
+
+              <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Documentos</p>
+                <div className="mt-3 space-y-2">
+                  {documents.slice(0, 3).map((doc) => (
+                    <div key={doc} className="rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-slate-200">
+                      {doc}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Configuración</p>
-                <p className="mt-2 text-slate-100">Local · Ollama · Voz</p>
+
+              <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Memoria</p>
+                <p className="mt-2 text-slate-300">{memoryItems.length} notas activas</p>
+                <div className="mt-3 flex flex-col gap-2">
+                  {memoryItems.slice(0, 2).map((memory) => (
+                    <div key={memory} className="rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-slate-200">
+                      {memory}
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Fuentes usadas</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {sources.map((source) => (
+                    <span key={source} className="rounded-full border border-slate-800 bg-slate-950/70 px-3 py-1 text-[11px] text-slate-200">
+                      {source}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-2 flex flex-col items-center gap-4 text-[11px] text-slate-400">
+              <span>WS</span>
+              <span>Doc</span>
+              <span>Mem</span>
+              <span>Src</span>
             </div>
           )}
         </div>

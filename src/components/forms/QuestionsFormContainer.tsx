@@ -490,15 +490,15 @@ export default function ChatAgent() {
     setLoading(true);
     iniciarContador();
     try {
-      const respuesta = await hacerPregunta(data.pregunta, true);
+      const { answer } = await hacerPregunta(data.pregunta, "ollama");
       const tiempoFinal = tiempoRef.current;
       detenerContador();
-      reproducirAudio(respuesta);
+      reproducirAudio(answer);
       setHistorial((prev) => [
         ...prev,
         {
           pregunta: data.pregunta,
-          respuesta,
+          respuesta: answer,
           tiempoRespuesta: tiempoFinal,
         },
       ]);

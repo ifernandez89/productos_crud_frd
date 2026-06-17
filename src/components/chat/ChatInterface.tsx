@@ -55,6 +55,19 @@ export default function ChatInterface() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
+  const workspaceName = "Jarvis Workspace";
+  const documents = [
+    "Manual de voz",
+    "Guía de prompts",
+    "Resumen de entrenamiento",
+  ];
+  const memoryItems = [
+    "Contexto de usuario activo",
+    "Preferencias de estilo",
+    "Última tarea guardada",
+  ];
+  const sources = ["Local", "Ollama", "Documentos"];
+
   // Check browser support
   useEffect(() => {
     const SpeechRecognitionAPI = (window as unknown as Record<string, unknown>).SpeechRecognition || (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
@@ -126,7 +139,7 @@ export default function ChatInterface() {
     const startTime = performance.now(); // Rastrear tiempo inicio
 
     try {
-      const response = await hacerPregunta(inputValue, true);
+      const { answer, sessionId } = await hacerPregunta(inputValue, "ollama");
       const endTime = performance.now(); // Rastrear tiempo fin
       const responseTime = endTime - startTime; // Calcular tiempo total
 
@@ -143,7 +156,7 @@ export default function ChatInterface() {
       setMessages((prev) => [...prev, assistantMessage]);
 
       // Simular streaming token-level mostrando incrementalmente
-      const tokens = response.split(/(\s+)/); // conservar espacios
+      const tokens = answer.split(/(\s+)/); // conservar espacios
       let accumulated = "";
       const interval = 40; // ms por "token"
       tokens.forEach((tok, idx) => {
@@ -157,7 +170,7 @@ export default function ChatInterface() {
             setIsTyping(false);
             // Speak response if audio enabled
             if (audioEnabled && !isSpeaking) {
-              speakText(response);
+              speakText(answer);
             }
           }
         }, interval * idx);
@@ -205,11 +218,11 @@ export default function ChatInterface() {
     const startTime = performance.now();
 
     try {
-      const response = await hacerPregunta(prompt, true);
+      const { answer, sessionId } = await hacerPregunta(prompt, "ollama");
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 
-      const tokens = response.split(/(\s+)/);
+      const tokens = answer.split(/(\s+)/);
       let accumulated = "";
       const interval = 40;
 
@@ -224,7 +237,7 @@ export default function ChatInterface() {
           if (idx === tokens.length - 1) {
             setIsTyping(false);
             if (audioEnabled && !isSpeaking) {
-              speakText(response);
+              speakText(answer);
             }
           }
         }, interval * idx);
@@ -315,6 +328,10 @@ export default function ChatInterface() {
             onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
             onFeedback={handleFeedback}
             onRegenerate={handleRegenerate}
+            workspaceName={workspaceName}
+            documents={documents}
+            memoryItems={memoryItems}
+            sources={sources}
           />
         )}
       </main>
