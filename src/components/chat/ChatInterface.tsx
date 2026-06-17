@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChatHeroSection } from "./ChatHeroSection";
 import { ChatPanel } from "./ChatPanel";
 import { ChatInputBar } from "./ChatInputBar";
-import { hacerPregunta } from "../../app/services/preguntas.api";
+import { hacerPregunta, getLastAssistantMessage } from "../../app/services/preguntas.api";
 
 interface Message {
   id: string;
@@ -53,6 +53,7 @@ export default function ChatInterface() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const workspaceName = "Jarvis Workspace";
@@ -139,9 +140,12 @@ export default function ChatInterface() {
     const startTime = performance.now(); // Rastrear tiempo inicio
 
     try {
-      const { answer, sessionId } = await hacerPregunta(inputValue, "ollama");
+      const { answer, sessionId, lastMessage } = await hacerPregunta(inputValue, "ollama");
       const endTime = performance.now(); // Rastrear tiempo fin
       const responseTime = endTime - startTime; // Calcular tiempo total
+
+      const currentLastMessage = lastMessage ?? answer;
+      setLastAssistantMessage(currentLastMessage);
 
       // Añadir mensaje asistente vacío para streaming visual
       const assistantId = (Date.now() + 1).toString();
@@ -178,6 +182,26 @@ export default function ChatInterface() {
     } catch (error) {
       console.error("Error:", error);
       setIsTyping(false);
+    }
+  };
+
+  const handleRepeatLast = () => {
+    const lastMessage = getLastAssistantMessage();
+    if (!lastMessage) {
+      console.warn("No hay último mensaje guardado para repetir.");
+      return;
+    }
+
+    const repeatMessage: Message = {
+      id: `${Date.now()}-repeat`,
+      role: "assistant",
+      content: lastMessage,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, repeatMessage]);
+    if (audioEnabled && speechSupported) {
+      speakText(lastMessage);
     }
   };
 
@@ -289,6 +313,13 @@ export default function ChatInterface() {
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-300 sm:inline-flex">🟢 Local</span>
+            <button
+              onClick={handleRepeatLast}
+              className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-[11px] text-slate-200 transition hover:border-cyan-500/40 hover:bg-slate-800"
+              title="Repetir última respuesta"
+            >
+              🔁 Repetir
+            </button>
             <button
               onClick={() => setAudioEnabled(!audioEnabled)}
               className={`rounded-full p-2 transition-colors ${

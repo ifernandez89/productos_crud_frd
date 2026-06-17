@@ -2,10 +2,12 @@
 
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 const JARVIS_SESSION_KEY = "jarvis_session_id";
+const LAST_ASSISTANT_MESSAGE_KEY = "jarvis_last_assistant_message";
 
 type JarvisResponse = {
   answer: string;
   sessionId: string | null;
+  lastMessage?: string;
 };
 
 const getStoredSessionId = (): string | null => {
@@ -16,6 +18,16 @@ const getStoredSessionId = (): string | null => {
 const storeSessionId = (sessionId: string | null) => {
   if (typeof window === "undefined" || !sessionId) return;
   window.localStorage.setItem(JARVIS_SESSION_KEY, sessionId);
+};
+
+const storeLastAssistantMessage = (message: string | null) => {
+  if (typeof window === "undefined" || message === null) return;
+  window.localStorage.setItem(LAST_ASSISTANT_MESSAGE_KEY, message);
+};
+
+export const getLastAssistantMessage = (): string | null => {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(LAST_ASSISTANT_MESSAGE_KEY);
 };
 
 export async function hacerPregunta(
@@ -46,7 +58,13 @@ export async function hacerPregunta(
       storeSessionId(data.sessionId);
     }
 
-    return data;
+    const lastMessage = data.lastMessage ?? data.answer;
+    storeLastAssistantMessage(lastMessage);
+
+    return {
+      ...data,
+      lastMessage,
+    };
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(error.message);
