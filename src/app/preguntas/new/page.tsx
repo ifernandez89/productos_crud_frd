@@ -1,6 +1,6 @@
 // src/app/preguntas/new/page.tsx
-import QuestionForm from "../../../components/forms/QuestionsFormContainer";
+import ChatInterface from "../../../components/chat/ChatInterface";
 
 export default function NewProductPage() {
-  return <QuestionForm />;
+  return <ChatInterface />;
 }
