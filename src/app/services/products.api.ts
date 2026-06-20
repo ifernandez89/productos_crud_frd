@@ -1,6 +1,7 @@
 //funciones que piden al backend
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
+// Use logical OR so an empty string secret falls back to the default localhost URL
+const BASE_URL = BACKEND_URL || "http://localhost:4000";
 const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
 const buildHeaders = (hasJson = false) => {
