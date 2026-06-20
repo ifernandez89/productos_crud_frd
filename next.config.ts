@@ -14,6 +14,10 @@ try {
 const nextConfig: NextConfig = {
   // Produce a fully static export suitable for GitHub Pages
   output: 'export',
+  // Base path para GitHub Pages (nombre del repo)
+  basePath: '/productos_crud_frd',
+  // Asset prefix para que los recursos se carguen correctamente
+  assetPrefix: '/productos_crud_frd',
 images: {
     unoptimized: true,
     remotePatterns: [
