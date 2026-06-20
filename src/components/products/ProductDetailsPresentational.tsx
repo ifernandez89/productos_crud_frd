@@ -3,6 +3,7 @@ import { CardFooter } from "../ui/card";
 import { ProductFactory } from "./factories/ProductFactory";
 import { Product } from "./models/Product";
 import { applyDecorators } from "@/utils/productDecorators";
+import Image from "next/image";
 
 type Props = {
   product: Product;
@@ -90,9 +91,11 @@ export default function ProductDetails({
       <div>
         <strong></strong>
         <div className="mt-2">
-          <img
+          <Image
             src={product.image}
             alt={product.name}
+            width={320}
+            height={240}
             className="max-w-xs h-auto w-auto rounded border-none shadow-none"
           />
         </div>

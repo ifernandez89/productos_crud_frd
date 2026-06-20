@@ -1,6 +1,8 @@
 // app/services/preguntas.api.ts
 
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
+const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 const JARBEES_SESSION_KEY = "jarbees_session_id";
 const LAST_ASSISTANT_MESSAGE_KEY = "jarbees_last_assistant_message";
 
@@ -36,11 +38,14 @@ export async function hacerPregunta(
 ): Promise<JarBeesResponse> {
   try {
     const sessionId = getStoredSessionId();
-    const res = await fetch(`${BACKEND_URL}/api/jarbees/query`, {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (API_TOKEN) headers["Authorization"] = `Bearer ${API_TOKEN}`;
+
+    const res = await fetch(`${BASE_URL}/api/jarbees/query`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         message,
         sessionId,

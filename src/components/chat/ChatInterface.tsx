@@ -1,7 +1,10 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import dynamic from "next/dynamic";
 import { ChatHeroSection } from "./ChatHeroSection";
-import { ChatPanel } from "./ChatPanel";
+const ChatPanel = dynamic(() => import("./ChatPanel").then(mod => mod.ChatPanel), { ssr: false });
+import { loadConversation, saveConversation } from "@/lib/db";
 import { ChatInputBar } from "./ChatInputBar";
 import { hacerPregunta, getLastAssistantMessage } from "../../app/services/preguntas.api";
 
@@ -46,6 +49,7 @@ interface SpeechRecognitionLike {
 export default function ChatInterface() {
   const [view, setView] = useState<"hero" | "chat">("hero");
   const [messages, setMessages] = useState<Message[]>([]);
+  const MAX_IN_MEMORY = 200; // keep recent messages in memory for low-end devices
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -53,7 +57,6 @@ export default function ChatInterface() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const workspaceName = "JarBees Workspace";
@@ -67,7 +70,14 @@ export default function ChatInterface() {
     "Preferencias de estilo",
     "Última tarea guardada",
   ];
-  const sources = ["Local", "Ollama", "Documentos"];
+  const sources = ["Local", "Modelo", "Documentos"];
+
+  // start with sidebar closed on small screens
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSidebarOpen(window.innerWidth >= 640);
+    }
+  }, []);
 
   // Check browser support
   useEffect(() => {
@@ -94,6 +104,47 @@ export default function ChatInterface() {
       setSpeechSupported(true);
     }
   }, []);
+
+  // Load saved conversation from IndexedDB (key: 'default')
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const saved = await loadConversation('default');
+        if (mounted && saved?.messages) {
+          // Keep only the most recent messages in memory
+          const msgs = Array.isArray(saved.messages) ? saved.messages : [];
+          setMessages(msgs.slice(-MAX_IN_MEMORY));
+          setView('chat');
+        }
+      } catch {
+        // ignore
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, []);
+
+  // Persist conversations to IndexedDB (debounced)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        saveConversation('default', messages);
+      } catch {
+        // ignore
+      }
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [messages]);
+
+  // Helper to add a message while capping in-memory size
+  const addMessage = (msg: Message) => {
+    setMessages((prev) => {
+      const next = [...prev, msg];
+      if (next.length > MAX_IN_MEMORY) return next.slice(-MAX_IN_MEMORY);
+      return next;
+    });
+  };
 
   // Handle voice input
   const toggleVoiceInput = () => {
@@ -134,18 +185,17 @@ export default function ChatInterface() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    addMessage(userMessage);
     setInputValue("");
     setIsTyping(true);
     const startTime = performance.now(); // Rastrear tiempo inicio
 
     try {
-      const { answer, sessionId, lastMessage } = await hacerPregunta(inputValue, "ollama");
+        const { answer } = await hacerPregunta(inputValue, "ollama");
       const endTime = performance.now(); // Rastrear tiempo fin
       const responseTime = endTime - startTime; // Calcular tiempo total
 
-      const currentLastMessage = lastMessage ?? answer;
-      setLastAssistantMessage(currentLastMessage);
+      
 
       // Añadir mensaje asistente vacío para streaming visual
       const assistantId = (Date.now() + 1).toString();
@@ -157,7 +207,7 @@ export default function ChatInterface() {
         responseTime,
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      addMessage(assistantMessage);
 
       // Simular streaming token-level mostrando incrementalmente
       const tokens = answer.split(/(\s+)/); // conservar espacios
@@ -242,7 +292,7 @@ export default function ChatInterface() {
     const startTime = performance.now();
 
     try {
-      const { answer, sessionId } = await hacerPregunta(prompt, "ollama");
+        const { answer } = await hacerPregunta(prompt, "ollama");
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 
@@ -300,15 +350,15 @@ export default function ChatInterface() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 px-4 py-3 backdrop-blur-sm sm:px-6">
+      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 px-4 py-3 md:backdrop-blur-sm sm:px-6">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20">
-              <span className="text-base font-bold text-white">🧠</span>
+              <Image src="/JarBees_logo.png" alt="JarBees" width={24} height={24} className="object-contain" />
             </div>
             <div className="leading-tight">
               <h1 className="text-base font-semibold text-slate-100 sm:text-lg">JarBees</h1>
-              <p className="text-[11px] text-slate-400 sm:text-xs">Llama 3.2 3B • Local</p>
+              <p className="text-[11px] text-slate-400 sm:text-xs">Modelo disponible</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

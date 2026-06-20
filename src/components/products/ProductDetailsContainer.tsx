@@ -1,6 +1,10 @@
 "use client";
 import React from "react";
-import ProductDetails from "./ProductDetailsPresentational";
+import dynamic from "next/dynamic";
+const ProductDetails = dynamic(
+  () => import("./ProductDetailsPresentational").then((mod) => mod.default),
+  { ssr: false }
+);
 import { deleteProduct } from "@/app/services/products.api";
 import { useRouter } from "next/navigation"; // tu función real
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";

@@ -1,7 +1,12 @@
 "use client";
 
-import { ProductCardContainer } from "./ProductCardContainer";
+import dynamic from "next/dynamic";
 import { Product } from "./models/Product";
+
+const ProductCardContainer = dynamic(
+  () => import("./ProductCardContainer").then((mod) => mod.ProductCardContainer),
+  { ssr: false }
+);
 
 export function ProductListContainer({ products }: Readonly<{ products: Product[] }>) {
   return (

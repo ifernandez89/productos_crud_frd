@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { ActionButton } from "./ActionButton";
 
 interface ChatHeroSectionProps {
@@ -13,19 +14,12 @@ export function ChatHeroSection({ onActionClick, onChatStart }: ChatHeroSectionP
   return (
     <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-4 text-center">
       {/* Logo y título */}
-      <div className="mb-8 animate-fade-in-up">
+      <div className="mb-8 md:animate-fade-in-up">
         <div className="mb-4 flex justify-center">
           <div className="relative">
-            <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 opacity-30 blur-2xl"></div>
-            <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-2xl">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="h-10 w-10 text-white"
-              >
-                <path d="M11.7 2.805a.75.75 0 01.6 0A27.2 27.2 0 0112 4.08c2.565.313 5.056.755 7.47 1.349a.75.75 0 01.531 1.145l-1.937 1.938a.75.75 0 00-.176.53c.24.804.461 1.625.66 2.46a.75.75 0 01-.721.996H3.889a.75.75 0 01-.721-.996c.199-.835.42-1.656.66-2.46a.75.75 0 00-.176-.53L.544 4.33a.75.75 0 01.531-1.145A27.2 27.2 0 0112 4.08c2.565.313 5.056.755 7.47 1.349z" />
-              </svg>
+            <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 opacity-30 md:blur-2xl"></div>
+            <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg md:shadow-2xl">
+              <Image src="/JarBees_logo.png" alt="JarBees" width={40} height={40} className="object-contain" />
             </div>
           </div>
         </div>
