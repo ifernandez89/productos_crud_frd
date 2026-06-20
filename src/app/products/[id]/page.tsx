@@ -7,32 +7,57 @@ import { Product } from "@/components/products/models/Product";
 
 // Accept either a params object or a Promise resolving to params to match
 // Next's generated `PageProps` typing during build.
-type PageProps = { params?: { id?: string } | Promise<{ id?: string }> };
+type PageProps = { params?: unknown };
+
+function isPromise<T>(v: unknown): v is Promise<T> {
+  return !!v && typeof (v as any).then === "function";
+}
 
 export default function ProductPage(props: PageProps) {
-  const params = props?.params || {};
-  const id = params.id;
   const [product, setProduct] = useState<Product | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "no-id">("loading");
 
   useEffect(() => {
-    if (!id) {
-      setStatus("no-id");
-      return;
-    }
     let mounted = true;
-    setStatus("loading");
-    getProduct(id)
-      .then((p) => {
+    const run = async () => {
+      setStatus("loading");
+      const p = props?.params;
+      let resolvedParams: { id?: string } | undefined;
+      try {
+        if (p === undefined) {
+          setStatus("no-id");
+          return;
+        }
+        if (isPromise<{ id?: string }>(p)) {
+          resolvedParams = await p;
+        } else {
+          resolvedParams = p as { id?: string } | undefined;
+        }
+      } catch (err) {
+        console.error("Error resolving params:", err);
+        setStatus("no-id");
+        return;
+      }
+
+      const id = resolvedParams?.id;
+      if (!id) {
+        setStatus("no-id");
+        return;
+      }
+
+      try {
+        const fetched = await getProduct(id);
         if (!mounted) return;
-        setProduct(p as Product);
+        setProduct(fetched as Product);
         setStatus("ready");
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         console.error("Client fetch product error:", err);
         if (!mounted) return;
         setStatus("error");
-      });
+      }
+    };
+
+    run();
     return () => {
       mounted = false;
     };
