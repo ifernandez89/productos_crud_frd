@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
   basePath: '/productos_crud_frd',
   // Asset prefix para que los recursos se carguen correctamente
   assetPrefix: '/productos_crud_frd',
+  // Exportar basePath como variable de entorno
+  env: {
+    NEXT_PUBLIC_BASE_PATH: '/productos_crud_frd',
+  },
 images: {
     unoptimized: true,
     remotePatterns: [

@@ -294,12 +294,9 @@ export default function ChatInterfaceSimple() {
             </div>
             <div>
               <h1 className="text-base font-semibold text-slate-100">JarBees</h1>
-              <p className="text-xs text-slate-400">Modelo local</p>
+              <p className="text-xs text-slate-400">Asistente conversacional</p>
             </div>
           </div>
-          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
-            🟢 Local
-          </span>
         </div>
       </header>
 
@@ -325,6 +322,7 @@ export default function ChatInterfaceSimple() {
             role={msg.role}
             content={msg.content}
             timestamp={msg.timestamp}
+            responseTime={msg.responseTime}
           />
         ))}
 

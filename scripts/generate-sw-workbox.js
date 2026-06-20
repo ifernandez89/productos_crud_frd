@@ -14,7 +14,7 @@ async function build() {
         urlPattern: /\/api\//,
         handler: 'NetworkFirst',
         options: {
-          cacheName: 'api-cache',
+          cacheName: 'jarbees-api-cache-v1',
           expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
           networkTimeoutSeconds: 5,
         },
@@ -23,7 +23,7 @@ async function build() {
         urlPattern: /\.(?:png|jpg|jpeg|svg|webp|ico)$/,
         handler: 'CacheFirst',
         options: {
-          cacheName: 'image-cache',
+          cacheName: 'jarbees-image-cache-v1',
           expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
         },
       },
