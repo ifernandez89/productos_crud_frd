@@ -1,6 +1,7 @@
 import { getProduct } from "../../../services/products.api";
 import ProductFormContainer from "@/components/forms/ProductFormContainer";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function ProductEditPage(props: any) {
   const params = await props.params;
   const id = params?.id;

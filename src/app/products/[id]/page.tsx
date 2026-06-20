@@ -3,6 +3,8 @@ import ProductDetailContainer from "@/components/products/ProductDetailsContaine
 import { getProduct } from "@/app/services/products.api";
 
 
+// Allow flexible props typing for build-time params handling
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function generateMetadata(props: any): Promise<Metadata> {
   const params = await props.params;
   const product = await getProduct(params.id);
@@ -22,6 +24,7 @@ export async function generateStaticParams() {
   return ids.split(',').map((id) => ({ id: id.trim() }));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function ProductEditPage(props: any) {
   const params = await props.params;
   const id = params?.id;
