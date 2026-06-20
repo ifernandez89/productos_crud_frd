@@ -6,13 +6,33 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 
 ## [Unreleased]
 
-- Added: `scripts/generate-sw-workbox.js` — Workbox SW generator.
-- Added: `.github/workflows/deploy_export_and_lighthouse.yml` — CI job to build, start and run Lighthouse (manual dispatch).
-- Added: `public/sw-workbox.js` (generated) and `public/sw.orig.js` (backup of previous SW).
-- Changed: `public/sw.js` now imports the Workbox bundle (shim) to keep canonical `/sw.js` registration.
-- Changed: `src/components/RegisterSW.tsx` — register `/sw.js` (now imports Workbox SW).
-- Changed: `package.json` — removed local `lighthouse` devDependency to avoid install errors; added `generate-workbox-sw` script.
-- Added: `public/sw-workbox.js` generation step validated locally (`npm run generate-workbox-sw`).
+### Added
+- **Reconocimiento de voz continuo**: Implementado modo `continuous: true` en ambos componentes de chat para grabación sin cortes por silencio
+- **Voz masculina estilo JARVIS**: Sistema de selección automática de voces masculinas con parámetros optimizados (`pitch: 0.75`, `rate: 0.92`)
+- **Botón de detener audio**: Nuevo botón visible en el panel de historial para detener la reproducción de respuestas
+- **Auto-reinicio de reconocimiento de voz**: Reinicio automático cuando el navegador corta la sesión por razones internas
+- **Nuevos dominios de consulta**: Agregadas capacidades de astronomía (🌙 fase lunar, 🌅 amanecer/atardecer, 🪐 planetas, eclipses), calendarios (📅 Maya con kin, ✡️ Hebreo) y matemáticas (📐 derivadas, integrales, aritmética)
+- **Acciones rápidas expandidas**: 8 nuevos botones de acceso rápido a consultas frecuentes organizadas por categoría
+- **Preguntas frecuentes categorizadas**: Organizadas en 4 grupos (Astronomía, Calendarios, Matemáticas, Celulares) con iconos y headers
+
+### Changed
+- **GitHub Actions workflows actualizados**: 
+  - Agregado `permissions: contents: write` para permitir push a `gh-pages`
+  - Actualizado Node.js de v18 a v20 para evitar deprecaciones
+  - Actualizado `peaceiris/actions-gh-pages` de v3 a v4
+  - Removido workflow duplicado `nextjs.yml` que causaba conflictos
+- **Next.js config**: Agregado `images: { unoptimized: true }` para compatibilidad con `output: 'export'`
+- **Manejo de errores de voz mejorado**: Errores "network", "aborted" y "no-speech" ya no rompen el flujo de reconocimiento
+- **UI del micrófono**: Textos actualizados para reflejar el nuevo comportamiento de grabación controlada por el usuario
+
+### Fixed
+- **Error 403 en GitHub Pages deploy**: Solucionado con permisos explícitos en workflow
+- **Bloqueo de archivos Git en Windows**: Limpieza automática de procesos Git colgados
+- **Reconocimiento de voz roto después de error de backend**: Implementado reinicio resiliente y manejo de errores no críticos
+- **Auto-envío no deseado**: El micrófono ya no envía automáticamente; el usuario controla cuándo detener y enviar
+- **Error de optimización de imágenes en build estático**: Configurado `unoptimized: true` para exports estáticos
+
+---
 
 ## [0.1.0] - 2026-06-20
 
