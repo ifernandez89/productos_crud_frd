@@ -12,6 +12,8 @@ try {
 }
 
 const nextConfig: NextConfig = {
+  // Produce a fully static export suitable for GitHub Pages
+  output: 'export',
 images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.frandroid.com' },
@@ -40,5 +42,3 @@ async redirects() {
   },
 };
 export default withBundleAnalyzer(nextConfig);
-
-module.exports = withBundleAnalyzer(nextConfig);
