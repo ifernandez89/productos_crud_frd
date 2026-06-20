@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
   // Produce a fully static export suitable for GitHub Pages
   output: 'export',
 images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: 'images.frandroid.com' },
       { protocol: 'https', hostname: 'servicelshop.com.mx' },

@@ -85,25 +85,47 @@ export default function ChatInterface() {
     if (SpeechRecognitionAPI) {
       recognitionRef.current = new (SpeechRecognitionAPI as unknown as new () => SpeechRecognitionLike)();
       recognitionRef.current.lang = "es-ES";
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      // continuous: true evita cortes por silencio y errores "network"
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
 
       recognitionRef.current.onstart = () => setIsListening(true);
-      recognitionRef.current.onend = () => setIsListening(false);
+      
+      recognitionRef.current.onend = () => {
+        // Si el navegador cortó por sí solo y el usuario no detuvo manualmente,
+        // intentamos reiniciar automáticamente
+        if (recognitionRef.current !== null && isListening) {
+          try {
+            recognitionRef.current.start();
+            return;
+          } catch {
+            // Si falla el reinicio, dejamos que termine
+          }
+        }
+        setIsListening(false);
+      };
+
       recognitionRef.current.onresult = (event: SpeechRecognitionEventLike) => {
-        const transcript = event.results[0][0].transcript;
+        // Tomar el último resultado disponible (más reciente)
+        const lastResultIndex = event.results.length - 1;
+        const transcript = event.results[lastResultIndex][0].transcript;
         setInputValue(transcript);
       };
+
       recognitionRef.current.onerror = (event: SpeechRecognitionErrorEventLike) => {
-        console.error("Speech recognition error", event.error);
-        setIsListening(false);
+        // Solo loguear errores críticos, ignorar "network" y "aborted"
+        if (event.error !== "network" && event.error !== "aborted" && event.error !== "no-speech") {
+          console.warn("Speech recognition error:", event.error);
+        }
+        // No forzar setIsListening(false) aquí — dejar que onend lo maneje
+        // para permitir reintentos automáticos
       };
     }
 
     if ("speechSynthesis" in window) {
       setSpeechSupported(true);
     }
-  }, []);
+  }, [isListening]);
 
   // Load saved conversation from IndexedDB (key: 'default')
   useEffect(() => {
@@ -149,9 +171,83 @@ export default function ChatInterface() {
   // Handle voice input
   const toggleVoiceInput = () => {
     if (isListening) {
-      recognitionRef.current?.stop();
+      // Guardamos referencia local y limpiamos el ref ANTES de llamar stop()
+      const recognition = recognitionRef.current;
+      recognitionRef.current = null;
+      recognition?.stop();
+      setIsListening(false);
     } else {
-      recognitionRef.current?.start();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch (error) {
+          console.warn("No se pudo iniciar el reconocimiento de voz:", error);
+        }
+      }
+    }
+  };
+
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+
+  // Nombres de voces masculinas conocidas, en orden de preferencia
+  const MALE_VOICE_NAMES = [
+    "Microsoft Pablo",        // Windows es-ES
+    "Microsoft Jorge",        // Windows es-MX / es-AR
+    "Google español",         // Chrome Android/Desktop es-ES
+    "Jorge",
+    "Pablo",
+    "Diego",
+    "Carlos",
+    "Ricardo",
+    "Miguel",
+    "Andrés",
+    "Enrique",
+  ];
+
+  // Palabras que indican voz femenina (para descartar)
+  const FEMALE_KEYWORDS = ["female", "femenina", "mujer", "woman", "laura", "helena",
+    "mónica", "monica", "paulina", "luciana", "isabela", "rosa", "sabina", "lupe"];
+
+  const selectMaleVoice = (): SpeechSynthesisVoice | null => {
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return null;
+
+    const esVoices = voices.filter((v) =>
+      v.lang.startsWith("es") || v.lang.startsWith("ES"),
+    );
+    const pool = esVoices.length ? esVoices : voices;
+
+    // 1. Buscar por nombre exacto conocido
+    for (const name of MALE_VOICE_NAMES) {
+      const match = pool.find((v) =>
+        v.name.toLowerCase().includes(name.toLowerCase()),
+      );
+      if (match) return match;
+    }
+
+    // 2. Descartar voces femeninas y devolver la primera restante
+    const nonFemale = pool.filter(
+      (v) => !FEMALE_KEYWORDS.some((kw) => v.name.toLowerCase().includes(kw)),
+    );
+    return nonFemale[0] ?? pool[0] ?? null;
+  };
+
+  const getOrLoadVoice = (callback: (voice: SpeechSynthesisVoice | null) => void) => {
+    if (voiceRef.current) {
+      callback(voiceRef.current);
+      return;
+    }
+    // Las voces pueden no estar cargadas aún en el primer render
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length) {
+      voiceRef.current = selectMaleVoice();
+      callback(voiceRef.current);
+    } else {
+      window.speechSynthesis.onvoiceschanged = () => {
+        voiceRef.current = selectMaleVoice();
+        window.speechSynthesis.onvoiceschanged = null;
+        callback(voiceRef.current);
+      };
     }
   };
 
@@ -162,16 +258,22 @@ export default function ChatInterface() {
     // Cancel any currently speaking utterances
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "es-ES";
-    utterance.rate = 1;
-    utterance.pitch = 1;
+    getOrLoadVoice((voice) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "es-ES";
+      // Parámetros estilo JARVIS: voz grave, ritmo pausado y preciso
+      utterance.rate = 0.92;   // ligeramente más lento que normal
+      utterance.pitch = 0.75;  // más grave (0 = mínimo, 2 = máximo)
+      utterance.volume = 1;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+      if (voice) utterance.voice = voice;
 
-    window.speechSynthesis.speak(utterance);
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+    });
   };
 
   // Handle message submission
