@@ -3,14 +3,14 @@
 import React, { useEffect, useState } from "react";
 import ProductFormContainer from "@/components/forms/ProductFormContainer";
 import { getProduct } from "@/app/services/products.api";
+import { Product } from "@/components/products/models/Product";
 
-// Client-side edit page: fetch product at runtime so static export doesn't
-// require backend access. Shows disconnected message when backend is unreachable.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function ProductEditPage(props: any) {
+type PageProps = { params?: { id?: string } };
+
+export default function ProductEditPage(props: PageProps) {
   const params = props?.params || {};
   const id = params.id;
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "no-id">("loading");
 
   useEffect(() => {
@@ -23,10 +23,10 @@ export default function ProductEditPage(props: any) {
     getProduct(id)
       .then((p) => {
         if (!mounted) return;
-        setProduct(p);
+        setProduct(p as Product);
         setStatus("ready");
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error("Client fetch product error:", err);
         if (!mounted) return;
         setStatus("error");
