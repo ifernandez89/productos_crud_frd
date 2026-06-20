@@ -3,9 +3,7 @@ import ProductDetailContainer from "@/components/products/ProductDetailsContaine
 import { getProduct } from "@/app/services/products.api";
 
 
-export async function generateMetadata(
-  props: ProductParams
-): Promise<Metadata> {
+export async function generateMetadata(props: any): Promise<Metadata> {
   const params = await props.params;
   const product = await getProduct(params.id);
   
