@@ -23,9 +23,10 @@ export async function generateStaticParams() {
     const { getProducts } = await import('@/app/services/products.api');
     const products = await getProducts();
     if (Array.isArray(products) && products.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return products.map((p: any) => ({ id: String(p.id || p._id || p.slug) }));
     }
-  } catch (e) {
+  } catch {
     // ignore and fallback
   }
 
