@@ -16,12 +16,16 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 - **Preguntas frecuentes categorizadas**: Organizadas en 4 grupos (Astronomía, Calendarios, Matemáticas, Celulares) con iconos y headers
 
 ### Changed
+- **Página principal redirige al chat**: La home (`/`) ahora redirige automáticamente a `/preguntas/new` para acceso directo al chat
 - **GitHub Actions workflows actualizados**: 
   - Agregado `permissions: contents: write` para permitir push a `gh-pages`
   - Actualizado Node.js de v18 a v20 para evitar deprecaciones
   - Actualizado `peaceiris/actions-gh-pages` de v3 a v4
   - Removido workflow duplicado `nextjs.yml` que causaba conflictos
-- **Next.js config**: Agregado `images: { unoptimized: true }` para compatibilidad con `output: 'export'`
+- **Next.js config para GitHub Pages**: 
+  - Agregado `basePath: '/productos_crud_frd'` para rutas correctas en GitHub Pages
+  - Agregado `assetPrefix: '/productos_crud_frd'` para carga correcta de CSS/JS
+  - Agregado `images: { unoptimized: true }` para compatibilidad con `output: 'export'`
 - **Manejo de errores de voz mejorado**: Errores "network", "aborted" y "no-speech" ya no rompen el flujo de reconocimiento
 - **UI del micrófono**: Textos actualizados para reflejar el nuevo comportamiento de grabación controlada por el usuario
 
@@ -29,8 +33,9 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 - **Error 403 en GitHub Pages deploy**: Solucionado con permisos explícitos en workflow
 - **Bloqueo de archivos Git en Windows**: Limpieza automática de procesos Git colgados
 - **Reconocimiento de voz roto después de error de backend**: Implementado reinicio resiliente y manejo de errores no críticos
-- **Auto-envío no deseado**: El micrófono ya no envía automáticamente; el usuario controla cuándo detener y enviar
+- **Auto-envío no deseado del micrófono**: El micrófono ya no envía automáticamente; el usuario controla cuándo detener y enviar
 - **Error de optimización de imágenes en build estático**: Configurado `unoptimized: true` para exports estáticos
+- **Estilos no cargando en GitHub Pages**: Agregado `basePath` y `assetPrefix` para rutas correctas de assets
 
 ---
 

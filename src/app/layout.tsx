@@ -16,6 +16,8 @@ export const metadata: Metadata = {
     icon: '/JarBees_logo.png',
     apple: '/JarBees_logo.png',
   },
+  manifest: '/manifest.json',
+  themeColor: '#06b6d4',
 };
 
 export default function RootLayout({
@@ -25,10 +27,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#06b6d4" />
-      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
