@@ -2,9 +2,6 @@ import { Metadata } from "next";
 import ProductDetailContainer from "@/components/products/ProductDetailsContainer";
 import { getProduct } from "@/app/services/products.api";
 
-type ProductParams = {
-  params: { id: string };
-};
 
 export async function generateMetadata(
   props: ProductParams
@@ -27,8 +24,9 @@ export async function generateStaticParams() {
   return ids.split(',').map((id) => ({ id: id.trim() }));
 }
 
-export default async function ProductEditPage(props: ProductParams) {
-  const { id } = props.params;
+export default async function ProductEditPage(props: any) {
+  const params = await props.params;
+  const id = params?.id;
   if (!id) throw new Error('ID del producto no proporcionado.');
   const product = await getProduct(id);
   return <ProductDetailContainer title="Detalles" product={product} />;
