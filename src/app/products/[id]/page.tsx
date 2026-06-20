@@ -10,7 +10,7 @@ import { Product } from "@/components/products/models/Product";
 type PageProps = { params?: unknown };
 
 function isPromise<T>(v: unknown): v is Promise<T> {
-  return !!v && typeof (v as any).then === "function";
+  return !!v && typeof (v as { then?: unknown }).then === "function";
 }
 
 export default function ProductPage(props: PageProps) {
@@ -61,7 +61,7 @@ export default function ProductPage(props: PageProps) {
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [props]);
 
   if (status === "loading") return <div className="p-6">Cargando producto…</div>;
   if (status === "no-id") return <div className="p-6">ID no proporcionado.</div>;

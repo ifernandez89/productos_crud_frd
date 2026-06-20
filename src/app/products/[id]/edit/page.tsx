@@ -10,7 +10,7 @@ import { Product } from "@/components/products/models/Product";
 type PageProps = { params?: unknown };
 
 function isPromise<T>(v: unknown): v is Promise<T> {
-  return !!v && typeof (v as any).then === "function";
+  return !!v && typeof (v as { then?: unknown }).then === "function";
 }
 
 export default function ProductEditPage(props: PageProps) {
