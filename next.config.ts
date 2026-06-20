@@ -31,14 +31,6 @@ images: {
       bodySizeLimit: '10mb', // Aumenta el límite del tamaño del cuerpo a 10 MB
     },
   },
-async redirects() {
-    return [
-      {
-        source: "/login/page",
-        destination: "/",
-        permanent: false,
-      },
-    ];
-  },
+
 };
 export default withBundleAnalyzer(nextConfig);

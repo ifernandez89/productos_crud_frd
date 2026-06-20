@@ -4,7 +4,7 @@ import ProductPageClient from "./ProductPageClient";
 // `generateStaticParams`. Returning an empty array ensures the app can be
 // exported without prebuilding any product pages (client-side fetch at runtime).
 export async function generateStaticParams() {
-  return [];
+  return [{ id: '1' }];
 }
 
 // Server wrapper: simply forwards `params` to the client component.
