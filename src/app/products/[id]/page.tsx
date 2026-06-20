@@ -1,45 +1,45 @@
-import { Metadata } from "next";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import ProductDetailContainer from "@/components/products/ProductDetailsContainer";
-import { getProduct, getProducts } from "@/app/services/products.api";
+import { getProduct } from "@/app/services/products.api";
 
-
-// Allow flexible props typing for build-time params handling
+// Client-side product page: fetches at runtime so the static export doesn't
+// require backend access. Shows a disconnected message when the backend is
+// unreachable.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function generateMetadata(props: any): Promise<Metadata> {
-  const params = await props.params;
-  const product = await getProduct(params.id);
-  
-  return {
-    title: product ? `${product.name} - NextStore` : "Product Not Found",
-    description: product?.description || "Product details page",
-  };
-}
+export default function ProductPage(props: any) {
+  const params = props?.params || {};
+  const id = params.id;
+  const [product, setProduct] = useState<any>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error" | "no-id">("loading");
 
-// For `output: 'export'` we must provide `generateStaticParams` for dynamic routes.
-// By default we export no product pages. To export specific products at build
-// time, set the environment variable `NEXT_PUBLIC_STATIC_PRODUCT_IDS="id1,id2"`.
-export async function generateStaticParams() {
-  // Try to fetch product IDs from backend at build time (CI should set NEXT_PUBLIC_BACKEND_URL)
-  try {
-    const products = await getProducts();
-    if (Array.isArray(products) && products.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return products.map((p: any) => ({ id: String(p.id || p._id || p.slug) }));
+  useEffect(() => {
+    if (!id) {
+      setStatus("no-id");
+      return;
     }
-  } catch {
-    // ignore and fallback
-  }
+    let mounted = true;
+    setStatus("loading");
+    getProduct(id)
+      .then((p) => {
+        if (!mounted) return;
+        setProduct(p);
+        setStatus("ready");
+      })
+      .catch((err) => {
+        console.error("Client fetch product error:", err);
+        if (!mounted) return;
+        setStatus("error");
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
 
-  const ids = process.env.NEXT_PUBLIC_STATIC_PRODUCT_IDS;
-  if (!ids) return [];
-  return ids.split(',').map((id) => ({ id: id.trim() }));
-}
+  if (status === "loading") return <div className="p-6">Cargando producto…</div>;
+  if (status === "no-id") return <div className="p-6">ID no proporcionado.</div>;
+  if (status === "error") return <div className="p-6">JarBees desconectado — no se puede cargar el producto.</div>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default async function ProductEditPage(props: any) {
-  const params = await props.params;
-  const id = params?.id;
-  if (!id) throw new Error('ID del producto no proporcionado.');
-  const product = await getProduct(id);
   return <ProductDetailContainer title="Detalles" product={product} />;
 }
