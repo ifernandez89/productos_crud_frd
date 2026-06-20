@@ -3,7 +3,7 @@ import ProductDetailContainer from "@/components/products/ProductDetailsContaine
 import { getProduct } from "@/app/services/products.api";
 
 type ProductParams = {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 };
 
 export async function generateMetadata(
@@ -28,13 +28,8 @@ export async function generateStaticParams() {
 }
 
 export default async function ProductEditPage(props: ProductParams) {
-  const params = await props.params;
-  let product = null;
-  if (!params?.id) {
-    throw new Error("ID del producto no proporcionado.");
-  } else {
-    product = await getProduct(params.id);
-  }
-
+  const { id } = props.params;
+  if (!id) throw new Error('ID del producto no proporcionado.');
+  const product = await getProduct(id);
   return <ProductDetailContainer title="Detalles" product={product} />;
 }
