@@ -1,6 +1,6 @@
 // src/app/preguntas/new/page.tsx
-import ChatInterface from "../../../components/chat/ChatInterface";
+import ChatInterfaceSimple from "../../../components/chat/ChatInterfaceSimple";
 
 export default function NewProductPage() {
-  return <ChatInterface />;
+  return <ChatInterfaceSimple />;
 }

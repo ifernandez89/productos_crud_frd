@@ -7,6 +7,13 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 ## [Unreleased]
 
 ### Added
+- **UI minimalista estilo ChatGPT/Claude**: 
+  - Rediseño completo de la interfaz del chat
+  - Herramientas ocultas detrás del botón "+" (Imagen, Buscar Web, Documentos, Memoria, Herramientas)
+  - Mensajes compactos estilo burbujas con avatares pequeños
+  - Header simplificado con solo nombre y estado
+  - Input bar inferior con 3 botones principales: +, 🎤, ➤
+  - Reducción del 50%+ de ruido visual
 - **PWA completa configurada**: 
   - Componente `InstallPWA` con prompt elegante de instalación
   - Página `/offline` con reconexión automática cada 5 segundos
