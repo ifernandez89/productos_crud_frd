@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { ChatInputSimple } from "./ChatInputSimple";
 import { ChatMessageCompact } from "./ChatMessageCompact";
 import { loadConversation, saveConversation } from "@/lib/db";
@@ -289,8 +290,14 @@ export default function ChatInterfaceSimple() {
       <header className="border-b border-slate-800 bg-slate-950/80 px-4 py-3 backdrop-blur-sm">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-xl shadow-lg shadow-cyan-500/20">
-              🐝
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-1.5 shadow-lg shadow-cyan-500/20">
+              <Image 
+                src="/JarBees_logo.png" 
+                alt="JarBees" 
+                width={32} 
+                height={32} 
+                className="object-contain"
+              />
             </div>
             <div>
               <h1 className="text-base font-semibold text-slate-100">JarBees</h1>
@@ -305,8 +312,14 @@ export default function ChatInterfaceSimple() {
         {messages.length === 0 && !isTyping && (
           <div className="flex h-full items-center justify-center px-4">
             <div className="max-w-md text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-3xl shadow-lg shadow-cyan-500/20">
-                🐝
+              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-4 shadow-lg shadow-cyan-500/20">
+                <Image 
+                  src="/JarBees_logo.png" 
+                  alt="JarBees" 
+                  width={64} 
+                  height={64} 
+                  className="object-contain"
+                />
               </div>
               <h2 className="text-xl font-semibold text-slate-100">JarBees está listo</h2>
               <p className="mt-2 text-sm text-slate-400">

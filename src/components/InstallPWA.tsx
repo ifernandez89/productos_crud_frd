@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Button } from "./ui/button";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -59,8 +60,14 @@ export default function InstallPWA() {
     <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-slide-up">
       <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-slate-900 to-slate-950 p-4 shadow-2xl shadow-cyan-500/10 backdrop-blur-sm">
         <div className="mb-3 flex items-start gap-3">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20">
-            <span className="text-2xl">🐝</span>
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-2 shadow-lg shadow-cyan-500/20">
+            <Image 
+              src="/JarBees_logo.png" 
+              alt="JarBees" 
+              width={36} 
+              height={36} 
+              className="object-contain"
+            />
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-slate-100">

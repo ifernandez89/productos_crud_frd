@@ -1,5 +1,6 @@
 "use client";
-import { Bot, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
+import Image from "next/image";
 
 interface ChatMessageCompactProps {
   role: "user" | "assistant";
@@ -21,8 +22,14 @@ export function ChatMessageCompact({ role, content, responseTime }: ChatMessageC
               Tú
             </div>
           ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
-              <Bot className="h-5 w-5" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-1.5">
+              <Image 
+                src="/JarBees_logo.png" 
+                alt="JarBees" 
+                width={24} 
+                height={24} 
+                className="object-contain"
+              />
             </div>
           )}
         </div>
