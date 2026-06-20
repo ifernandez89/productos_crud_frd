@@ -6,6 +6,8 @@ import { ChatMessageCompact } from "./ChatMessageCompact";
 import { loadConversation, saveConversation } from "@/lib/db";
 import { hacerPregunta } from "../../app/services/preguntas.api";
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 interface Message {
   id: string;
   role: "user" | "assistant";
@@ -292,7 +294,7 @@ export default function ChatInterfaceSimple() {
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-1.5 shadow-lg shadow-cyan-500/20">
               <Image 
-                src="/JarBees_logo.png" 
+                src={`${BASE_PATH}/JarBees_logo.png`}
                 alt="JarBees" 
                 width={32} 
                 height={32} 
@@ -314,7 +316,7 @@ export default function ChatInterfaceSimple() {
             <div className="max-w-md text-center">
               <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-4 shadow-lg shadow-cyan-500/20">
                 <Image 
-                  src="/JarBees_logo.png" 
+                  src={`${BASE_PATH}/JarBees_logo.png`}
                   alt="JarBees" 
                   width={64} 
                   height={64} 

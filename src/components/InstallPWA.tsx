@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "./ui/button";
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -62,7 +64,7 @@ export default function InstallPWA() {
         <div className="mb-3 flex items-start gap-3">
           <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-2 shadow-lg shadow-cyan-500/20">
             <Image 
-              src="/JarBees_logo.png" 
+              src={`${BASE_PATH}/JarBees_logo.png`}
               alt="JarBees" 
               width={36} 
               height={36} 

@@ -2,6 +2,8 @@
 import { Clock } from "lucide-react";
 import Image from "next/image";
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 interface ChatMessageCompactProps {
   role: "user" | "assistant";
   content: string;
@@ -24,7 +26,7 @@ export function ChatMessageCompact({ role, content, responseTime }: ChatMessageC
           ) : (
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-1.5">
               <Image 
-                src="/JarBees_logo.png" 
+                src={`${BASE_PATH}/JarBees_logo.png`}
                 alt="JarBees" 
                 width={24} 
                 height={24} 
