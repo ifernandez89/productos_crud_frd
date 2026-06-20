@@ -8,7 +8,6 @@ import ProductFormPresentational from "@/components/forms/ProductFormPresentatio
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Product } from "../products/models/Product";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function ProductsForm({
   title,
   product,

@@ -1,5 +1,7 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { Virtuoso } from 'react-virtuoso';
 import { ChatMessage } from "./ChatMessage";
 
 interface Message {
@@ -39,15 +41,18 @@ export function ChatPanel({
   sources,
 }: ChatPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [follow, setFollow] = useState(true);
 
-  // Auto-scroll to bottom
+  // Only scroll the empty-state anchor when there are no messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+    if (messages.length === 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages.length]);
 
   return (
     <div className="flex h-[calc(100vh-124px)] overflow-hidden">
-      <aside className={`border-r border-slate-800 bg-slate-950/90 backdrop-blur-sm transition-all duration-200 ${sidebarOpen ? "w-72" : "w-16"}`}>
+      <aside className={`border-r border-slate-800 bg-slate-950/90 md:backdrop-blur-sm transition-all duration-200 ${sidebarOpen ? "w-72" : "w-16"}`}>
         <div className="flex h-full flex-col p-3">
           <button
             type="button"
@@ -121,7 +126,7 @@ export function ChatPanel({
 
       <section className="flex min-w-0 flex-1 flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/50 px-4 py-3 backdrop-blur-sm sm:px-6">
+      <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/50 px-4 py-3 md:backdrop-blur-sm sm:px-6">
         <div>
           <h2 className="text-sm font-semibold text-slate-100 sm:text-base">Conversaciones</h2>
           <p className="text-[11px] text-slate-400">Respuesta local • Tiempo visible</p>
@@ -135,11 +140,13 @@ export function ChatPanel({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 pb-28 sm:px-6 sm:py-4 sm:pb-32">
+      <div className="flex-1 px-3 py-3 pb-28 sm:px-6 sm:py-4 sm:pb-32" style={{ minHeight: 0 }}>
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-4 text-center text-slate-300">
-            <div className="mb-5 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-6 shadow-2xl shadow-slate-950/50">
-              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-2xl shadow-lg shadow-cyan-500/20">🧠</div>
+            <div className="mb-5 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-6 shadow-lg md:shadow-2xl shadow-slate-950/50">
+              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-2xl shadow-lg shadow-cyan-500/20">
+                <Image src="/JarBees_logo.png" alt="JarBees" width={40} height={40} className="object-contain" />
+              </div>
               <p className="text-xl font-semibold text-slate-100">JarBees está listo</p>
               <p className="mt-2 max-w-md text-sm text-slate-400">Haz una pregunta, pide ayuda o explora un tema. El tiempo de respuesta aparece automáticamente debajo de cada mensaje.</p>
             </div>
@@ -156,9 +163,14 @@ export function ChatPanel({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 sm:gap-4">
-            {messages.map((msg, idx) => {
-              const prev = messages[idx - 1];
+          <Virtuoso
+            style={{ height: '100%' }}
+            data={messages}
+            initialTopMostItemIndex={messages.length - 1}
+            overscan={100}
+            atBottomStateChange={(atBottom) => setFollow(atBottom)}
+            itemContent={(index, msg) => {
+              const prev = index > 0 ? messages[index - 1] : null;
               const showDaySeparator = prev
                 ? new Date(prev.timestamp).toDateString() !== new Date(msg.timestamp).toDateString()
                 : true;
@@ -173,7 +185,6 @@ export function ChatPanel({
                     </div>
                   )}
                   <ChatMessage
-                    key={msg.id}
                     messageId={msg.id}
                     role={msg.role}
                     content={msg.content}
@@ -185,17 +196,10 @@ export function ChatPanel({
                   />
                 </div>
               );
-            })}
-            {isTyping && (
-              <ChatMessage
-                role="assistant"
-                content=""
-                timestamp={new Date()}
-                isTyping={true}
-              />
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+            }}
+            followOutput={follow ? (isTyping ? 'smooth' : true) : false}
+            components={{ Footer: () => <div ref={messagesEndRef} /> }}
+          />
         )}
       </div>
       </section>

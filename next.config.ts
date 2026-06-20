@@ -1,5 +1,16 @@
 import type { NextConfig } from "next";
 
+// Bundle analyzer wrapper (enabled when ANALYZE=true).
+// Try to require, but fall back when the package isn't installed (keeps build working).
+let withBundleAnalyzer: any = (cfg: any) => cfg;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const _analyzer = require('@next/bundle-analyzer');
+  withBundleAnalyzer = _analyzer({ enabled: process.env.ANALYZE === 'true' });
+} catch (e) {
+  // package not installed — continue without analyzer
+}
+
 const nextConfig: NextConfig = {
 images: {
     remotePatterns: [
@@ -28,6 +39,6 @@ async redirects() {
     ];
   },
 };
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

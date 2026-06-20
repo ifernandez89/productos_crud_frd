@@ -1,11 +1,21 @@
 //funciones que piden al backend
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
+const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
+
+const buildHeaders = (hasJson = false) => {
+  const headers: Record<string, string> = {};
+  if (hasJson) headers["Content-Type"] = "application/json";
+  if (API_TOKEN) headers["Authorization"] = `Bearer ${API_TOKEN}`;
+  return headers;
+};
 
 export async function getProducts() {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/products`, {
+    const res = await fetch(`${BASE_URL}/api/products`, {
       method: "GET",
       cache: "no-store",
+      headers: buildHeaders(false),
     });
 
     if (!res.ok) {
@@ -21,19 +31,18 @@ export async function getProducts() {
 }
 
 export async function getProduct(id: string) {
-  const data = await fetch(`${BACKEND_URL}/api/products/${id}`, {
+  const data = await fetch(`${BASE_URL}/api/products/${id}`, {
     method: "GET",
     cache: "no-store",
+    headers: buildHeaders(false),
   });
   return await data.json(); //debe esperar hasta que se resuelva la respuesta antes de retornarla
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProduct(productData: any) {
-  const res = await fetch(`${BACKEND_URL}/api/products`, {
+  const res = await fetch(`${BASE_URL}/api/products`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildHeaders(true),
     body: JSON.stringify(productData),
   });
   const data = await res.json();
@@ -43,11 +52,9 @@ export async function createProduct(productData: any) {
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateProduct(id: string, newProduct: any) {
-  const res = await fetch(`${BACKEND_URL}/api/products/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/products/${id}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildHeaders(true),
     body: JSON.stringify(newProduct),
     cache: "no-store",
   });
@@ -55,8 +62,9 @@ export async function updateProduct(id: string, newProduct: any) {
 }
 
 export async function deleteProduct(id: string) {
-  const res = await fetch(`${BACKEND_URL}/api/products/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/products/${id}`, {
     method: "DELETE",
+    headers: buildHeaders(false),
   });
   return await res.json(); //debe esperar que se resuelva antes de retornarla
 }

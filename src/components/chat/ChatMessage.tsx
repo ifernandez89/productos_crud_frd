@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 interface ChatMessageProps {
   messageId?: string;
   role: "user" | "assistant";
@@ -55,7 +55,11 @@ export function ChatMessage({ messageId, role, content, timestamp, isTyping = fa
             : "bg-gradient-to-br from-emerald-500 to-green-600 text-white"
         }`}
       >
-        {isUser ? "Tú" : "🧠"}
+        {isUser ? (
+          "Tú"
+        ) : (
+          <Image src="/JarBees_logo.png" alt="JarBees" width={20} height={20} className="object-contain" />
+        )}
       </div>
 
       {/* Content */}
