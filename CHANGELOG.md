@@ -7,6 +7,12 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 ## [Unreleased]
 
 ### Added
+- **PWA completa configurada**: 
+  - Componente `InstallPWA` con prompt elegante de instalación
+  - Página `/offline` con reconexión automática cada 5 segundos
+  - Manifest.json completo con shortcuts (Nuevo Chat, Astronomía, Matemáticas)
+  - Soporte para iconos maskable (Android adaptativos)
+  - Documentación completa en `PWA_JARBEES.md` y `GENERATE_ICONS.md`
 - **Reconocimiento de voz continuo**: Implementado modo `continuous: true` en ambos componentes de chat para grabación sin cortes por silencio
 - **Voz masculina estilo JARVIS**: Sistema de selección automática de voces masculinas con parámetros optimizados (`pitch: 0.75`, `rate: 0.92`)
 - **Botón de detener audio**: Nuevo botón visible en el panel de historial para detener la reproducción de respuestas
