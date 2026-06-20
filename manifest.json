@@ -1,23 +1,23 @@
 {
   "name": "JarBees",
   "short_name": "JarBees",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#06b6d4",
   "icons": [
     {
-      "src": "/apple-touch-icon.png",
+      "src": "apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "/favicon-32.png",
+      "src": "favicon-32.png",
       "sizes": "32x32",
       "type": "image/png"
     },
     {
-      "src": "/favicon-16.png",
+      "src": "favicon-16.png",
       "sizes": "16x16",
       "type": "image/png"
     }
