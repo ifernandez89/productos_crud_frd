@@ -18,3 +18,11 @@ async function ProductEditPage(props: PageProps) {
 }
 
 export default ProductEditPage;
+
+// Provide static params for export; empty by default. Set
+// `NEXT_PUBLIC_STATIC_PRODUCT_IDS` to a comma-separated list to export product pages.
+export async function generateStaticParams() {
+  const ids = process.env.NEXT_PUBLIC_STATIC_PRODUCT_IDS;
+  if (!ids) return [];
+  return ids.split(',').map((id) => ({ id: id.trim() }));
+}
