@@ -19,6 +19,16 @@ export default ProductEditPage;
 // Provide static params for export; empty by default. Set
 // `NEXT_PUBLIC_STATIC_PRODUCT_IDS` to a comma-separated list to export product pages.
 export async function generateStaticParams() {
+  try {
+    const { getProducts } = await import('@/app/services/products.api');
+    const products = await getProducts();
+    if (Array.isArray(products) && products.length > 0) {
+      return products.map((p: any) => ({ id: String(p.id || p._id || p.slug) }));
+    }
+  } catch (e) {
+    // ignore and fallback
+  }
+
   const ids = process.env.NEXT_PUBLIC_STATIC_PRODUCT_IDS;
   if (!ids) return [];
   return ids.split(',').map((id) => ({ id: id.trim() }));

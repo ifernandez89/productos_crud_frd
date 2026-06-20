@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import ProductDetailContainer from "@/components/products/ProductDetailsContainer";
-import { getProduct } from "@/app/services/products.api";
+import { getProduct, getProducts } from "@/app/services/products.api";
 
 
 // Allow flexible props typing for build-time params handling
@@ -19,6 +19,16 @@ export async function generateMetadata(props: any): Promise<Metadata> {
 // By default we export no product pages. To export specific products at build
 // time, set the environment variable `NEXT_PUBLIC_STATIC_PRODUCT_IDS="id1,id2"`.
 export async function generateStaticParams() {
+  // Try to fetch product IDs from backend at build time (CI should set NEXT_PUBLIC_BACKEND_URL)
+  try {
+    const products = await getProducts();
+    if (Array.isArray(products) && products.length > 0) {
+      return products.map((p: any) => ({ id: String(p.id || p._id || p.slug) }));
+    }
+  } catch (e) {
+    // ignore and fallback
+  }
+
   const ids = process.env.NEXT_PUBLIC_STATIC_PRODUCT_IDS;
   if (!ids) return [];
   return ids.split(',').map((id) => ({ id: id.trim() }));
