@@ -5,7 +5,9 @@ import ProductFormContainer from "@/components/forms/ProductFormContainer";
 import { getProduct } from "@/app/services/products.api";
 import { Product } from "@/components/products/models/Product";
 
-type PageProps = { params?: { id?: string } };
+// Accept either a params object or a Promise resolving to params to match
+// Next's generated `PageProps` typing during build.
+type PageProps = { params?: { id?: string } | Promise<{ id?: string }> };
 
 export default function ProductEditPage(props: PageProps) {
   const params = props?.params || {};
