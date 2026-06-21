@@ -303,7 +303,7 @@ export default function ChatInterface() {
     const startTime = performance.now(); // Rastrear tiempo inicio
 
     try {
-        const { answer } = await hacerPregunta(trimmedInput, "ollama");
+        const { answer } = await hacerPregunta(trimmedInput, "ollama", { autoGeolocation: true });
       const endTime = performance.now(); // Rastrear tiempo fin
       const responseTime = endTime - startTime; // Calcular tiempo total
 
@@ -404,7 +404,7 @@ export default function ChatInterface() {
     const startTime = performance.now();
 
     try {
-        const { answer } = await hacerPregunta(prompt, "ollama");
+        const { answer } = await hacerPregunta(prompt, "ollama", { autoGeolocation: true });
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 

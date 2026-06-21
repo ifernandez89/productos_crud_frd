@@ -257,7 +257,7 @@ export default function ChatInterfaceSimple() {
     const startTime = performance.now();
 
     try {
-      const { answer } = await hacerPregunta(inputValue, "ollama");
+      const { answer } = await hacerPregunta(inputValue, "ollama", { autoGeolocation: true });
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 

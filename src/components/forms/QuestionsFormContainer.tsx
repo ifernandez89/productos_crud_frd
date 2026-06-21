@@ -502,7 +502,7 @@ export default function ChatAgent() {
     setLoading(true);
     iniciarContador();
     try {
-      const { answer } = await hacerPregunta(data.pregunta, "ollama");
+      const { answer } = await hacerPregunta(data.pregunta, "ollama", { autoGeolocation: true });
       const tiempoFinal = tiempoRef.current;
       detenerContador();
       reproducirAudio(answer);
