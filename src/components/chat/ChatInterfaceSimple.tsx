@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ChatInputSimple } from "./ChatInputSimple";
 import { ChatMessageCompact } from "./ChatMessageCompact";
 import { loadConversation, saveConversation } from "@/lib/db";
+import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 import { hacerPregunta } from "../../app/services/preguntas.api";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -48,6 +49,7 @@ interface SpeechRecognitionLike {
 export default function ChatInterfaceSimple() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [inputError, setInputError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [audioEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -232,12 +234,20 @@ export default function ChatInterfaceSimple() {
   };
 
   const handleSubmit = async () => {
-    if (!inputValue.trim()) return;
+    const trimmedInput = inputValue.trim();
+    if (!trimmedInput) return;
+
+    if (trimmedInput.length > MAX_MESSAGE_LENGTH) {
+      setInputError(`Mensaje máximo: ${MAX_MESSAGE_LENGTH} caracteres.`);
+      return;
+    }
+
+    setInputError(null);
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: inputValue,
+      content: trimmedInput,
       timestamp: new Date(),
     };
 
@@ -354,11 +364,21 @@ export default function ChatInterfaceSimple() {
       {/* Input */}
       <ChatInputSimple
         value={inputValue}
-        onChange={setInputValue}
+        onChange={(value) => {
+          if (value.length > MAX_MESSAGE_LENGTH) {
+            setInputError(`Mensaje máximo: ${MAX_MESSAGE_LENGTH} caracteres.`);
+            setInputValue(value.slice(0, MAX_MESSAGE_LENGTH));
+          } else {
+            setInputError(null);
+            setInputValue(value);
+          }
+        }}
         onSubmit={handleSubmit}
         onVoiceToggle={toggleVoiceInput}
         isListening={isListening}
         isTyping={isTyping}
+        maxLength={MAX_MESSAGE_LENGTH}
+        errorMessage={inputError ?? undefined}
       />
     </div>
   );

@@ -11,18 +11,19 @@ try {
   // package not installed — continue without analyzer
 }
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const nextConfig: NextConfig = {
   // Produce a fully static export suitable for GitHub Pages
   output: 'export',
-  // Base path para GitHub Pages (nombre del repo)
-  basePath: '/productos_crud_frd',
-  // Asset prefix para que los recursos se carguen correctamente
-  assetPrefix: '/productos_crud_frd',
-  // Exportar basePath como variable de entorno
+  // Base path and asset prefix only in production.
+  basePath: isProduction ? '/productos_crud_frd' : '',
+  assetPrefix: isProduction ? '/productos_crud_frd' : '',
+  // Export basePath as env var for runtime consumption.
   env: {
-    NEXT_PUBLIC_BASE_PATH: '/productos_crud_frd',
+    NEXT_PUBLIC_BASE_PATH: isProduction ? '/productos_crud_frd' : '',
   },
-images: {
+  images: {
     unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: 'images.frandroid.com' },

@@ -14,6 +14,8 @@ interface ChatInputBarProps {
   isSpeaking: boolean;
   onToggleSpeaking: () => void;
   onActionClick: (action: "image" | "write" | "search") => void;
+  maxLength: number;
+  errorMessage?: string;
 }
 
 export function ChatInputBar({
@@ -28,6 +30,8 @@ export function ChatInputBar({
   isSpeaking,
   onToggleSpeaking,
   onActionClick,
+  maxLength,
+  errorMessage,
 }: ChatInputBarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -78,6 +82,7 @@ export function ChatInputBar({
               className="w-full resize-none bg-transparent px-2 py-2 text-[15px] text-slate-100 placeholder-slate-500 focus:outline-none"
               rows={1}
               style={{ minHeight: "46px" }}
+              maxLength={maxLength}
             />
 
             <div className="flex items-center gap-1 pt-1">
@@ -122,6 +127,10 @@ export function ChatInputBar({
             </button>
             </div>
           </div>
+
+          {errorMessage && (
+            <p className="px-3 pb-1 text-xs text-red-400">{errorMessage}</p>
+          )}
 
           <div className="mt-1 flex flex-wrap items-center gap-2 border-t border-slate-800/80 px-2 pb-2 pt-2">
             {[

@@ -9,6 +9,8 @@ interface ChatInputSimpleProps {
   onVoiceToggle: () => void;
   isListening: boolean;
   isTyping: boolean;
+  maxLength: number;
+  errorMessage?: string;
 }
 
 export function ChatInputSimple({
@@ -18,6 +20,8 @@ export function ChatInputSimple({
   onVoiceToggle,
   isListening,
   isTyping,
+  maxLength,
+  errorMessage,
 }: ChatInputSimpleProps) {
   const [showTools, setShowTools] = useState(false);
 
@@ -79,6 +83,7 @@ export function ChatInputSimple({
               placeholder="Escribe un mensaje..."
               disabled={isTyping}
               rows={1}
+              maxLength={maxLength}
               className="w-full resize-none rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 pr-12 text-sm text-slate-100 placeholder-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 disabled:opacity-50"
               style={{
                 maxHeight: "200px",
@@ -86,6 +91,9 @@ export function ChatInputSimple({
               }}
             />
           </div>
+          {errorMessage && (
+            <p className="mt-2 text-xs text-red-400">{errorMessage}</p>
+          )}
 
           {/* Voice button */}
           <button

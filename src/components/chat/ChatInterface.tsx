@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { ChatHeroSection } from "./ChatHeroSection";
 const ChatPanel = dynamic(() => import("./ChatPanel").then(mod => mod.ChatPanel), { ssr: false });
 import { loadConversation, saveConversation } from "@/lib/db";
+import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 import { ChatInputBar } from "./ChatInputBar";
 import { hacerPregunta, getLastAssistantMessage } from "../../app/services/preguntas.api";
 
@@ -51,6 +52,7 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const MAX_IN_MEMORY = 200; // keep recent messages in memory for low-end devices
   const [inputValue, setInputValue] = useState("");
+  const [inputError, setInputError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -278,12 +280,20 @@ export default function ChatInterface() {
 
   // Handle message submission
   const handleSubmit = async () => {
-    if (!inputValue.trim()) return;
+    const trimmedInput = inputValue.trim();
+    if (!trimmedInput) return;
+
+    if (trimmedInput.length > MAX_MESSAGE_LENGTH) {
+      setInputError(`Mensaje máximo: ${MAX_MESSAGE_LENGTH} caracteres.`);
+      return;
+    }
+
+    setInputError(null);
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: inputValue,
+      content: trimmedInput,
       timestamp: new Date(),
     };
 
@@ -293,7 +303,7 @@ export default function ChatInterface() {
     const startTime = performance.now(); // Rastrear tiempo inicio
 
     try {
-        const { answer } = await hacerPregunta(inputValue, "ollama");
+        const { answer } = await hacerPregunta(trimmedInput, "ollama");
       const endTime = performance.now(); // Rastrear tiempo fin
       const responseTime = endTime - startTime; // Calcular tiempo total
 
@@ -523,7 +533,15 @@ export default function ChatInterface() {
       {view === "chat" && (
         <ChatInputBar
           value={inputValue}
-          onChange={setInputValue}
+          onChange={(value) => {
+            if (value.length > MAX_MESSAGE_LENGTH) {
+              setInputError(`Mensaje máximo: ${MAX_MESSAGE_LENGTH} caracteres.`);
+              setInputValue(value.slice(0, MAX_MESSAGE_LENGTH));
+            } else {
+              setInputError(null);
+              setInputValue(value);
+            }
+          }}
           onSubmit={handleSubmit}
           onVoiceStart={toggleVoiceInput}
           onVoiceStop={toggleVoiceInput}
@@ -533,6 +551,8 @@ export default function ChatInterface() {
           isSpeaking={isSpeaking}
           onToggleSpeaking={() => setIsSpeaking(!isSpeaking)}
           onActionClick={handleActionClick}
+          maxLength={MAX_MESSAGE_LENGTH}
+          errorMessage={inputError ?? undefined}
         />
       )}
     </div>

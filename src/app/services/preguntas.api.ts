@@ -12,6 +12,8 @@ type JarBeesResponse = {
   lastMessage?: string;
 };
 
+import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
+
 const getStoredSessionId = (): string | null => {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(JARBEES_SESSION_KEY);
@@ -36,6 +38,10 @@ export async function hacerPregunta(
   message: string,
   provider: "ollama" | "openrouter" = "ollama"
 ): Promise<JarBeesResponse> {
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    throw new Error(`Mensaje demasiado largo. Máximo ${MAX_MESSAGE_LENGTH} caracteres.`);
+  }
+
   try {
     const sessionId = getStoredSessionId();
     const headers: Record<string, string> = {

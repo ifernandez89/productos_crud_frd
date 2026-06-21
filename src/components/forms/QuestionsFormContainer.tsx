@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { hacerPregunta } from "../../app/services/preguntas.api";
+import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 
 const LoadingSVG = () => (
   <svg
@@ -40,6 +41,10 @@ type HistorialItem = {
   tiempoRespuesta: number; // en segundos
 };
 
+type FormValues = {
+  pregunta: string;
+};
+
 type SpeechRecognitionLike = {
   lang: string;
   interimResults: boolean;
@@ -69,7 +74,14 @@ type SpeechRecognitionErrorLike = {
 };
 
 export default function ChatAgent() {
-  const { register, handleSubmit, reset, setValue, getValues } = useForm();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useForm<FormValues>();
   const [loading, setLoading] = useState(false);
   const [historial, setHistorial] = useState<HistorialItem[]>([]);
   const [tiempo, setTiempo] = useState(0);
@@ -591,10 +603,20 @@ export default function ChatAgent() {
               <div className="space-y-3">
                 <textarea
                   placeholder="Escribí tu texto, pregunta o tema a resumir..."
-                  {...register("pregunta", { required: true })}
+                  {...register("pregunta", {
+                    required: "La pregunta no puede estar vacía.",
+                    maxLength: {
+                      value: MAX_MESSAGE_LENGTH,
+                      message: `Mensaje máximo: ${MAX_MESSAGE_LENGTH} caracteres.`,
+                    },
+                  })}
                   onKeyDown={handleQuestionHistoryNavigation}
                   className="min-h-[120px] text-sm border border-gray-300 rounded p-2 w-full resize-none bg-gray-100 text-black"
+                  maxLength={MAX_MESSAGE_LENGTH}
                 />
+                {errors.pregunta?.message && (
+                  <p className="text-sm text-red-500">{errors.pregunta.message}</p>
+                )}
                 <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Acciones rápidas
