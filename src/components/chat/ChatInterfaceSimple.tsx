@@ -5,16 +5,17 @@ import { ChatInputSimple } from "./ChatInputSimple";
 import { ChatMessageCompact } from "./ChatMessageCompact";
 import { loadConversation, saveConversation } from "@/lib/db";
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
-import { hacerPregunta } from "../../app/services/preguntas.api";
+import { hacerPregunta, classifyError } from "../../app/services/preguntas.api";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 interface Message {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
   timestamp: Date;
   responseTime?: number;
+  isError?: boolean;
 }
 
 interface SpeechRecognitionEventLike extends Event {
@@ -291,8 +292,15 @@ export default function ChatInterfaceSimple() {
         }, interval * idx);
       });
     } catch (error) {
-      console.error("Error:", error);
+      const errorMsg = classifyError(error);
       setIsTyping(false);
+      addMessage({
+        id: (Date.now() + 1).toString(),
+        role: "system",
+        content: errorMsg,
+        timestamp: new Date(),
+        isError: true,
+      });
     }
   };
 
@@ -348,6 +356,7 @@ export default function ChatInterfaceSimple() {
             content={msg.content}
             timestamp={msg.timestamp}
             responseTime={msg.responseTime}
+            isError={msg.isError}
           />
         ))}
 

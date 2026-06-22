@@ -5,6 +5,60 @@ import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
 const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
+
+// Mensajes de error según el tipo de falla
+export const SERVICE_ERRORS = {
+  backend_unreachable: "⚠️ No pude conectarme al servidor. Verificá que el backend esté corriendo.",
+  ollama_down: "⚠️ El modelo de IA (Ollama) no está disponible en este momento. Intentá más tarde.",
+  timeout: "⚠️ La respuesta tardó demasiado. El servidor puede estar bajo carga, intentá de nuevo.",
+  server_error: "⚠️ Error interno del servidor. Si el problema persiste, reiniciá el backend.",
+  network_error: "⚠️ Sin conexión a internet. Verificá tu red e intentá de nuevo.",
+  unknown: "⚠️ Ocurrió un error inesperado. Intentá de nuevo.",
+} as const;
+
+// Clasifica el error y devuelve el mensaje adecuado
+export function classifyError(error: unknown): string {
+  if (!(error instanceof Error)) return SERVICE_ERRORS.unknown;
+
+  const msg = error.message.toLowerCase();
+
+  // Sin red / backend no responde
+  if (
+    msg.includes("failed to fetch") ||
+    msg.includes("networkerror") ||
+    msg.includes("network request failed") ||
+    msg.includes("econnrefused")
+  ) {
+    // Distinguir sin red vs backend caído según navigator.onLine
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return SERVICE_ERRORS.network_error;
+    }
+    return SERVICE_ERRORS.backend_unreachable;
+  }
+
+  // Timeout
+  if (msg.includes("timeout") || msg.includes("aborted") || msg.includes("timed out")) {
+    return SERVICE_ERRORS.timeout;
+  }
+
+  // Ollama caído (el backend responde pero Ollama interno no)
+  if (
+    msg.includes("ollama") ||
+    msg.includes("connect econnrefused 127.0.0.1:11434") ||
+    msg.includes("model") ||
+    msg.includes("503") ||
+    msg.includes("service unavailable")
+  ) {
+    return SERVICE_ERRORS.ollama_down;
+  }
+
+  // Error 5xx genérico del servidor
+  if (msg.includes("500") || msg.includes("502") || msg.includes("504") || msg.includes("error en la api")) {
+    return SERVICE_ERRORS.server_error;
+  }
+
+  return `⚠️ ${error.message}`;
+}
 const JARBEES_SESSION_KEY = "jarbees_session_id";
 const LAST_ASSISTANT_MESSAGE_KEY = "jarbees_last_assistant_message";
 const GEO_CACHE_KEY = "jarbees_geo_coords";

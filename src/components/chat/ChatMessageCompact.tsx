@@ -1,18 +1,34 @@
 "use client";
-import { Clock } from "lucide-react";
+import { Clock, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 interface ChatMessageCompactProps {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
   timestamp?: Date;
   responseTime?: number;
+  isError?: boolean;
 }
 
-export function ChatMessageCompact({ role, content, responseTime }: ChatMessageCompactProps) {
+export function ChatMessageCompact({ role, content, responseTime, isError }: ChatMessageCompactProps) {
   const isUser = role === "user";
+  const isSystem = role === "system";
+
+  // Mensaje de error del sistema
+  if (isSystem || isError) {
+    return (
+      <div className="py-3">
+        <div className="mx-auto flex w-full max-w-3xl px-4">
+          <div className="flex w-full items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" />
+            <p className="text-sm text-amber-300">{content}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex gap-3 py-4 ${isUser ? "" : "bg-slate-900/30"}`}>
@@ -25,11 +41,11 @@ export function ChatMessageCompact({ role, content, responseTime }: ChatMessageC
             </div>
           ) : (
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-1.5">
-              <Image 
+              <Image
                 src={`${BASE_PATH}/JarBees_logo.png`}
-                alt="JarBees" 
-                width={24} 
-                height={24} 
+                alt="JarBees"
+                width={24}
+                height={24}
                 className="object-contain"
               />
             </div>
