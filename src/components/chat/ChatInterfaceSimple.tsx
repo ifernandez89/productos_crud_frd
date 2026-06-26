@@ -5,7 +5,7 @@ import { ChatInputSimple } from "./ChatInputSimple";
 import { ChatMessageCompact } from "./ChatMessageCompact";
 import { loadConversation, saveConversation } from "@/lib/db";
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
-import { hacerPregunta, classifyError } from "../../app/services/preguntas.api";
+import { hacerPregunta, classifyError, initSession, fetchHistory, type HistoryMessage } from "../../app/services/preguntas.api";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -133,18 +133,40 @@ export default function ChatInterfaceSimple() {
     });
   };
 
-  // Load conversation
+  // ─── NIVEL 1: Init sesión + recuperar historial del backend ─────────────────
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const saved = await loadConversation('default');
+        // 1. Obtener / crear sessionId en el backend
+        const sessionId = await initSession();
+
+        if (!mounted) return;
+
+        if (sessionId) {
+          // 2. Recuperar historial del backend para reconstruir el chat
+          const history = await fetchHistory(sessionId);
+
+          if (mounted && history.length > 0) {
+            const msgs: Message[] = history.map((h: HistoryMessage, i: number) => ({
+              id: `history-${i}`,
+              role: h.role,
+              content: h.content,
+              timestamp: h.timestamp ? new Date(h.timestamp) : new Date(),
+            }));
+            setMessages(msgs.slice(-MAX_IN_MEMORY));
+            return; // historial del backend tiene prioridad
+          }
+        }
+
+        // 3. Fallback: IndexedDB local si el backend no tiene historial
+        const saved = await loadConversation("default");
         if (mounted && saved?.messages) {
           const msgs = Array.isArray(saved.messages) ? saved.messages : [];
           setMessages(msgs.slice(-MAX_IN_MEMORY));
         }
       } catch {
-        // ignore
+        // Si todo falla, arrancamos con chat vacío
       }
     })();
 

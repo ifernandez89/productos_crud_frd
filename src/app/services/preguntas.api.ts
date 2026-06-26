@@ -6,79 +6,71 @@ export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
 const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
-// Mensajes de error según el tipo de falla
+// ─── Keys localStorage ────────────────────────────────────────────────────────
+const JARBEES_SESSION_KEY        = "jarbees_session_id";
+const LAST_ASSISTANT_MESSAGE_KEY = "jarbees_last_assistant_message";
+const GEO_CACHE_KEY              = "jarbees_geo_coords";
+const GEO_CACHE_TTL_MS           = 24 * 60 * 60 * 1000;
+
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+export type JarBeesResponse = {
+  answer: string;
+  sessionId: string | null;
+  lastMessage?: string;
+};
+
+export type HistoryMessage = {
+  role: "user" | "assistant";
+  content: string;
+  timestamp?: string;
+};
+
+type GeoCoords = { latitude: number; longitude: number };
+type GeoCache  = GeoCoords & { timestamp: number };
+
+// ─── Mensajes de error ────────────────────────────────────────────────────────
 export const SERVICE_ERRORS = {
   backend_unreachable: "⚠️ No pude conectarme al servidor. Verificá que el backend esté corriendo.",
-  ollama_down: "⚠️ El modelo de IA (Ollama) no está disponible en este momento. Intentá más tarde.",
-  timeout: "⚠️ La respuesta tardó demasiado. El servidor puede estar bajo carga, intentá de nuevo.",
-  server_error: "⚠️ Error interno del servidor. Si el problema persiste, reiniciá el backend.",
-  network_error: "⚠️ Sin conexión a internet. Verificá tu red e intentá de nuevo.",
-  unknown: "⚠️ Ocurrió un error inesperado. Intentá de nuevo.",
+  ollama_down:         "⚠️ El modelo de IA (Ollama) no está disponible en este momento. Intentá más tarde.",
+  timeout:             "⚠️ La respuesta tardó demasiado. El servidor puede estar bajo carga, intentá de nuevo.",
+  server_error:        "⚠️ Error interno del servidor. Si el problema persiste, reiniciá el backend.",
+  network_error:       "⚠️ Sin conexión a internet. Verificá tu red e intentá de nuevo.",
+  unknown:             "⚠️ Ocurrió un error inesperado. Intentá de nuevo.",
 } as const;
 
-// Clasifica el error y devuelve el mensaje adecuado
 export function classifyError(error: unknown): string {
   if (!(error instanceof Error)) return SERVICE_ERRORS.unknown;
-
   const msg = error.message.toLowerCase();
 
-  // Sin red / backend no responde
   if (
     msg.includes("failed to fetch") ||
     msg.includes("networkerror") ||
     msg.includes("network request failed") ||
     msg.includes("econnrefused")
   ) {
-    // Distinguir sin red vs backend caído según navigator.onLine
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      return SERVICE_ERRORS.network_error;
-    }
-    return SERVICE_ERRORS.backend_unreachable;
+    return typeof navigator !== "undefined" && !navigator.onLine
+      ? SERVICE_ERRORS.network_error
+      : SERVICE_ERRORS.backend_unreachable;
   }
-
-  // Timeout
-  if (msg.includes("timeout") || msg.includes("aborted") || msg.includes("timed out")) {
+  if (msg.includes("timeout") || msg.includes("aborted") || msg.includes("timed out"))
     return SERVICE_ERRORS.timeout;
-  }
-
-  // Ollama caído (el backend responde pero Ollama interno no)
   if (
     msg.includes("ollama") ||
-    msg.includes("connect econnrefused 127.0.0.1:11434") ||
-    msg.includes("model") ||
+    msg.includes("11434") ||
     msg.includes("503") ||
     msg.includes("service unavailable")
-  ) {
+  )
     return SERVICE_ERRORS.ollama_down;
-  }
-
-  // Error 5xx genérico del servidor
-  if (msg.includes("500") || msg.includes("502") || msg.includes("504") || msg.includes("error en la api")) {
+  if (
+    msg.includes("500") || msg.includes("502") ||
+    msg.includes("504") || msg.includes("error en la api")
+  )
     return SERVICE_ERRORS.server_error;
-  }
 
   return `⚠️ ${error.message}`;
 }
-const JARBEES_SESSION_KEY = "jarbees_session_id";
-const LAST_ASSISTANT_MESSAGE_KEY = "jarbees_last_assistant_message";
-const GEO_CACHE_KEY = "jarbees_geo_coords";
-const GEO_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 horas
 
-type JarBeesResponse = {
-  answer: string;
-  sessionId: string | null;
-  lastMessage?: string;
-};
-
-type GeoCoords = {
-  latitude: number;
-  longitude: number;
-};
-
-type GeoCache = GeoCoords & {
-  timestamp: number;
-};
-
+// ─── localStorage helpers ─────────────────────────────────────────────────────
 const getStoredSessionId = (): string | null => {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(JARBEES_SESSION_KEY);
@@ -94,6 +86,12 @@ const storeLastAssistantMessage = (message: string | null) => {
   window.localStorage.setItem(LAST_ASSISTANT_MESSAGE_KEY, message);
 };
 
+export const getLastAssistantMessage = (): string | null => {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(LAST_ASSISTANT_MESSAGE_KEY);
+};
+
+// ─── Geolocalización ─────────────────────────────────────────────────────────
 const getCachedGeoCoords = (): GeoCoords | null => {
   if (typeof window === "undefined") return null;
   try {
@@ -104,78 +102,98 @@ const getCachedGeoCoords = (): GeoCoords | null => {
       window.localStorage.removeItem(GEO_CACHE_KEY);
       return null;
     }
-    return {
-      latitude: cache.latitude,
-      longitude: cache.longitude,
-    };
-  } catch {
-    return null;
-  }
+    return { latitude: cache.latitude, longitude: cache.longitude };
+  } catch { return null; }
 };
 
 const storeGeoCoords = (coords: GeoCoords) => {
   if (typeof window === "undefined") return;
   try {
-    const cache: GeoCache = {
-      ...coords,
-      timestamp: Date.now(),
-    };
-    window.localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // ignore storage errors
-  }
+    window.localStorage.setItem(
+      GEO_CACHE_KEY,
+      JSON.stringify({ ...coords, timestamp: Date.now() })
+    );
+  } catch { /* ignore */ }
 };
 
-const getCurrentPosition = (): Promise<GeoCoords> => {
-  return new Promise((resolve, reject) => {
+const getCurrentPosition = (): Promise<GeoCoords> =>
+  new Promise((resolve, reject) => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      reject(new Error("Geolocalización no soportada"));
-      return;
+      reject(new Error("Geolocalización no soportada")); return;
     }
-
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      (error) => {
-        reject(error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 600000,
-      }
+      (p) => resolve({ latitude: p.coords.latitude, longitude: p.coords.longitude }),
+      reject,
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 600000 }
     );
   });
-};
 
-const isWeatherQuery = (message: string): boolean => {
-  const normalized = message.toLowerCase();
-  return /\b(clima|tiempo|temperatura|lluvia|pron[oó]stico|meteorolog[ií]a|nublado|soleado|viento|tormenta|nevado|helada|humedad)\b/.test(normalized);
-};
+const isWeatherQuery = (message: string) =>
+  /\b(clima|tiempo|temperatura|lluvia|pron[oó]stico|meteorolog[ií]a|nublado|soleado|viento|tormenta|nevado|helada|humedad)\b/
+    .test(message.toLowerCase());
 
 const resolveGeoCoords = async (message: string): Promise<GeoCoords | null> => {
   if (!isWeatherQuery(message)) return null;
   const cached = getCachedGeoCoords();
   if (cached) return cached;
-
   try {
     const coords = await getCurrentPosition();
     storeGeoCoords(coords);
     return coords;
+  } catch { return null; }
+};
+
+// ─── Headers helper ───────────────────────────────────────────────────────────
+const buildHeaders = (): Record<string, string> => {
+  const h: Record<string, string> = { "Content-Type": "application/json" };
+  if (API_TOKEN) h["Authorization"] = `Bearer ${API_TOKEN}`;
+  return h;
+};
+
+// ─── NIVEL 1: Obtener / crear sesión ─────────────────────────────────────────
+/**
+ * Llama a GET /api/jarbees/session?sessionId=xxx una sola vez al inicio.
+ * Si el backend no tiene esa sesión, crea una nueva y la devuelve.
+ * Guarda el sessionId resultante en localStorage.
+ */
+export async function initSession(): Promise<string | null> {
+  try {
+    const stored = getStoredSessionId();
+    const url = stored
+      ? `${BASE_URL}/api/jarbees/session?sessionId=${stored}`
+      : `${BASE_URL}/api/jarbees/session`;
+
+    const res = await fetch(url, { method: "GET", headers: buildHeaders() });
+    if (!res.ok) return stored;
+
+    const data = (await res.json()) as { sessionId: string };
+    storeSessionId(data.sessionId);
+    return data.sessionId;
   } catch {
-    return null;
+    // backend caído — devolvemos el id local si existe
+    return getStoredSessionId();
   }
-};
+}
 
-export const getLastAssistantMessage = (): string | null => {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(LAST_ASSISTANT_MESSAGE_KEY);
-};
+// ─── NIVEL 1: Recuperar historial al recargar ─────────────────────────────────
+/**
+ * Llama a GET /api/jarbees/history?sessionId=xxx para reconstruir el chat.
+ */
+export async function fetchHistory(sessionId: string): Promise<HistoryMessage[]> {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/api/jarbees/history?sessionId=${sessionId}`,
+      { method: "GET", headers: buildHeaders() }
+    );
+    if (!res.ok) return [];
+    const data = (await res.json()) as { messages: HistoryMessage[] };
+    return Array.isArray(data.messages) ? data.messages : [];
+  } catch {
+    return [];
+  }
+}
 
+// ─── NIVEL 1/2/3: Enviar pregunta ─────────────────────────────────────────────
 export async function hacerPregunta(
   message: string,
   provider: "ollama" | "openrouter" = "ollama",
@@ -187,10 +205,6 @@ export async function hacerPregunta(
 
   try {
     const sessionId = getStoredSessionId();
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    if (API_TOKEN) headers["Authorization"] = `Bearer ${API_TOKEN}`;
 
     let latitude: number | undefined;
     let longitude: number | undefined;
@@ -200,18 +214,10 @@ export async function hacerPregunta(
       longitude = options.longitude;
     } else if (options?.autoGeolocation) {
       const coords = await resolveGeoCoords(message);
-      if (coords) {
-        latitude = coords.latitude;
-        longitude = coords.longitude;
-      }
+      if (coords) { latitude = coords.latitude; longitude = coords.longitude; }
     }
 
-    const body: Record<string, unknown> = {
-      message,
-      sessionId,
-      provider,
-    };
-
+    const body: Record<string, unknown> = { message, sessionId, provider };
     if (latitude !== undefined && longitude !== undefined) {
       body.latitude = latitude;
       body.longitude = longitude;
@@ -219,7 +225,7 @@ export async function hacerPregunta(
 
     const res = await fetch(`${BASE_URL}/api/jarbees/query`, {
       method: "POST",
-      headers,
+      headers: buildHeaders(),
       body: JSON.stringify(body),
     });
 
@@ -229,22 +235,13 @@ export async function hacerPregunta(
     }
 
     const data = (await res.json()) as JarBeesResponse;
-    if (data.sessionId) {
-      storeSessionId(data.sessionId);
-    }
+    if (data.sessionId) storeSessionId(data.sessionId);
 
     const lastMessage = data.lastMessage ?? data.answer;
     storeLastAssistantMessage(lastMessage);
 
-    return {
-      ...data,
-      lastMessage,
-    };
+    return { ...data, lastMessage };
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    } else {
-      throw new Error("Ocurrió un error desconocido.");
-    }
+    throw error instanceof Error ? error : new Error("Ocurrió un error desconocido.");
   }
 }
