@@ -2,20 +2,7 @@
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000";
 const TOKEN_KEY = "jarbees_auth_token";
-
-// En NestJS el prefijo global puede ser /api o ninguno.
-// AUTH_PATH apunta directamente a /auth (sin /api) porque es ruta pública.
-// Si tu backend usa un prefijo global como /api, cambiá esto a `${BASE_URL}/api`
-const AUTH_BASE = process.env.NEXT_PUBLIC_AUTH_BASE_URL ?? BASE_URL;
-
-export type LoginCredentials = {
-  password: string;
-};
-
-export type AuthResponse = {
-  token: string;
-  expiresIn?: string;
-};
+const MASTER_PASSWORD = process.env.NEXT_PUBLIC_MASTER_PASSWORD ?? "";
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
 export const getToken = (): string | null => {
@@ -23,95 +10,48 @@ export const getToken = (): string | null => {
   return window.localStorage.getItem(TOKEN_KEY);
 };
 
-export const storeToken = (token: string) => {
+export const storeToken = (token: string): void => {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(TOKEN_KEY, token);
 };
 
-export const clearToken = () => {
+export const clearToken = (): void => {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(TOKEN_KEY);
+  window.localStorage.removeItem("jarbees_session_id");
 };
 
 // ─── Headers con JWT ─────────────────────────────────────────────────────────
 export const buildAuthHeaders = (): Record<string, string> => {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
   const token = getToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   return headers;
 };
 
-// ─── Login ────────────────────────────────────────────────────────────────────
+// ─── Auto-login silencioso ────────────────────────────────────────────────────
 /**
- * POST /auth/login
- * Obtiene el token JWT del backend
+ * Obtiene un token JWT usando la MASTER_PASSWORD del .env.
+ * Si ya hay un token en localStorage lo reutiliza directamente.
+ * Se llama una vez al iniciar el chat y al recibir un 401.
  */
-export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
+export async function autoLogin(): Promise<void> {
+  // Reutilizar token existente sin verificar (evita una petición extra)
+  const existing = getToken();
+  if (existing) return;
+
+  if (!MASTER_PASSWORD) return;
+
   try {
-    const res = await fetch(`${AUTH_BASE}/auth/login`, {
+    const res = await fetch(`${BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
+      body: JSON.stringify({ password: MASTER_PASSWORD }),
     });
-
-    if (!res.ok) {
-      // NestJS devuelve JSON: { message, error, statusCode }
-      let errorMessage = "Error al iniciar sesión";
-      try {
-        const errorBody = (await res.json()) as { message?: string };
-        if (res.status === 401) errorMessage = "Usuario o contraseña incorrectos";
-        else if (errorBody.message) errorMessage = errorBody.message;
-      } catch {
-        if (res.status === 401) errorMessage = "Usuario o contraseña incorrectos";
-      }
-      throw new Error(errorMessage);
-    }
-
-    const data = (await res.json()) as AuthResponse;
-    storeToken(data.token);
-    return data;
-  } catch (error) {
-    throw error instanceof Error ? error : new Error("Error desconocido al iniciar sesión");
-  }
-}
-
-// ─── Verify ───────────────────────────────────────────────────────────────────
-/**
- * GET /auth/verify
- * Verifica si el token actual es válido
- */
-export async function verifyToken(): Promise<boolean> {
-  try {
-    const token = getToken();
-    if (!token) return false;
-
-    const res = await fetch(`${AUTH_BASE}/auth/verify`, {
-      method: "GET",
-      headers: buildAuthHeaders(),
-    });
-
-    return res.ok;
+    if (!res.ok) return;
+    const data = (await res.json()) as { token?: string };
+    if (data.token) storeToken(data.token);
   } catch {
-    return false;
+    // backend caído — continuar sin token
   }
-}
-
-// ─── Logout ───────────────────────────────────────────────────────────────────
-export function logout() {
-  clearToken();
-  // Opcionalmente: limpiar sessionId también
-  if (typeof window !== "undefined") {
-    window.localStorage.removeItem("jarbees_session_id");
-  }
-}
-
-// ─── Check si está autenticado ────────────────────────────────────────────────
-export async function isAuthenticated(): Promise<boolean> {
-  const token = getToken();
-  if (!token) return false;
-  return await verifyToken();
 }

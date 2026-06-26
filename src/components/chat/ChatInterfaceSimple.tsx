@@ -6,6 +6,7 @@ import { ChatMessageCompact } from "./ChatMessageCompact";
 import { loadConversation, saveConversation } from "@/lib/db";
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 import { hacerPregunta, classifyError, initSession, fetchHistory, type HistoryMessage } from "../../app/services/preguntas.api";
+import { autoLogin } from "../../app/services/auth.api";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -138,6 +139,9 @@ export default function ChatInterfaceSimple() {
     let mounted = true;
     (async () => {
       try {
+        // 0. Auto-login silencioso con master password
+        await autoLogin();
+
         // 1. Obtener / crear sessionId en el backend
         const sessionId = await initSession();
 
@@ -281,7 +285,19 @@ export default function ChatInterfaceSimple() {
     const startTime = performance.now();
 
     try {
-      const { answer } = await hacerPregunta(inputValue, "ollama", { autoGeolocation: true });
+      // Si el token expiró, intentar renovarlo antes de enviar
+      let result;
+      try {
+        result = await hacerPregunta(trimmedInput, "ollama", { autoGeolocation: true });
+      } catch (err) {
+        if (err instanceof Error && err.message === "UNAUTHORIZED") {
+          await autoLogin(); // renovar token
+          result = await hacerPregunta(trimmedInput, "ollama", { autoGeolocation: true });
+        } else {
+          throw err;
+        }
+      }
+      const { answer } = result;
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 
