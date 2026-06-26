@@ -28,11 +28,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await login({ username: username.trim(), password: password.trim() });
+      await login({ username: username.trim(), password: password.trim() });
       
       // El token ya se guardó en localStorage en la función login()
       // Actualizar el estado de autenticación
-      auth.login(response.token);
+      auth.login();
       
       // Redirigir al chat
       router.push("/preguntas/new");

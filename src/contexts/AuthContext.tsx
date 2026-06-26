@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 type AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string) => void;
+  login: () => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
 };
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = (_token: string) => {
+  const login = () => {
     setIsAuthenticated(true);
   };
 
