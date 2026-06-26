@@ -7,6 +7,26 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 ## [Unreleased]
 
 ### Added
+- **Autenticación JWT completa**:
+  - `auth.api.ts`: Servicio con `login()`, `verifyToken()`, `logout()`, `getToken()`, `storeToken()`, `buildAuthHeaders()`
+  - Token JWT con expiración de 30 días, guardado en `localStorage` bajo clave `jarbees_auth_token`
+  - Header `Authorization: Bearer <token>` en todas las peticiones al backend
+  - `AuthContext.tsx`: Proveedor global de estado de autenticación con `isAuthenticated`, `isLoading`, `login()`, `logout()`
+  - `AuthProvider` integrado en `layout.tsx` para disponibilidad en toda la app
+  - Página de login `/login` con formulario usuario/contraseña, manejo de errores y UX consistente con la identidad JarBees
+  - `ProtectedRoute.tsx`: Wrapper que redirige a `/login` si no hay sesión activa, con pantalla de carga mientras verifica el token
+  - Interceptor 401: cualquier petición que retorne `401 Unauthorized` hace logout automático y redirige al login
+  - Página `/preguntas/new` ahora protegida con `ProtectedRoute`
+- **Botón de logout en header del chat**: Ícono `LogOut` + "Salir" en el header del `ChatInterfaceSimple`, visible en desktop
+
+### Changed
+- `preguntas.api.ts`: Reemplazada la función `buildHeaders()` local por `buildAuthHeaders()` de `auth.api.ts`. Todos los llamados al backend ahora incluyen el JWT automáticamente
+- `preguntas.api.ts`: Eliminada variable `NEXT_PUBLIC_API_TOKEN` — el JWT reemplaza el token estático de entorno
+- `layout.tsx`: Removido el wrapper `<main className="container mx-auto pt-5">` que rompía el layout `h-screen` del chat. El contenido ahora ocupa toda la pantalla correctamente
+
+### Fixed
+- Import de `buildAuthHeaders` movido al tope del archivo `preguntas.api.ts` (ES modules no permiten imports en medio del código)
+
 - **UI minimalista estilo ChatGPT/Claude**: 
   - Rediseño completo de la interfaz del chat
   - Herramientas ocultas detrás del botón "+" (Imagen, Buscar Web, Documentos, Memoria, Herramientas)

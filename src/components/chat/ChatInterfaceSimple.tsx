@@ -1,11 +1,13 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { LogOut } from "lucide-react";
 import { ChatInputSimple } from "./ChatInputSimple";
 import { ChatMessageCompact } from "./ChatMessageCompact";
 import { loadConversation, saveConversation } from "@/lib/db";
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 import { hacerPregunta, classifyError, initSession, fetchHistory, type HistoryMessage } from "../../app/services/preguntas.api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -59,6 +61,7 @@ export default function ChatInterfaceSimple() {
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const auth = useAuth();
 
   const MAX_IN_MEMORY = 200;
 
@@ -165,13 +168,18 @@ export default function ChatInterfaceSimple() {
           const msgs = Array.isArray(saved.messages) ? saved.messages : [];
           setMessages(msgs.slice(-MAX_IN_MEMORY));
         }
-      } catch {
+      } catch (error) {
+        // Si es error de autenticación (401), hacer logout
+        if (error instanceof Error && error.message === "UNAUTHORIZED") {
+          auth.logout();
+          return;
+        }
         // Si todo falla, arrancamos con chat vacío
       }
     })();
 
     return () => { mounted = false; };
-  }, []);
+  }, [auth]);
 
   // Save conversation
   useEffect(() => {
@@ -314,6 +322,12 @@ export default function ChatInterfaceSimple() {
         }, interval * idx);
       });
     } catch (error) {
+      // Si es error de autenticación (401), hacer logout
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        auth.logout();
+        return;
+      }
+      
       const errorMsg = classifyError(error);
       setIsTyping(false);
       addMessage({
@@ -346,6 +360,14 @@ export default function ChatInterfaceSimple() {
               <p className="text-xs text-slate-400">Asistente conversacional</p>
             </div>
           </div>
+          <button
+            onClick={auth.logout}
+            className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:border-slate-600 hover:bg-slate-800"
+            title="Cerrar sesión"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Salir</span>
+          </button>
         </div>
       </header>
 
