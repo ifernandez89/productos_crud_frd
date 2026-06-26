@@ -1,7 +1,6 @@
 // app/services/preguntas.api.ts
 
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
-import { buildAuthHeaders } from "./auth.api";
 
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
@@ -144,10 +143,9 @@ const resolveGeoCoords = async (message: string): Promise<GeoCoords | null> => {
 };
 
 // ─── Headers helper ───────────────────────────────────────────────────────────
-const buildHeaders = (): Record<string, string> => {
-  // Usar buildAuthHeaders de auth.api para incluir JWT token
-  return buildAuthHeaders();
-};
+const buildHeaders = (): Record<string, string> => ({
+  "Content-Type": "application/json",
+});
 
 // ─── NIVEL 1: Obtener / crear sesión ─────────────────────────────────────────
 /**
@@ -163,23 +161,12 @@ export async function initSession(): Promise<string | null> {
       : `${BASE_URL}/api/jarbees/session`;
 
     const res = await fetch(url, { method: "GET", headers: buildHeaders() });
-    
-    // Si recibimos 401, significa que el token es inválido
-    if (res.status === 401) {
-      throw new Error("UNAUTHORIZED");
-    }
-    
     if (!res.ok) return stored;
 
     const data = (await res.json()) as { sessionId: string };
     storeSessionId(data.sessionId);
     return data.sessionId;
-  } catch (error) {
-    // Si es error de autenticación, lo propagamos
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      throw error;
-    }
-    // backend caído — devolvemos el id local si existe
+  } catch {
     return getStoredSessionId();
   }
 }
@@ -194,20 +181,10 @@ export async function fetchHistory(sessionId: string): Promise<HistoryMessage[]>
       `${BASE_URL}/api/jarbees/history?sessionId=${sessionId}`,
       { method: "GET", headers: buildHeaders() }
     );
-    
-    // Si recibimos 401, significa que el token es inválido
-    if (res.status === 401) {
-      throw new Error("UNAUTHORIZED");
-    }
-    
     if (!res.ok) return [];
     const data = (await res.json()) as { messages: HistoryMessage[] };
     return Array.isArray(data.messages) ? data.messages : [];
-  } catch (error) {
-    // Si es error de autenticación, lo propagamos
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      throw error;
-    }
+  } catch {
     return [];
   }
 }
@@ -247,11 +224,6 @@ export async function hacerPregunta(
       headers: buildHeaders(),
       body: JSON.stringify(body),
     });
-
-    // Si recibimos 401, significa que el token es inválido
-    if (res.status === 401) {
-      throw new Error("UNAUTHORIZED");
-    }
 
     if (!res.ok) {
       const errorBody = await res.text();
