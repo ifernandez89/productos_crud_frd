@@ -36,11 +36,13 @@ export function ChatInputBar({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isFocused, setIsFocused] = useState(false);
 
-  // Auto-resize textarea
+  // Auto-resize textarea; reset to base height when value is cleared
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+      textareaRef.current.style.height = value
+        ? `${Math.min(textareaRef.current.scrollHeight, 200)}px`
+        : "46px";
     }
   }, [value]);
 

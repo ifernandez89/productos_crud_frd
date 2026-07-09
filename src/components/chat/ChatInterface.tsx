@@ -299,6 +299,7 @@ export default function ChatInterface() {
 
     addMessage(userMessage);
     setInputValue("");
+    setInputError(null);
     setIsTyping(true);
     const startTime = performance.now(); // Rastrear tiempo inicio
 
