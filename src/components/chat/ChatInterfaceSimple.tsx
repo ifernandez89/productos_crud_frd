@@ -6,6 +6,8 @@ import { ChatMessageCompact } from "./ChatMessageCompact";
 import { loadConversation, saveConversation } from "@/lib/db";
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 import { hacerPregunta, classifyError, initSession, fetchHistory, type HistoryMessage } from "../../app/services/preguntas.api";
+import { analyzeImage, ingestPdf } from "../../app/services/jarbees.api";
+import type { AttachedFile } from "./ChatInputSimple";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -52,6 +54,7 @@ export default function ChatInterfaceSimple() {
   const [inputValue, setInputValue] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
   const [audioEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
@@ -259,7 +262,8 @@ export default function ChatInterfaceSimple() {
 
   const handleSubmit = async () => {
     const trimmedInput = inputValue.trim();
-    if (!trimmedInput) return;
+
+    if (!trimmedInput && !attachedFile) return;
 
     if (trimmedInput.length > MAX_MESSAGE_LENGTH) {
       setInputError(`Mensaje máximo: ${MAX_MESSAGE_LENGTH} caracteres.`);
@@ -268,38 +272,68 @@ export default function ChatInterfaceSimple() {
 
     setInputError(null);
 
-    const userMessage: Message = {
+    const userContent = attachedFile
+      ? trimmedInput
+        ? `[${attachedFile.type === "image" ? "Imagen" : "PDF"}: ${attachedFile.file.name}] ${trimmedInput}`
+        : `[${attachedFile.type === "image" ? "Imagen" : "PDF"}: ${attachedFile.file.name}]`
+      : trimmedInput;
+
+    addMessage({
       id: Date.now().toString(),
       role: "user",
-      content: trimmedInput,
+      content: userContent,
       timestamp: new Date(),
-    };
+    });
 
-    addMessage(userMessage);
     setInputValue("");
+    setInputError(null);
+    const currentFile = attachedFile;
+    setAttachedFile(null);
     setIsTyping(true);
+
     const startTime = performance.now();
+    const sessionId =
+      typeof window !== "undefined"
+        ? (window.localStorage.getItem("jarbees_session_id") ?? undefined)
+        : undefined;
 
     try {
-      const { answer } = await hacerPregunta(trimmedInput, "ollama", { autoGeolocation: true });
-      const endTime = performance.now();
-      const responseTime = endTime - startTime;
+      let answer: string;
+      let responseTime: number;
+
+      if (currentFile?.type === "image") {
+        const result = await analyzeImage(currentFile.file, {
+          question: trimmedInput || undefined,
+          mode: "general",
+          sessionId,
+        });
+        responseTime = result.latencyMs ?? performance.now() - startTime;
+        answer = result.answer;
+
+      } else if (currentFile?.type === "pdf") {
+        const result = await ingestPdf(currentFile.file, {
+          title: currentFile.file.name.replace(/\.pdf$/i, ""),
+        });
+        responseTime = performance.now() - startTime;
+        answer = `✅ PDF "${result.title}" guardado en tu biblioteca. Se procesaron ${result.chunks} fragmentos y ya está disponible para consultas.`;
+
+      } else {
+        const result = await hacerPregunta(trimmedInput, "ollama", { autoGeolocation: true });
+        responseTime = performance.now() - startTime;
+        answer = result.answer;
+      }
 
       const assistantId = (Date.now() + 1).toString();
-      const assistantMessage: Message = {
+      addMessage({
         id: assistantId,
         role: "assistant",
         content: "",
         timestamp: new Date(),
         responseTime,
-      };
+      });
 
-      addMessage(assistantMessage);
-
-      // Streaming simulation
       const tokens = answer.split(/(\s+)/);
       let accumulated = "";
-      const interval = 40;
       tokens.forEach((tok, idx) => {
         setTimeout(() => {
           accumulated += tok;
@@ -308,12 +342,11 @@ export default function ChatInterfaceSimple() {
           );
           if (idx === tokens.length - 1) {
             setIsTyping(false);
-            if (audioEnabled && !isSpeaking) {
-              speakText(answer);
-            }
+            if (audioEnabled && !isSpeaking) speakText(answer);
           }
-        }, interval * idx);
+        }, 40 * idx);
       });
+
     } catch (error) {
       const errorMsg = classifyError(error);
       setIsTyping(false);
@@ -411,6 +444,8 @@ export default function ChatInterfaceSimple() {
         isTyping={isTyping}
         maxLength={MAX_MESSAGE_LENGTH}
         errorMessage={inputError ?? undefined}
+        attachedFile={attachedFile}
+        onFileAttach={setAttachedFile}
       />
     </div>
   );
