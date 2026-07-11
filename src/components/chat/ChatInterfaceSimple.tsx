@@ -114,11 +114,31 @@ export default function ChatInterfaceSimple() {
     }
   };
 
+  const sanitizeForSpeech = (text: string): string =>
+    text
+      // emojis y símbolos Unicode
+      .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
+      .replace(/[\u{2600}-\u{27BF}]/gu, "")
+      // markdown: negrita, cursiva, código, encabezados, listas, separadores
+      .replace(/#{1,6}\s*/g, "")
+      .replace(/\*{1,3}([^*]*)\*{1,3}/g, "$1")
+      .replace(/_{1,2}([^_]*)_{1,2}/g, "$1")
+      .replace(/`{1,3}[^`]*`{1,3}/g, "")
+      .replace(/^[-*•·]\s+/gm, "")
+      .replace(/^\d+\.\s+/gm, "")
+      .replace(/^>\s*/gm, "")
+      .replace(/[-]{3,}/g, "")
+      // URLs
+      .replace(/https?:\/\/\S+/g, "")
+      // espacios múltiples y líneas vacías extra
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
   const speakText = (text: string) => {
     if (!speechSupported || !audioEnabled) return;
     window.speechSynthesis.cancel();
     getOrLoadVoice((voice) => {
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(sanitizeForSpeech(text));
       utterance.lang = "es-ES";
       utterance.rate = 0.92;
       utterance.pitch = 0.75;
