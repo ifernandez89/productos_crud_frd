@@ -116,24 +116,24 @@ export default function ChatInterfaceSimple() {
 
   const speakText = (text: string) => {
     if (!speechSupported || !audioEnabled) return;
-
     window.speechSynthesis.cancel();
-
     getOrLoadVoice((voice) => {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "es-ES";
       utterance.rate = 0.92;
       utterance.pitch = 0.75;
       utterance.volume = 1;
-
       if (voice) utterance.voice = voice;
-
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => setIsSpeaking(false);
-
       window.speechSynthesis.speak(utterance);
     });
+  };
+
+  const stopSpeaking = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
   };
 
   // ─── NIVEL 1: Init sesión + recuperar historial del backend ─────────────────
@@ -386,6 +386,19 @@ export default function ChatInterfaceSimple() {
               <p className="text-xs text-slate-400">Asistente conversacional</p>
             </div>
           </div>
+          {isSpeaking && (
+            <button
+              onClick={stopSpeaking}
+              className="flex items-center gap-2 rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/20"
+              title="Detener lectura"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+              </span>
+              Detener lectura
+            </button>
+          )}
         </div>
       </header>
 
