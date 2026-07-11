@@ -313,9 +313,15 @@ export default function ChatInterfaceSimple() {
       } else if (currentFile?.type === "pdf") {
         const result = await ingestPdf(currentFile.file, {
           title: currentFile.file.name.replace(/\.pdf$/i, ""),
+          question: trimmedInput || undefined,
+          sessionId,
         });
         responseTime = performance.now() - startTime;
-        answer = `✅ PDF "${result.title}" guardado en tu biblioteca. Se procesaron ${result.chunks} fragmentos y ya está disponible para consultas.`;
+        // Si el backend respondió una pregunta, mostramos esa respuesta;
+        // si no, confirmamos la ingestión
+        answer = result.answer
+          ? result.answer
+          : `✅ PDF "${result.title}" guardado en tu biblioteca. Se procesaron ${result.chunks} fragmentos y ya está disponible para consultas.`;
 
       } else {
         const result = await hacerPregunta(trimmedInput, "ollama", { autoGeolocation: true });

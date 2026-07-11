@@ -44,23 +44,26 @@ export async function analyzeImage(
   return (await res.json()) as VisionResponse;
 }
 
-// ─── Library: ingestar PDF permanentemente ───────────────────────────────────
+// ─── Library: ingestar PDF + responder pregunta ───────────────────────────────
 export type PdfIngestResponse = {
   success: true;
   documentId: number;
   title: string;
   chunks: number;
   category?: string;
+  answer?: string; // presente cuando se envía question
 };
 
 export async function ingestPdf(
   file: Blob,
-  options?: { title?: string; category?: string }
+  options?: { title?: string; category?: string; question?: string; sessionId?: string }
 ): Promise<PdfIngestResponse> {
   const form = new FormData();
   form.append("file", file);
   if (options?.title) form.append("title", options.title);
   if (options?.category) form.append("category", options.category);
+  if (options?.question) form.append("question", options.question);
+  if (options?.sessionId) form.append("sessionId", options.sessionId);
 
   const headers = buildHeaders(false);
   const res = await fetch(`${BASE_URL}/api/jarbees/library/document/pdf`, {
