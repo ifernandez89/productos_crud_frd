@@ -151,6 +151,11 @@ export async function createPlanner(objective: string, sessionId?: string): Prom
   return (await res.json()) as PlannerResponse;
 }
 
-const jarbeesApi = { ingestUrl, sendFeedback, createPlanner };
+export function connectGoogle(): void {
+  if (typeof window === "undefined") return;
+  window.location.assign(`${BASE_URL}/api/jarbees/google/login`);
+}
+
+const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle };
 
 export default jarbeesApi;
