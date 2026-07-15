@@ -6,7 +6,7 @@ import { ChatMessageCompact } from "./ChatMessageCompact";
 import { loadConversation, saveConversation } from "@/lib/db";
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 import { hacerPregunta, classifyError, initSession, fetchHistory, type HistoryMessage } from "../../app/services/preguntas.api";
-import { analyzeImage, ingestPdf } from "../../app/services/jarbees.api";
+import { analyzeImage, ingestPdf, getLibraryIndex } from "../../app/services/jarbees.api";
 import type { AttachedFile } from "./ChatInputSimple";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -62,6 +62,24 @@ export default function ChatInterfaceSimple() {
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const [librarySuggestions, setLibrarySuggestions] = useState<string[]>([]);
+
+  // Cargar índice de la biblioteca para autocompletado
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const docs = await getLibraryIndex();
+        if (mounted) {
+          const titles = docs.map((doc) => doc.titulo).filter(Boolean);
+          setLibrarySuggestions(titles);
+        }
+      } catch (error) {
+        console.warn("No se pudo cargar el índice de la biblioteca para autocompletado:", error);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const MAX_IN_MEMORY = 200;
 
@@ -485,6 +503,7 @@ export default function ChatInterfaceSimple() {
         errorMessage={inputError ?? undefined}
         attachedFile={attachedFile}
         onFileAttach={setAttachedFile}
+        suggestions={librarySuggestions}
       />
     </div>
   );

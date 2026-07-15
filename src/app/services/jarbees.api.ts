@@ -151,11 +151,45 @@ export async function createPlanner(objective: string, sessionId?: string): Prom
   return (await res.json()) as PlannerResponse;
 }
 
+export type LibraryIndexItem = {
+  titulo: string;
+  autor?: string;
+  formato: string;
+  archivo?: string;
+  categorias?: string[];
+  embeddings?: string;
+};
+
+export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
+  const res = await fetch(`${BASE_URL}/api/jarbees/library/index`, {
+    method: "GET",
+    headers: buildHeaders(false),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Error al obtener el índice de la biblioteca: ${text}`);
+  }
+
+  const data = await res.json();
+  if (Array.isArray(data)) {
+    return data as LibraryIndexItem[];
+  }
+  if (data && typeof data === "object") {
+    const list = data.documentos ?? data.documents ?? [];
+    if (Array.isArray(list)) {
+      return list as LibraryIndexItem[];
+    }
+  }
+  return [];
+}
+
 export function connectGoogle(): void {
   if (typeof window === "undefined") return;
   window.location.assign(`${BASE_URL}/api/jarbees/google/login`);
 }
 
-const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle };
+const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle, getLibraryIndex };
 
 export default jarbeesApi;
+

@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { Send, Plus, Mic, Image as ImageIcon, FileText, X } from "lucide-react";
+import { Send, Plus, Mic, Image as ImageIcon, FileText, X, BookOpen } from "lucide-react";
 
 export type AttachedFile = {
   file: File;
@@ -20,6 +20,8 @@ interface ChatInputSimpleProps {
   // archivo adjunto
   attachedFile?: AttachedFile | null;
   onFileAttach?: (file: AttachedFile | null) => void;
+  // Sugerencias para autocompletado
+  suggestions?: string[];
 }
 
 export function ChatInputSimple({
@@ -33,12 +35,76 @@ export function ChatInputSimple({
   errorMessage,
   attachedFile,
   onFileAttach,
+  suggestions = [],
 }: ChatInputSimpleProps) {
   const [showTools, setShowTools] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [dropdownOpen, setDropdownOpen] = useState(true);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  // Detect context for autocomplete: slash '/' preceded by space or start of string
+  const lastSlashIndex = value.lastIndexOf("/");
+  const isSlashTriggered = lastSlashIndex !== -1 && (lastSlashIndex === 0 || /\s/.test(value[lastSlashIndex - 1]));
+  const searchQuery = isSlashTriggered ? value.substring(lastSlashIndex + 1).toLowerCase() : "";
+
+  const filteredSuggestions = isSlashTriggered
+    ? suggestions.filter((item) => item.toLowerCase().includes(searchQuery))
+    : [];
+
+  const showDropdown = isSlashTriggered && dropdownOpen && filteredSuggestions.length > 0;
+
+  const selectSuggestion = (suggestion: string) => {
+    if (lastSlashIndex !== -1) {
+      const beforeSlash = value.substring(0, lastSlashIndex);
+      // Rellena con el título exacto
+      const newValue = `${beforeSlash}${suggestion} `;
+      onChange(newValue);
+    }
+    setDropdownOpen(false);
+    setHighlightedIndex(0);
+    // Vuelve a enfocar el textarea
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    const lastSlash = val.lastIndexOf("/");
+    const isNowTriggered = lastSlash !== -1 && (lastSlash === 0 || /\s/.test(val[lastSlash - 1]));
+    if (isNowTriggered) {
+      setDropdownOpen(true);
+    }
+    onChange(val);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showDropdown) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev + 1) % filteredSuggestions.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev - 1 + filteredSuggestions.length) % filteredSuggestions.length);
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        selectSuggestion(filteredSuggestions[highlightedIndex]);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setDropdownOpen(false);
+        return;
+      }
+    }
+
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       onSubmit();
@@ -126,8 +192,9 @@ export function ChatInputSimple({
           {/* Text input */}
           <div className="relative flex-1">
             <textarea
+              ref={textareaRef}
               value={value}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               placeholder={attachedFile ? "Agregá una pregunta (opcional)..." : "Escribe un mensaje..."}
               disabled={isTyping}
@@ -136,6 +203,27 @@ export function ChatInputSimple({
               className="w-full resize-none rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 pr-12 text-sm text-slate-100 placeholder-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 disabled:opacity-50"
               style={{ maxHeight: "200px", minHeight: "44px" }}
             />
+
+            {showDropdown && (
+              <div className="absolute bottom-full left-0 z-50 mb-2 w-full max-h-60 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900 shadow-2xl p-1">
+                {filteredSuggestions.slice(0, 8).map((suggestion, idx) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => selectSuggestion(suggestion)}
+                    onMouseEnter={() => setHighlightedIndex(idx)}
+                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                      idx === highlightedIndex
+                        ? "bg-cyan-500/20 text-cyan-400"
+                        : "text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    <BookOpen className="h-4 w-4 flex-shrink-0 text-cyan-500" />
+                    <span className="truncate">{suggestion}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {errorMessage && (

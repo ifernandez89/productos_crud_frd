@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { AudioControls } from "./AudioControls";
+import { BookOpen } from "lucide-react";
 
 interface ChatInputBarProps {
   value: string;
@@ -16,6 +17,8 @@ interface ChatInputBarProps {
   onActionClick: (action: "image" | "write" | "search") => void;
   maxLength: number;
   errorMessage?: string;
+  // Sugerencias para autocompletado de libros
+  suggestions?: string[];
 }
 
 export function ChatInputBar({
@@ -32,9 +35,49 @@ export function ChatInputBar({
   onActionClick,
   maxLength,
   errorMessage,
+  suggestions = [],
 }: ChatInputBarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+
+  const [dropdownOpen, setDropdownOpen] = useState(true);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  // Detect context for autocomplete: slash '/' preceded by space or start of string
+  const lastSlashIndex = value.lastIndexOf("/");
+  const isSlashTriggered = lastSlashIndex !== -1 && (lastSlashIndex === 0 || /\s/.test(value[lastSlashIndex - 1]));
+  const searchQuery = isSlashTriggered ? value.substring(lastSlashIndex + 1).toLowerCase() : "";
+
+  const filteredSuggestions = isSlashTriggered
+    ? suggestions.filter((item) => item.toLowerCase().includes(searchQuery))
+    : [];
+
+  const showDropdown = isSlashTriggered && dropdownOpen && filteredSuggestions.length > 0;
+
+  const selectSuggestion = (suggestion: string) => {
+    if (lastSlashIndex !== -1) {
+      const beforeSlash = value.substring(0, lastSlashIndex);
+      // Rellena con el título exacto
+      const newValue = `${beforeSlash}${suggestion} `;
+      onChange(newValue);
+    }
+    setDropdownOpen(false);
+    setHighlightedIndex(0);
+    // Vuelve a enfocar el textarea
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    const lastSlash = val.lastIndexOf("/");
+    const isNowTriggered = lastSlash !== -1 && (lastSlash === 0 || /\s/.test(val[lastSlash - 1]));
+    if (isNowTriggered) {
+      setDropdownOpen(true);
+    }
+    onChange(val);
+  };
 
   // Auto-resize textarea; reset to base height when value is cleared
   useEffect(() => {
@@ -54,6 +97,29 @@ export function ChatInputBar({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showDropdown) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev + 1) % filteredSuggestions.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev - 1 + filteredSuggestions.length) % filteredSuggestions.length);
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        selectSuggestion(filteredSuggestions[highlightedIndex]);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setDropdownOpen(false);
+        return;
+      }
+    }
+
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
@@ -72,20 +138,43 @@ export function ChatInputBar({
               : "border-slate-700/80"
           }`}
         >
-          <div className="flex items-start gap-2 px-1 pb-1 pt-1">
-            <textarea
-              ref={textareaRef}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              onKeyDown={handleKeyDown}
-              placeholder="Escribe un mensaje..."
-              className="w-full resize-none bg-transparent px-2 py-2 text-[15px] text-slate-100 placeholder-slate-500 focus:outline-none"
-              rows={1}
-              style={{ minHeight: "46px" }}
-              maxLength={maxLength}
-            />
+          <div className="flex items-start gap-2 px-1 pb-1 pt-1 w-full relative">
+            <div className="flex-1 relative">
+              <textarea
+                ref={textareaRef}
+                value={value}
+                onChange={handleTextChange}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                onKeyDown={handleKeyDown}
+                placeholder="Escribe un mensaje..."
+                className="w-full resize-none bg-transparent px-2 py-2 text-[15px] text-slate-100 placeholder-slate-500 focus:outline-none"
+                rows={1}
+                style={{ minHeight: "46px" }}
+                maxLength={maxLength}
+              />
+
+              {showDropdown && (
+                <div className="absolute bottom-full left-0 z-50 mb-4 w-full max-h-60 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl p-1">
+                  {filteredSuggestions.slice(0, 8).map((suggestion, idx) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => selectSuggestion(suggestion)}
+                      onMouseEnter={() => setHighlightedIndex(idx)}
+                      className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                        idx === highlightedIndex
+                          ? "bg-cyan-500/20 text-cyan-400"
+                          : "text-slate-300 hover:bg-slate-800"
+                      }`}
+                    >
+                      <BookOpen className="h-4 w-4 flex-shrink-0 text-cyan-500" />
+                      <span className="truncate">{suggestion}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center gap-1 pt-1">
             <button
