@@ -8,7 +8,7 @@ import { loadConversation, saveConversation } from "@/lib/db";
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 import { ChatInputBar } from "./ChatInputBar";
 import { hacerPregunta, getLastAssistantMessage } from "../../app/services/preguntas.api";
-import { getLibraryIndex } from "../../app/services/jarbees.api";
+import { getLibraryIndex, type LibraryIndexItem } from "../../app/services/jarbees.api";
 
 interface Message {
   id: string;
@@ -61,7 +61,7 @@ export default function ChatInterface() {
   const [isListening, setIsListening] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
-  const [librarySuggestions, setLibrarySuggestions] = useState<string[]>([]);
+  const [librarySuggestions, setLibrarySuggestions] = useState<LibraryIndexItem[]>([]);
 
   // Cargar índice de la biblioteca para autocompletado
   useEffect(() => {
@@ -70,8 +70,7 @@ export default function ChatInterface() {
       try {
         const docs = await getLibraryIndex();
         if (mounted) {
-          const titles = docs.map((doc) => doc.titulo).filter(Boolean);
-          setLibrarySuggestions(titles);
+          setLibrarySuggestions(docs);
         }
       } catch (error) {
         console.warn("No se pudo cargar el índice de la biblioteca para autocompletado en ChatInterface:", error);

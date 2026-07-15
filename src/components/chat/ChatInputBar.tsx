@@ -17,8 +17,8 @@ interface ChatInputBarProps {
   onActionClick: (action: "image" | "write" | "search") => void;
   maxLength: number;
   errorMessage?: string;
-  // Sugerencias para autocompletado de libros
-  suggestions?: string[];
+  // Sugerencias para autocompletado de libros (títulos y autores)
+  suggestions?: { titulo: string; autor?: string }[];
 }
 
 export function ChatInputBar({
@@ -49,7 +49,13 @@ export function ChatInputBar({
   const searchQuery = isSlashTriggered ? value.substring(lastSlashIndex + 1).toLowerCase() : "";
 
   const filteredSuggestions = isSlashTriggered
-    ? suggestions.filter((item) => item.toLowerCase().includes(searchQuery))
+    ? suggestions.filter((item) => {
+        const search = searchQuery.toLowerCase();
+        return (
+          item.titulo.toLowerCase().includes(search) ||
+          (item.autor && item.autor.toLowerCase().includes(search))
+        );
+      })
     : [];
 
   const showDropdown = isSlashTriggered && dropdownOpen && filteredSuggestions.length > 0;
@@ -110,7 +116,7 @@ export function ChatInputBar({
       }
       if (e.key === "Enter") {
         e.preventDefault();
-        selectSuggestion(filteredSuggestions[highlightedIndex]);
+        selectSuggestion(filteredSuggestions[highlightedIndex].titulo);
         return;
       }
       if (e.key === "Escape") {
@@ -158,9 +164,9 @@ export function ChatInputBar({
                 <div className="absolute bottom-full left-0 z-50 mb-4 w-full max-h-60 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl p-1">
                   {filteredSuggestions.slice(0, 8).map((suggestion, idx) => (
                     <button
-                      key={suggestion}
+                      key={suggestion.titulo}
                       type="button"
-                      onClick={() => selectSuggestion(suggestion)}
+                      onClick={() => selectSuggestion(suggestion.titulo)}
                       onMouseEnter={() => setHighlightedIndex(idx)}
                       className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                         idx === highlightedIndex
@@ -169,7 +175,12 @@ export function ChatInputBar({
                       }`}
                     >
                       <BookOpen className="h-4 w-4 flex-shrink-0 text-cyan-500" />
-                      <span className="truncate">{suggestion}</span>
+                      <div className="flex flex-col text-left truncate flex-1">
+                        <span className="truncate font-medium text-slate-100">{suggestion.titulo}</span>
+                        {suggestion.autor && (
+                          <span className="truncate text-[11px] text-slate-400 mt-0.5">{suggestion.autor}</span>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
