@@ -75,6 +75,7 @@ export default function ChatInterfaceSimple() {
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const [balanceLoadingStatus, setBalanceLoadingStatus] = useState<string | null>(null);
   const [balanceReport, setBalanceReport] = useState<BalanceReport | null>(null);
+  const [hasMoreQuestions, setHasMoreQuestions] = useState(true);
 
   // Cargar índice de la biblioteca para autocompletado
   useEffect(() => {
@@ -320,6 +321,7 @@ export default function ChatInterfaceSimple() {
       setBalanceAnswers({});
       setIsBalanceActive(true);
       setInputValue("");
+      setHasMoreQuestions(true);
     } catch (error) {
       console.error("Error al iniciar balance:", error);
       addMessage({
@@ -341,15 +343,30 @@ export default function ChatInterfaceSimple() {
 
     setIsSubmittingAnswer(true);
     try {
-      await submitBalanceAnswer(balanceSessionId, currentQuestion.id, inputValue.trim());
+      const res = await submitBalanceAnswer(balanceSessionId, currentQuestion.id, inputValue.trim());
       const nextAnswers = { ...balanceAnswers, [currentQuestion.id]: inputValue.trim() };
       setBalanceAnswers(nextAnswers);
       
       const nextIdx = currentQuestionIndex + 1;
-      setCurrentQuestionIndex(nextIdx);
       
-      const nextQuestion = balanceQuestions[nextIdx];
-      setInputValue(nextQuestion ? nextAnswers[nextQuestion.id] || "" : "");
+      if (nextIdx < balanceQuestions.length) {
+        // Navegando hacia adelante por preguntas ya cargadas anteriormente
+        setCurrentQuestionIndex(nextIdx);
+        const nextQuestion = balanceQuestions[nextIdx];
+        setInputValue(nextQuestion ? nextAnswers[nextQuestion.id] || "" : "");
+      } else {
+        // En la última pregunta cargada
+        if (res.nextQuestion) {
+          // Agregar la nueva pregunta dinámica al array
+          setBalanceQuestions((prev) => [...prev, res.nextQuestion!]);
+          setCurrentQuestionIndex(nextIdx);
+          setInputValue("");
+          setHasMoreQuestions(true);
+        } else {
+          // No hay más preguntas, la entrevista terminó
+          setHasMoreQuestions(false);
+        }
+      }
     } catch (error) {
       console.error("Error al guardar respuesta:", error);
     } finally {
@@ -609,14 +626,14 @@ export default function ChatInterfaceSimple() {
               <span className="text-[11px] font-semibold uppercase tracking-wider text-cyan-400">Balance de Estado Energético</span>
             </div>
             <span className="text-xs font-medium text-slate-400">
-              Pregunta {currentQuestionIndex + 1} de {balanceQuestions.length}
+              Pregunta {currentQuestionIndex + 1} de 10
             </span>
           </div>
           
           <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-300"
-              style={{ width: `${((currentQuestionIndex + 1) / balanceQuestions.length) * 100}%` }}
+              style={{ width: `${Math.min(((currentQuestionIndex + 1) / 10) * 100, 100)}%` }}
             />
           </div>
 
@@ -651,7 +668,7 @@ export default function ChatInterfaceSimple() {
                 className={`flex h-10 w-10 items-center justify-center rounded-xl border transition ${
                   isListening 
                     ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400" 
-                    : "border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-200"
+                     : "border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-200"
                 }`}
                 title={isListening ? "Detener dictado" : "Dictar respuesta"}
               >
@@ -672,7 +689,22 @@ export default function ChatInterfaceSimple() {
                 Anterior
               </button>
 
-              {currentQuestionIndex < balanceQuestions.length - 1 ? (
+              {/* Opción de finalizar temprano si hay al menos 5 respuestas */}
+              {currentQuestionIndex >= 4 && hasMoreQuestions && (
+                <button
+                  onClick={handleFinishQuestionnaire}
+                  disabled={!inputValue.trim() || isSubmittingAnswer}
+                  className="rounded-xl bg-gradient-to-r from-emerald-500/85 to-teal-600/85 px-4 py-2 text-xs font-medium text-white shadow-md shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-30 disabled:pointer-events-none transition flex items-center gap-1.5"
+                  title="Finalizar la entrevista y generar el informe ahora (mínimo 5 respuestas)"
+                >
+                  {isSubmittingAnswer ? (
+                    <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
+                  ) : null}
+                  Generar Informe
+                </button>
+              )}
+
+              {(currentQuestionIndex < balanceQuestions.length - 1 || hasMoreQuestions) ? (
                 <button
                   onClick={handleNextQuestion}
                   disabled={!inputValue.trim() || isSubmittingAnswer}
@@ -692,7 +724,7 @@ export default function ChatInterfaceSimple() {
                   {isSubmittingAnswer ? (
                     <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                   ) : null}
-                  Finalizar y Analizar
+                  Generar Informe
                 </button>
               )}
             </div>
