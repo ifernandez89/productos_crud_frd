@@ -433,23 +433,6 @@ export default function ChatInterfaceSimple() {
     }
   };
 
-  const handleViewLatestReport = async () => {
-    setIsTyping(true);
-    try {
-      const report = await getLatestBalance();
-      if ("message" in report) {
-        alert("Aún no completaste ningún cuestionario de balance energético.");
-      } else {
-        setBalanceReport(report as BalanceReport);
-        setIsBalanceActive(false);
-      }
-    } catch (error) {
-      console.error("Error al obtener último balance:", error);
-      alert("No se pudo cargar tu balance energético actual.");
-    } finally {
-      setIsTyping(false);
-    }
-  };
 
   const toggleVoiceInput = () => {
     if (isListening) {
@@ -473,7 +456,8 @@ export default function ChatInterfaceSimple() {
 
     if (!trimmedInput && !attachedFile) return;
 
-    if (trimmedInput.toLowerCase() === "/balance" || trimmedInput.toLowerCase() === "/cuestionario") {
+    const lowerInput = trimmedInput.toLowerCase();
+    if (lowerInput === "/balance" || lowerInput === "/balance!" || lowerInput === "/cuestionario" || lowerInput === "/cuestionario!") {
       setInputValue("");
       handleStartBalance();
       return;
@@ -952,17 +936,6 @@ export default function ChatInterfaceSimple() {
           </div>
           
           <div className="flex items-center gap-2">
-            {!isBalanceActive && !balanceLoadingStatus && (
-              <button
-                onClick={handleViewLatestReport}
-                className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1.5 text-xs text-cyan-300 transition hover:bg-cyan-500/20 flex items-center gap-1.5"
-                title="Ver tu estado energético"
-              >
-                <span>📊</span>
-                <span>Mi Balance</span>
-              </button>
-            )}
-            
             {isSpeaking && (
               <button
                 onClick={stopSpeaking}
