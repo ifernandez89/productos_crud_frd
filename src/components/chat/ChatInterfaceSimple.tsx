@@ -75,6 +75,7 @@ export default function ChatInterfaceSimple() {
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const [balanceLoadingStatus, setBalanceLoadingStatus] = useState<string | null>(null);
   const [balanceReport, setBalanceReport] = useState<BalanceReport | null>(null);
+  const [hasMoreQuestions, setHasMoreQuestions] = useState(true);
 
   // Cargar índice de la biblioteca para autocompletado
   useEffect(() => {
@@ -264,7 +265,7 @@ export default function ChatInterfaceSimple() {
       recognitionRef.current.interimResults = true;
 
       recognitionRef.current.onstart = () => setIsListening(true);
-      
+
       recognitionRef.current.onend = () => {
         if (recognitionRef.current !== null && isListening) {
           try {
@@ -320,6 +321,7 @@ export default function ChatInterfaceSimple() {
       setBalanceAnswers({});
       setIsBalanceActive(true);
       setInputValue("");
+      setHasMoreQuestions(true);
     } catch (error) {
       console.error("Error al iniciar balance:", error);
       addMessage({
@@ -341,15 +343,30 @@ export default function ChatInterfaceSimple() {
 
     setIsSubmittingAnswer(true);
     try {
-      await submitBalanceAnswer(balanceSessionId, currentQuestion.id, inputValue.trim());
+      const res = await submitBalanceAnswer(balanceSessionId, currentQuestion.id, inputValue.trim());
       const nextAnswers = { ...balanceAnswers, [currentQuestion.id]: inputValue.trim() };
       setBalanceAnswers(nextAnswers);
-      
+
       const nextIdx = currentQuestionIndex + 1;
-      setCurrentQuestionIndex(nextIdx);
-      
-      const nextQuestion = balanceQuestions[nextIdx];
-      setInputValue(nextQuestion ? nextAnswers[nextQuestion.id] || "" : "");
+
+      if (nextIdx < balanceQuestions.length) {
+        // Navegando hacia adelante por preguntas ya cargadas anteriormente
+        setCurrentQuestionIndex(nextIdx);
+        const nextQuestion = balanceQuestions[nextIdx];
+        setInputValue(nextQuestion ? nextAnswers[nextQuestion.id] || "" : "");
+      } else {
+        // En la última pregunta cargada
+        if (res.nextQuestion) {
+          // Agregar la nueva pregunta dinámica al array
+          setBalanceQuestions((prev) => [...prev, res.nextQuestion!]);
+          setCurrentQuestionIndex(nextIdx);
+          setInputValue("");
+          setHasMoreQuestions(true);
+        } else {
+          // No hay más preguntas, la entrevista terminó
+          setHasMoreQuestions(false);
+        }
+      }
     } catch (error) {
       console.error("Error al guardar respuesta:", error);
     } finally {
@@ -364,10 +381,10 @@ export default function ChatInterfaceSimple() {
 
     const nextAnswers = { ...balanceAnswers, [currentQuestion.id]: inputValue.trim() };
     setBalanceAnswers(nextAnswers);
-    
+
     const prevIdx = currentQuestionIndex - 1;
     setCurrentQuestionIndex(prevIdx);
-    
+
     const prevQuestion = balanceQuestions[prevIdx];
     setInputValue(prevQuestion ? nextAnswers[prevQuestion.id] || "" : "");
   };
@@ -383,7 +400,7 @@ export default function ChatInterfaceSimple() {
       await submitBalanceAnswer(balanceSessionId, currentQuestion.id, inputValue.trim());
       const finalAnswers = { ...balanceAnswers, [currentQuestion.id]: inputValue.trim() };
       setBalanceAnswers(finalAnswers);
-      
+
       setBalanceLoadingStatus("Iniciando procesamiento del balance...");
       const statusSteps = [
         "Analizando respuestas de las 7 dimensiones...",
@@ -391,7 +408,7 @@ export default function ChatInterfaceSimple() {
         "Generando recomendaciones y puntos ciegos mediante IA...",
         "Creando reporte de balance energético...",
       ];
-      
+
       let stepIdx = 0;
       const interval = setInterval(() => {
         if (stepIdx < statusSteps.length) {
@@ -399,9 +416,9 @@ export default function ChatInterfaceSimple() {
           stepIdx++;
         }
       }, 2000);
-      
+
       const report = await finishBalanceSession(balanceSessionId);
-      
+
       clearInterval(interval);
       setBalanceLoadingStatus(null);
       setBalanceReport(report);
@@ -581,13 +598,13 @@ export default function ChatInterfaceSimple() {
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button 
+          <button
             onClick={() => setShowBalancePrompt(false)}
             className="rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-slate-800 transition"
           >
             Ignorar
           </button>
-          <button 
+          <button
             onClick={handleStartBalance}
             className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-1.5 text-xs font-medium text-white shadow-md shadow-cyan-500/20 hover:from-cyan-400 hover:to-blue-500 transition"
           >
@@ -605,21 +622,21 @@ export default function ChatInterfaceSimple() {
         <div className="w-full max-w-2xl rounded-3xl border border-slate-800 bg-slate-900/60 p-6 md:p-8 shadow-2xl backdrop-blur-md flex flex-col gap-6 relative overflow-hidden">
           <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
           <div className="absolute -left-20 -bottom-20 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="flex h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
               <span className="text-[11px] font-semibold uppercase tracking-wider text-cyan-400">Balance de Estado Energético</span>
             </div>
             <span className="text-xs font-medium text-slate-400">
-              Pregunta {currentQuestionIndex + 1} de {balanceQuestions.length}
+              Pregunta {currentQuestionIndex + 1} de 10
             </span>
           </div>
-          
+
           <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-300"
-              style={{ width: `${((currentQuestionIndex + 1) / balanceQuestions.length) * 100}%` }}
+              style={{ width: `${Math.min(((currentQuestionIndex + 1) / 10) * 100, 100)}%` }}
             />
           </div>
 
@@ -651,11 +668,10 @@ export default function ChatInterfaceSimple() {
             <div className="flex gap-2">
               <button
                 onClick={toggleVoiceInput}
-                className={`flex h-10 w-10 items-center justify-center rounded-xl border transition ${
-                  isListening 
-                    ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400" 
+                className={`flex h-10 w-10 items-center justify-center rounded-xl border transition ${isListening
+                    ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
                     : "border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-200"
-                }`}
+                  }`}
                 title={isListening ? "Detener dictado" : "Dictar respuesta"}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
@@ -675,7 +691,22 @@ export default function ChatInterfaceSimple() {
                 Anterior
               </button>
 
-              {currentQuestionIndex < balanceQuestions.length - 1 ? (
+              {/* Opción de finalizar temprano si hay al menos 5 respuestas */}
+              {currentQuestionIndex >= 4 && hasMoreQuestions && (
+                <button
+                  onClick={handleFinishQuestionnaire}
+                  disabled={!inputValue.trim() || isSubmittingAnswer}
+                  className="rounded-xl bg-gradient-to-r from-emerald-500/85 to-teal-600/85 px-4 py-2 text-xs font-medium text-white shadow-md shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-30 disabled:pointer-events-none transition flex items-center gap-1.5"
+                  title="Finalizar la entrevista y generar el informe ahora (mínimo 5 respuestas)"
+                >
+                  {isSubmittingAnswer ? (
+                    <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
+                  ) : null}
+                  Generar Informe
+                </button>
+              )}
+
+              {(currentQuestionIndex < balanceQuestions.length - 1 || hasMoreQuestions) ? (
                 <button
                   onClick={handleNextQuestion}
                   disabled={!inputValue.trim() || isSubmittingAnswer}
@@ -695,7 +726,7 @@ export default function ChatInterfaceSimple() {
                   {isSubmittingAnswer ? (
                     <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                   ) : null}
-                  Finalizar y Analizar
+                  Generar Informe
                 </button>
               )}
             </div>
@@ -783,7 +814,7 @@ export default function ChatInterfaceSimple() {
                     <span className="text-cyan-400">{val}%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
-                    <div 
+                    <div
                       className={`h-full bg-gradient-to-r ${getGradient(dim)} transition-all duration-1000`}
                       style={{ width: `${val}%` }}
                     />
@@ -908,11 +939,11 @@ export default function ChatInterfaceSimple() {
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-1.5 shadow-lg shadow-cyan-500/20">
-              <Image 
+              <Image
                 src={`${BASE_PATH}/JarBees_logo.png`}
-                alt="JarBees" 
-                width={32} 
-                height={32} 
+                alt="JarBees"
+                width={32}
+                height={32}
                 className="object-contain"
               />
             </div>
@@ -921,19 +952,8 @@ export default function ChatInterfaceSimple() {
               <p className="text-xs text-slate-400">Asistente conversacional</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            {!isBalanceActive && !balanceLoadingStatus && (
-              <button
-                onClick={handleViewLatestReport}
-                className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1.5 text-xs text-cyan-300 transition hover:bg-cyan-500/20 flex items-center gap-1.5"
-                title="Ver tu estado energético"
-              >
-                <span>📊</span>
-                <span>Mi Balance</span>
-              </button>
-            )}
-            
             {isSpeaking && (
               <button
                 onClick={stopSpeaking}
@@ -976,11 +996,11 @@ export default function ChatInterfaceSimple() {
               <div className="flex h-full items-center justify-center px-4 py-16">
                 <div className="max-w-md text-center">
                   <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-4 shadow-lg shadow-cyan-500/20">
-                    <Image 
+                    <Image
                       src={`${BASE_PATH}/JarBees_logo.png`}
-                      alt="JarBees" 
-                      width={64} 
-                      height={64} 
+                      alt="JarBees"
+                      width={64}
+                      height={64}
                       className="object-contain"
                     />
                   </div>

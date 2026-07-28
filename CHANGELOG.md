@@ -6,6 +6,9 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Removed
+- **Botón "Mi Balance"**: Se eliminó el botón de acceso directo del header del chat, unificando la experiencia para usar únicamente el comando `/balance` (o `/balance!`).
+
 ### Added
 - **Autenticación JWT completa**:
   - `auth.api.ts`: Servicio con `login()`, `verifyToken()`, `logout()`, `getToken()`, `storeToken()`, `buildAuthHeaders()`

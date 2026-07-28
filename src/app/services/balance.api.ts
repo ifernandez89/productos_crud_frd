@@ -18,6 +18,7 @@ export interface SubmitAnswerResponse {
   success: boolean;
   message: string;
   questionId: number;
+  nextQuestion?: BalanceQuestion;
 }
 
 export interface BalanceReport {
