@@ -426,9 +426,9 @@ export default function ChatInterfaceSimple() {
         setBalanceReport(report as BalanceReport);
         setIsBalanceActive(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al obtener último balance:", error);
-      alert("No se pudo cargar tu balance energético actual.");
+      alert(`No se pudo cargar tu balance energético actual: ${error.message || error}`);
     } finally {
       setIsTyping(false);
     }
@@ -455,6 +455,9 @@ export default function ChatInterfaceSimple() {
     const trimmedInput = inputValue.trim();
 
     if (!trimmedInput && !attachedFile) return;
+
+    // Pausar inmediatamente cualquier dictado/respuesta de voz en curso
+    stopSpeaking();
 
     if (trimmedInput.toLowerCase() === "/balance" || trimmedInput.toLowerCase() === "/cuestionario") {
       setInputValue("");
