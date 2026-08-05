@@ -10,6 +10,12 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 - **Botón "Mi Balance"**: Se eliminó el botón de acceso directo del header del chat, unificando la experiencia para usar únicamente el comando `/balance` (o `/balance!`).
 
 ### Added
+- **Módulo Lector de Audiolibros AI (`/reader`)**:
+  - Nueva página `/reader` con vista de biblioteca de libros y audiolibros, integrando consulta dinámica al backend (`getLibraryIndex()`) y buscador `🔎 Buscar` en tiempo real por título y autor.
+  - Reproductor de audio con soporte para el elemento nativo HTML `<audio>` que permite reproducción en segundo plano y con pantalla bloqueada en móviles.
+  - Controles completos de reproducción: Play, Pause, Stop, barra de progreso (`input range`) y selector de velocidad exclusivo (`0.75x`, `1x`, `1.25x`, `1.5x`, `2x`).
+  - Endpoint API `GET /api/reader/[documentId]` para extracción e integración por bloques de texto con modelo local de Ollama (`sematre/orpheus:it_es-3b`).
+  - Nuevo botón `🎧 Lector` integrado en el header del chat (`ChatInterfaceSimple`) para navegar directamente a la sección `/reader`.
 - **Autenticación JWT completa**:
   - `auth.api.ts`: Servicio con `login()`, `verifyToken()`, `logout()`, `getToken()`, `storeToken()`, `buildAuthHeaders()`
   - Token JWT con expiración de 30 días, guardado en `localStorage` bajo clave `jarbees_auth_token`

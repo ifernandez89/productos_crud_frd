@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ChatInputSimple } from "./ChatInputSimple";
 import { ChatMessageCompact } from "./ChatMessageCompact";
@@ -51,6 +52,7 @@ interface SpeechRecognitionLike {
 }
 
 export default function ChatInterfaceSimple() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
@@ -433,6 +435,7 @@ export default function ChatInterfaceSimple() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleViewLatestReport = async () => {
     setIsTyping(true);
     try {
@@ -443,9 +446,10 @@ export default function ChatInterfaceSimple() {
         setBalanceReport(report as BalanceReport);
         setIsBalanceActive(false);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error al obtener último balance:", error);
-      alert(`No se pudo cargar tu balance energético actual: ${error.message || error}`);
+      const err = error as Error;
+      alert(`No se pudo cargar tu balance energético actual: ${err.message || String(error)}`);
     } finally {
       setIsTyping(false);
     }
@@ -954,6 +958,15 @@ export default function ChatInterfaceSimple() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push("/reader")}
+              className="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20 hover:border-cyan-500/50 shadow-sm"
+              title="Abrir Lector de Audiolibros"
+            >
+              <span>🎧</span>
+              <span>Lector</span>
+            </button>
+
             {isSpeaking && (
               <button
                 onClick={stopSpeaking}

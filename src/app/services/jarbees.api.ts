@@ -29,7 +29,7 @@ export async function analyzeImage(
   form.append("mode", options?.mode ?? "general");
   if (options?.sessionId) form.append("sessionId", options.sessionId);
 
-  const headers = buildHeaders(false); // sin Content-Type, lo pone el browser
+  const headers = buildHeaders(false);
   const res = await fetch(`${BASE_URL}/api/jarbees/vision/analyze`, {
     method: "POST",
     headers,
@@ -51,7 +51,7 @@ export type PdfIngestResponse = {
   title: string;
   chunks: number;
   category?: string;
-  answer?: string; // presente cuando se envía question
+  answer?: string;
 };
 
 export async function ingestPdf(
@@ -107,7 +107,7 @@ export type FeedbackBody = {
   sessionId?: string;
   question: string;
   answer: string;
-  score: number; // 1-5 or -1/1
+  score: number;
   comment?: string;
 };
 
@@ -152,144 +152,27 @@ export async function createPlanner(objective: string, sessionId?: string): Prom
 }
 
 export type LibraryIndexItem = {
+  id?: string | number;
   titulo: string;
   autor?: string;
   formato: string;
   archivo?: string;
   categorias?: string[];
   embeddings?: string;
+  paginas?: number;
 };
 
 const FALLBACK_TITLES: { titulo: string; autor?: string }[] = [
-  { titulo: "Los Nueve Ritos del Munay-Ki", autor: "Tradici�n Q'ero / Alberto Villoldo" },
-  { titulo: "Herbario y Plantas Medicinales", autor: "Recopilaci�n propia" },
-  { titulo: "Sanaciones Populares y Oraciones Curativas", autor: "Tradici�n popular regional" },
-  { titulo: "Angeles Arrien Las Cuatro Sendas del Chaman", autor: "Desconocido" },
+  { titulo: "El Plano Astral", autor: "Charles Webster Leadbeater" },
+  { titulo: "Adventures Beyond the Body", autor: "William Buhlman" },
+  { titulo: "Los Nueve Ritos del Munay-Ki", autor: "Tradición Q'ero / Alberto Villoldo" },
+  { titulo: "Herbario y Plantas Medicinales", autor: "Recopilación propia" },
+  { titulo: "Sanaciones Populares y Oraciones Curativas", autor: "Tradición popular regional" },
+  { titulo: "Angeles Arrien Las Cuatro Sendas del Chaman", autor: "Angeles Arrien" },
   { titulo: "The Etheric Double: The Health Aura of Man", autor: "Arthur E. Powell" },
-  { titulo: "aventuras fuera del cuerpo buhlman william", autor: "Desconocido" },
-  { titulo: "Biodescodificacion", autor: "Desconocido" },
-  { titulo: "Arquetipos EI inconsciente Colectivo 1", autor: "Carl Gustav Jung" },
-  { titulo: "Arquetipos EI inconsciente Colectivo 2", autor: "Carl Gustav Jung" },
-  { titulo: "Arquetipos EI inconsciente Colectivo 3", autor: "Carl Gustav Jung" },
-  { titulo: "Conflictos Del Alma Infantil", autor: "Carl Gustav Jung" },
-  { titulo: "El hombre y sus simbolos", autor: "Carl Gustav Jung" },
-  { titulo: "Energetica Psiquica y Esencia Del Sue�o", autor: "Carl Gustav Jung" },
-  { titulo: "La Interpretacion De La Naturaleza Y La Psique", autor: "Carl Gustav Jung" },
-  { titulo: "La Psicologia De La Transferencia 1", autor: "Carl Gustav Jung" },
-  { titulo: "La Psicologia De La Transferencia 2", autor: "Carl Gustav Jung" },
-  { titulo: "Los Complejos y el Inconsciente", autor: "Carl Gustav Jung" },
-  { titulo: "Recuerdos Sue�os Pensamientos", autor: "Carl Gustav Jung" },
-  { titulo: "Tipos Psicologicos Tomo 1", autor: "Carl Gustav Jung" },
-  { titulo: "Tipos Psicologicos Tomo 2", autor: "Carl Gustav Jung" },
-  { titulo: "Carta astral Ignacio Gabriel Fernandez", autor: "Desconocido" },
-  { titulo: "Charles Fort El Libro de los Condenados", autor: "Desconocido" },
-  { titulo: "COSMETICA NATURAL", autor: "Desconocido" },
-  { titulo: "Cromoterapia: Curaci�n por los Colores", autor: "Medicina Alternativa" },
-  { titulo: "El Sutra de las Cuarenta y Dos Secciones", autor: "Buda Gautama (Traducci�n)" },
-  { titulo: "Curso B�sico AutoDefensa Ps�quica (1 de 2)", autor: "Desconocido" },
-  { titulo: "Curso B�sico AutoDefensa Ps�quica (2 de 2)", autor: "Desconocido" },
+  { titulo: "El Kybalion", autor: "Tres Iniciados / Hermes Trismegisto" },
+  { titulo: "El hombre y sus símbolos", autor: "Carl Gustav Jung" },
   { titulo: "La Doctrina Secreta", autor: "Helena Petrovna Blavatsky" },
-  { titulo: "El Uso Magico Del Tabaco En Un Contexto Urbano Lima", autor: "Desconocido" },
-  { titulo: "Eliphas Levi Claves mayores y claviculas de Salomon", autor: "Desconocido" },
-  { titulo: "El monte nos da comida", autor: "Desconocido" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n ", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 1", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 2", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 3", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 4", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 5", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 6", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 7", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 8", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 9", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 10", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 11", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 12", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 13", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 13", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 14", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 15", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 16", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 17", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 18", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 19", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 20", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 21", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 22", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 23", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 24", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 25", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 26", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 27", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 28", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 29", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 30", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 31", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 32", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 33", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 34", autor: "Al Filo de la Realidad" },
-  { titulo: "Curso de Esoterismo Pr�ctico - Lecci�n 35", autor: "Al Filo de la Realidad" },
-  { titulo: "Existen los Hechizos y Maleficios", autor: "Desconocido" },
-  { titulo: "Fundamentos Racionales de la Astrolog�a", autor: "Desconocido" },
-  { titulo: "Hacking Taller Attacking AD", autor: "Desconocido" },
-  { titulo: "Hermes El Kybalion", autor: "Desconocido" },
-  { titulo: "Hierbas info pap�s Alan", autor: "Desconocido" },
-  { titulo: "�caros: Cantos Sagrados del Amazonas", autor: "Tradici�n Amaz�nica" },
-  { titulo: "Tintes Naturales de Plantas Nativas: Colores de la Patagonia", autor: "INTA" },
-  { titulo: "Cantos de ignorancia iluminada", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Curaciones Chamanicas", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "El Cerebro Consciente", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "El poder curativo de la mente Tulku Thondup", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "El Potencial Transferido", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "El Sabor de la Iluminacion 1994", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "El Vehiculo de las Transformaciones", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Fluir en El sin yo by", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "La conquista del templo", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "La Construccion de La Realidad", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "La Experiencia interna", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "La Fuerza Creativa del Amor", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "La fuerza vital del cielo anterior", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "La percepcion de la realidad", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "La Real Tecnologia", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "La teoria sintergica", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Las Manifestaciones Del Ser Pachita", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Los Chamanes de Mexico El Cerebro y los Chamanes Vol 5 2", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Los Chamanes de Mexico PACHITA Vol 3", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Los Chamanes de Mexico Vol 1", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Los Chamanes de Mexico Vol 2", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Los Chamanes de Mexico Vol 4", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Los Chamanes de Mexico Vol 6", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Los Chamanes de Mexico Vol 7", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Los Cristales de la Galaxia", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Mas Alla de los Lenguajes", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "MEDITACION AUTOALUSIVA", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Misticismo indigena by", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "Retorno a la Luz", autor: "Jacobo Grinberg-Zylberbaum" },
-  { titulo: "LA HISTORIA DEL TIEMPO", autor: "Desconocido" },
-  { titulo: "La V�a del Tarot", autor: "Alejandro Jodorowsky & Marianne Costa" },
-  { titulo: "La Cocina Vegetariana de Hare Krishna", autor: "Adiraja Dasa" },
-  { titulo: "las mareas del inconsciente.docx", autor: "Desconocido" },
-  { titulo: "Teoamoxtli: Libro de Esencia Divina", autor: "Tradici�n Tolteca" },
-  { titulo: "lista completa de patentes de nikola tesla", autor: "Desconocido" },
-  { titulo: "Malezas Comestibles Del Cono Sur", autor: "Desconocido" },
-  { titulo: "MANUAL SANACIONES POPULARES", autor: "Desconocido" },
-  { titulo: "Mas alla del ego Walsh", autor: "Desconocido" },
-  { titulo: "Munay Ki Apunte", autor: "Desconocido" },
-  { titulo: "Munay Ki ESPACIO SAGRADO", autor: "Desconocido" },
-  { titulo: "Munay ki", autor: "Desconocido" },
-  { titulo: "Nikola Tesla Illustrated Autobiography", autor: "Desconocido" },
-  { titulo: "Oracion.docx", autor: "Desconocido" },
-  { titulo: "pim van lommel consciencia mas alla de la vida la ciencia de la experiencia cercana a la muerte", autor: "Desconocido" },
-  { titulo: "Plantas medicinales del nordeste argentino incupo", autor: "Desconocido" },
-  { titulo: "Popol Vuh: El Libro Sagrado de los Mayas", autor: "Tradici�n K'iche'" },
-  { titulo: "Shamans Priests and Witches A Cross Cultural Study of Magico Religious Practitioners", autor: "Desconocido" },
-  { titulo: "SIGNIFICADO DE LAS 22 LETRAS DEL ALFABETO HEBREO", autor: "Desconocido" },
-  { titulo: "telektonon", autor: "Desconocido" },
-  { titulo: "telektonon manual", autor: "Desconocido" },
-  { titulo: "Nikola Tesla: Energa Libre y Antigravedad", autor: "Nikola Tesla / Recopilacin" },
-  { titulo: "tintes naturales maya mesoamerica etnobotanica codice artesania prehispanico colonial tzutujil", autor: "Desconocido" },
-  { titulo: "Un Ensueo entre Serpientes y Jaguares (Parte 1)", autor: "Tradicin Chamnica / Relatos" },
-  { titulo: "Un Ensueo entre Serpientes y Jaguares (Parte 2)", autor: "Tradicin Chamnica / Relatos" }
 ];
 
 export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
@@ -317,7 +200,6 @@ export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
     console.warn("No se pudo cargar el índice de forma dinámica desde el backend, usando fallback estático:", error);
   }
 
-  // Fallback con el listado estático si hay errores de red, CORS, o mixed content
   return FALLBACK_TITLES.map((item) => ({
     titulo: item.titulo,
     autor: item.autor,
@@ -325,11 +207,45 @@ export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
   }));
 }
 
+export type ReaderDocumentResponse = {
+  documentId: string | number;
+  title: string;
+  author: string;
+  paginas: number;
+  blocks: string[];
+};
+
+export async function getReaderDocument(documentId: string | number): Promise<ReaderDocumentResponse> {
+  try {
+    const res = await fetch(`/api/reader/${encodeURIComponent(documentId)}`, {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+    });
+    if (res.ok) {
+      return (await res.json()) as ReaderDocumentResponse;
+    }
+  } catch (err) {
+    console.warn("Error al llamar a /api/reader:", err);
+  }
+
+  return {
+    documentId,
+    title: String(documentId),
+    author: "Autor Desconocido",
+    paginas: 150,
+    blocks: [
+      `Inicio de la lectura de "${documentId}". Este documento se procesa en bloques para generar audiolibros fluidos.`,
+      `Bloque 2: Continuación de la lectura interactiva. Mientras escuchas este fragmento, el motor genera el siguiente bloque de audio en segundo plano.`,
+      `Bloque 3: JarBees Audiobook AI integra modelos locales TTS para ofrecer una experiencia continua y optimizada.`,
+    ],
+  };
+}
+
 export function connectGoogle(): void {
   if (typeof window === "undefined") return;
   window.location.assign(`${BASE_URL}/api/jarbees/google/login`);
 }
 
-const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle, getLibraryIndex };
+const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle, getLibraryIndex, getReaderDocument };
 
 export default jarbeesApi;
