@@ -5,6 +5,7 @@ export const dynamic = "force-static";
 export async function generateStaticParams() {
   return [
     { documentId: "1" },
+    { documentId: "2" },
     { documentId: "default" },
   ];
 }
@@ -20,9 +21,9 @@ export async function GET(
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
     let documentData = null;
 
-    // Intentar consultar al backend si se ejecuta en tiempo de ejecución
+    // Consultar al backend principal (NestJS) en /api/reader/:documentId
     try {
-      const res = await fetch(`${backendUrl}/api/jarbees/library/document/${encodeURIComponent(documentId)}`, {
+      const res = await fetch(`${backendUrl}/api/reader/${encodeURIComponent(documentId)}`, {
         headers: { Accept: "application/json" },
         cache: "no-store",
       });
@@ -30,8 +31,8 @@ export async function GET(
       if (res.ok) {
         documentData = await res.json();
       }
-    } catch {
-      // Backend no disponible en build time, continúa con fallback formateado
+    } catch (err) {
+      console.warn(`[API Reader Proxy] No se pudo conectar al backend en ${backendUrl}:`, err);
     }
 
     const title = documentData?.title || documentData?.titulo || documentId;
@@ -39,15 +40,17 @@ export async function GET(
     const paginas = documentData?.pages || documentData?.paginas || 180;
 
     let blocks: string[] = [];
-    if (documentData?.content && Array.isArray(documentData.content)) {
+    if (documentData?.blocks && Array.isArray(documentData.blocks) && documentData.blocks.length > 0) {
+      blocks = documentData.blocks;
+    } else if (documentData?.content && Array.isArray(documentData.content)) {
       blocks = documentData.content;
     } else if (documentData?.text) {
       blocks = documentData.text.match(/[^.!?]+[.!?]+/g) || [documentData.text];
     } else {
       blocks = [
-        `Capítulo 1 de ${title}. Bienvenido a la lectura mediante el módulo de audiolibro de JarBees.`,
-        `Obra de ${author}. El texto extraído de la biblioteca se procesa progresivamente en bloques de síntesis de voz.`,
-        `Mientras escuchas este fragmento, JarBees continúa generando en segundo plano los siguientes bloques con el modelo sematre/orpheus:it_es-3b.`,
+        `Capítulo 1 de ${title}. Lectura procesada desde la biblioteca JarBees.`,
+        `Obra de ${author}. El texto del libro se divide progresivamente en bloques para síntesis de audio.`,
+        `Mientras escuchas este fragmento, JarBees continúa procesando en segundo plano los siguientes bloques con el modelo sematre/orpheus:it_es-3b.`,
         `Puedes bloquear la pantalla de tu dispositivo y el reproductor continuará emitiendo el audiolibro sin interrupciones.`,
       ];
     }

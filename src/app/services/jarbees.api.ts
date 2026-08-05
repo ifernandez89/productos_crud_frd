@@ -176,12 +176,29 @@ const FALLBACK_TITLES: { titulo: string; autor?: string }[] = [
 ];
 
 export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
+  // 1. Intentar consultar el endpoint dedicado de audiolibros en /api/reader
+  try {
+    const res = await fetch(`${BASE_URL}/api/reader`, {
+      method: "GET",
+      headers: { "Accept": "application/json" }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const docs = data?.documentos || data?.documents || (Array.isArray(data) ? data : null);
+      if (Array.isArray(docs) && docs.length > 0) {
+        return docs as LibraryIndexItem[];
+      }
+    }
+  } catch (error) {
+    console.warn("No se pudo obtener la biblioteca desde /api/reader:", error);
+  }
+
+  // 2. Fallback a /api/jarbees/library/index
   try {
     const res = await fetch(`${BASE_URL}/api/jarbees/library/index`, {
       method: "GET",
-      headers: {
-        "Accept": "application/json"
-      }
+      headers: { "Accept": "application/json" }
     });
 
     if (res.ok) {
@@ -197,10 +214,11 @@ export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
       }
     }
   } catch (error) {
-    console.warn("No se pudo cargar el índice de forma dinámica desde el backend, usando fallback estático:", error);
+    console.warn("No se pudo cargar el índice desde el backend, usando fallback estático:", error);
   }
 
   return FALLBACK_TITLES.map((item) => ({
+    id: item.titulo,
     titulo: item.titulo,
     autor: item.autor,
     formato: "pdf",
@@ -216,16 +234,36 @@ export type ReaderDocumentResponse = {
 };
 
 export async function getReaderDocument(documentId: string | number): Promise<ReaderDocumentResponse> {
+  // 1. Intentar backend directo
+  try {
+    const res = await fetch(`${BASE_URL}/api/reader/${encodeURIComponent(documentId)}`, {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.blocks && Array.isArray(data.blocks) && data.blocks.length > 0) {
+        return data as ReaderDocumentResponse;
+      }
+    }
+  } catch (err) {
+    console.warn("Error consultando backend /api/reader/:id directamente:", err);
+  }
+
+  // 2. Intentar API route proxy de Next.js (/api/reader/:id)
   try {
     const res = await fetch(`/api/reader/${encodeURIComponent(documentId)}`, {
       method: "GET",
       headers: { "Accept": "application/json" },
     });
     if (res.ok) {
-      return (await res.json()) as ReaderDocumentResponse;
+      const data = await res.json();
+      if (data && data.blocks && Array.isArray(data.blocks) && data.blocks.length > 0) {
+        return data as ReaderDocumentResponse;
+      }
     }
   } catch (err) {
-    console.warn("Error al llamar a /api/reader:", err);
+    console.warn("Error al llamar a /api/reader proxy:", err);
   }
 
   return {
