@@ -98,6 +98,14 @@ export default function ReaderPage() {
   // Manejar selección de un libro para escuchar
   const handleSelectBook = async (item: LibraryIndexItem) => {
     stopPlayback();
+    // Desbloquear permisos de voz nativos del navegador móvil en el gesto directo del toque
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const dummy = new SpeechSynthesisUtterance("");
+      dummy.volume = 0;
+      window.speechSynthesis.speak(dummy);
+    }
+
     setLoadingDoc(true);
     setErrorMessage(null);
     const docId = item.id !== undefined ? item.id : item.titulo;
@@ -107,7 +115,7 @@ export default function ReaderPage() {
       setCurrentBlockIndex(0);
       blockIndexRef.current = 0;
       setProgress(0);
-      setIsPlaying(false); // No auto-reproducir para requerir gesto explícito del usuario en móviles
+      setIsPlaying(true); // Iniciar reproducción automáticamente al seleccionar libro
     } catch (err) {
       console.error("Error al cargar documento:", err);
       setErrorMessage(`No se pudo cargar el texto del libro "${item.titulo}".`);
@@ -131,6 +139,11 @@ export default function ReaderPage() {
       const sentences = rawSentences.map((s) => s.trim()).filter((s) => s.length > 0);
       let sentenceIndex = 0;
 
+      const voices = window.speechSynthesis.getVoices();
+      const spanishVoice = voices.find(
+        (v) => v.lang.startsWith("es") || v.lang.includes("ES") || v.lang.includes("MX") || v.lang.includes("AR")
+      );
+
       const speakNextSentence = () => {
         if (!isPlayingRef.current) return;
 
@@ -152,6 +165,9 @@ export default function ReaderPage() {
         const sentenceText = sentences[sentenceIndex];
         const utterance = new SpeechSynthesisUtterance(sentenceText);
         utterance.lang = "es-ES";
+        if (spanishVoice) {
+          utterance.voice = spanishVoice;
+        }
         utterance.rate = playbackSpeed;
         utteranceRef.current = utterance;
 
