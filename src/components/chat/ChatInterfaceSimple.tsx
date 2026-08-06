@@ -261,42 +261,36 @@ export default function ChatInterfaceSimple() {
   useEffect(() => {
     const SpeechRecognitionAPI = (window as unknown as Record<string, unknown>).SpeechRecognition || (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
     if (SpeechRecognitionAPI) {
-      recognitionRef.current = new (SpeechRecognitionAPI as unknown as new () => SpeechRecognitionLike)();
-      recognitionRef.current.lang = "es-ES";
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
+      const recognition = new (SpeechRecognitionAPI as unknown as new () => SpeechRecognitionLike)();
+      recognition.lang = "es-ES";
+      recognition.continuous = true;
+      recognition.interimResults = true;
 
-      recognitionRef.current.onstart = () => setIsListening(true);
+      recognition.onstart = () => setIsListening(true);
 
-      recognitionRef.current.onend = () => {
-        if (recognitionRef.current !== null && isListening) {
-          try {
-            recognitionRef.current.start();
-            return;
-          } catch {
-            // ignore
-          }
-        }
+      recognition.onend = () => {
         setIsListening(false);
       };
 
-      recognitionRef.current.onresult = (event: SpeechRecognitionEventLike) => {
+      recognition.onresult = (event: SpeechRecognitionEventLike) => {
         const lastResultIndex = event.results.length - 1;
         const transcript = event.results[lastResultIndex][0].transcript;
         setInputValue(transcript);
       };
 
-      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEventLike) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
         if (event.error !== "network" && event.error !== "aborted" && event.error !== "no-speech") {
           console.warn("Speech recognition error:", event.error);
         }
       };
+
+      recognitionRef.current = recognition;
     }
 
     if ("speechSynthesis" in window) {
       setSpeechSupported(true);
     }
-  }, [isListening]);
+  }, []);
 
   // Auto-scroll
   useEffect(() => {
@@ -457,9 +451,11 @@ export default function ChatInterfaceSimple() {
 
   const toggleVoiceInput = () => {
     if (isListening) {
-      const recognition = recognitionRef.current;
-      recognitionRef.current = null;
-      recognition?.stop();
+      try {
+        recognitionRef.current?.stop();
+      } catch (error) {
+        console.warn("Error al detener el reconocimiento de voz:", error);
+      }
       setIsListening(false);
     } else {
       if (recognitionRef.current) {
