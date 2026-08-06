@@ -9,6 +9,13 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 ### Removed
 - **Botón "Mi Balance"**: Se eliminó el botón de acceso directo del header del chat, unificando la experiencia para usar únicamente el comando `/balance` (o `/balance!`).
 
+### Fixed
+- **Unificación de Resolución de Backend (`getBaseUrl`)**: Sincronización idéntica de la resolución de URL de la API en todos los servicios (`jarbees.api.ts`, `preguntas.api.ts`, `balance.api.ts`, `products.api.ts`), garantizando que el Chatbot y el Lector apunten exactamente al mismo backend activo en PC, móviles y ngrok.
+- **Soporte Transparente para ngrok (`ngrok-skip-browser-warning`)**: Inclusión del header `"ngrok-skip-browser-warning": "69420"` en todas las solicitudes fetch para omitir la pantalla de advertencia de ngrok.
+- **Navegación Compatible con GitHub Pages (`useRouter`)**: Corrección de los enlaces de navegación interna en `/reader` para usar el enrutador de Next.js (`router.push`), evitando errores `404 File Not Found` por falta del prefijo de repositorio (`/productos_crud_frd`).
+- **Panel Interactivo de Servidor (`⚙️ Backend`)**: Botón y modal en el header y banners de error para actualizar la URL del servidor o ngrok en `localStorage` con un solo clic.
+- **Fallbacks Defensivos en Lectura de Audiolibros**: Manejo seguro en `getReaderDocument` para evitar errores de pantalla ante caídas temporales de red o cambios de URL de ngrok.
+
 ### Added
 - **Módulo Lector de Audiolibros AI (`/reader`)**:
   - Nueva página `/reader` con vista de biblioteca de libros y audiolibros, integrando consulta dinámica al backend (`getLibraryIndex()`) y buscador `🔎 Buscar` en tiempo real por título y autor.
