@@ -7,7 +7,7 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 ## [Unreleased]
 
 ### Removed
-- **Botón "Mi Balance"**: Se eliminó el botón de acceso directo del header del chat, unificando la experiencia para usar únicamente el comando `/balance` (o `/balance!`).
+- **Botón "Mi Balance"**: Se eliminó el botón de acceso directo del header del chat, unificando la experiencia para usar únicamente el comando `/balance` (o `/balance`).
 
 ### Fixed
 - **Estándar Arquitectónico de Conexión al Backend (`BASE_URL`)**: Restaurada la lógica directa y limpia `export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL; const BASE_URL = BACKEND_URL ?? "http://localhost:4000";` en todos los servicios de API (`preguntas.api.ts`, `jarbees.api.ts`, `balance.api.ts`, `products.api.ts`), unificando el consumo del Chatbot y del Lector.
