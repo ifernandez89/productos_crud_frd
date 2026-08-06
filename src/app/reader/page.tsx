@@ -107,7 +107,7 @@ export default function ReaderPage() {
       setCurrentBlockIndex(0);
       blockIndexRef.current = 0;
       setProgress(0);
-      setIsPlaying(true);
+      setIsPlaying(false); // No auto-reproducir para requerir gesto explícito del usuario en móviles
     } catch (err) {
       console.error("Error al cargar documento:", err);
       setErrorMessage(`No se pudo cargar el texto del libro "${item.titulo}".`);
@@ -116,12 +116,13 @@ export default function ReaderPage() {
     }
   };
 
-  // Función para sintaxis y emisión del bloque activo
+  // Función para síntesis y emisión del bloque activo
   const speakCurrentBlock = (index: number) => {
     const doc = activeDocRef.current;
     if (!doc || !doc.blocks || !doc.blocks[index]) return;
 
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      isPlayingRef.current = true;
       window.speechSynthesis.cancel();
 
       const textToSpeak = doc.blocks[index];
@@ -137,24 +138,19 @@ export default function ReaderPage() {
         if (currentDoc && nextIndex < currentDoc.blocks.length) {
           blockIndexRef.current = nextIndex;
           setCurrentBlockIndex(nextIndex);
-          speakCurrentBlock(nextIndex);
         } else {
           setIsPlaying(false);
+          isPlayingRef.current = false;
           setProgress(100);
         }
       };
 
       utterance.onerror = (e) => {
+        // En móviles, si la API bloquea o cancela el audio, NO saltar en bucle al siguiente bloque
+        console.warn("[Reader] Evento onerror en Web Speech API:", e);
         if (e.error !== "interrupted" && e.error !== "canceled") {
-          const nextIndex = blockIndexRef.current + 1;
-          const currentDoc = activeDocRef.current;
-          if (currentDoc && nextIndex < currentDoc.blocks.length && isPlayingRef.current) {
-            blockIndexRef.current = nextIndex;
-            setCurrentBlockIndex(nextIndex);
-            speakCurrentBlock(nextIndex);
-          } else {
-            setIsPlaying(false);
-          }
+          setIsPlaying(false);
+          isPlayingRef.current = false;
         }
       };
 
@@ -196,6 +192,7 @@ export default function ReaderPage() {
   const handlePlay = () => {
     if (!activeDoc) return;
     setIsPlaying(true);
+    isPlayingRef.current = true;
     if (typeof window !== "undefined" && window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
     } else {
@@ -205,12 +202,14 @@ export default function ReaderPage() {
 
   const handlePause = () => {
     setIsPlaying(false);
+    isPlayingRef.current = false;
     if (typeof window !== "undefined" && window.speechSynthesis.speaking) {
       window.speechSynthesis.pause();
     }
   };
 
   const stopPlayback = () => {
+    isPlayingRef.current = false;
     setIsPlaying(false);
     setCurrentBlockIndex(0);
     blockIndexRef.current = 0;
