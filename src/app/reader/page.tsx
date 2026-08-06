@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   getLibraryIndex,
   getReaderDocument,
+  getBaseUrl,
+  setBackendUrl,
   type LibraryIndexItem,
   type ReaderDocumentResponse
 } from "../services/jarbees.api";
@@ -12,12 +15,17 @@ import {
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export default function ReaderPage() {
+  const router = useRouter();
   const [library, setLibrary] = useState<LibraryIndexItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeDoc, setActiveDoc] = useState<ReaderDocumentResponse | null>(null);
   const [loadingDoc, setLoadingDoc] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Estado para la URL del backend
+  const [backendUrlState, setBackendUrlState] = useState<string>("");
+  const [showBackendInput, setShowBackendInput] = useState(false);
 
   // Estados del reproductor de audio
   const [isPlaying, setIsPlaying] = useState(false);
@@ -45,6 +53,13 @@ export default function ReaderPage() {
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
 
+  // Inicializar URL de Backend activa
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setBackendUrlState(getBaseUrl());
+    }
+  }, []);
+
   // Cargar lista completa de libros desde el backend en /api/reader
   const loadLibrary = async () => {
     setLoading(true);
@@ -54,7 +69,7 @@ export default function ReaderPage() {
       setLibrary(docs);
     } catch (err) {
       console.warn("Error cargando biblioteca en /reader:", err);
-      setErrorMessage("No se pudo conectar con la biblioteca del backend. Verificá que el backend esté corriendo.");
+      setErrorMessage("No se pudo conectar con la biblioteca del backend. Verificá que el backend y ngrok estén activos.");
     } finally {
       setLoading(false);
     }
@@ -63,6 +78,13 @@ export default function ReaderPage() {
   useEffect(() => {
     loadLibrary();
   }, []);
+
+  // Guardar nueva URL de Backend desde la interfaz (útil cuando ngrok cambia de URL)
+  const handleSaveBackendUrl = () => {
+    setBackendUrl(backendUrlState);
+    setShowBackendInput(false);
+    loadLibrary();
+  };
 
   // Filtrar biblioteca por búsqueda
   const filteredLibrary = library.filter((item) => {
@@ -230,14 +252,58 @@ export default function ReaderPage() {
             </div>
           </div>
 
-          <a
-            href="/preguntas/new"
-            className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition shadow-sm"
-          >
-            <span>💬</span>
-            <span>Volver al Chat</span>
-          </a>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowBackendInput(!showBackendInput)}
+              className="flex items-center gap-1 rounded-xl border border-slate-800 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition"
+              title="Configurar URL del Backend"
+            >
+              <span>⚙️</span>
+              <span className="hidden sm:inline">Servidor</span>
+            </button>
+
+            <button
+              onClick={() => router.push("/preguntas/new")}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition shadow-sm"
+            >
+              <span>💬</span>
+              <span>Volver al Chat</span>
+            </button>
+          </div>
         </div>
+
+        {/* Panel de configuración de URL de Backend para ngrok / HTTPS */}
+        {showBackendInput && (
+          <div className="mx-auto max-w-4xl mt-3 p-3 rounded-2xl border border-cyan-500/30 bg-slate-900/90 flex flex-col sm:flex-row items-center gap-3 animate-fade-in">
+            <span className="text-xs text-cyan-400 font-medium shrink-0">🌐 URL Backend:</span>
+            <input
+              type="text"
+              value={backendUrlState}
+              onChange={(e) => setBackendUrlState(e.target.value)}
+              placeholder="Ej: https://xxxx.ngrok-free.app o http://192.168.1.50:4000"
+              className="flex-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-100 focus:border-cyan-500 focus:outline-none"
+            />
+            <div className="flex gap-2 w-full sm:w-auto justify-end">
+              <button
+                onClick={handleSaveBackendUrl}
+                className="rounded-xl bg-cyan-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-cyan-400 transition"
+              >
+                Conectar
+              </button>
+              <button
+                onClick={() => {
+                  setBackendUrl("");
+                  setBackendUrlState(getBaseUrl());
+                  setShowBackendInput(false);
+                  loadLibrary();
+                }}
+                className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-700"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content Layout */}
@@ -246,12 +312,20 @@ export default function ReaderPage() {
         {errorMessage && (
           <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-xs text-red-300 flex items-center justify-between gap-3">
             <span>⚠️ {errorMessage}</span>
-            <button
-              onClick={loadLibrary}
-              className="underline font-bold text-red-200 shrink-0"
-            >
-              Reintentar
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowBackendInput(true)}
+                className="underline font-bold text-cyan-300"
+              >
+                ⚙️ Configurar Servidor
+              </button>
+              <button
+                onClick={loadLibrary}
+                className="underline font-bold text-red-200"
+              >
+                Reintentar
+              </button>
+            </div>
           </div>
         )}
 

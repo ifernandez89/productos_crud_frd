@@ -146,6 +146,7 @@ const resolveGeoCoords = async (message: string): Promise<GeoCoords | null> => {
 // ─── Headers helper ───────────────────────────────────────────────────────────
 const buildHeaders = (): Record<string, string> => ({
   "Content-Type": "application/json",
+  "ngrok-skip-browser-warning": "69420",
 });
 
 // ─── NIVEL 1: Obtener / crear sesión ─────────────────────────────────────────
