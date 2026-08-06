@@ -5,14 +5,14 @@ on:
     branches: [ main, develop ]
   workflow_dispatch: {}
 
-# Cancela automáticamente cualquier run anterior en cola o en progreso al llegar una nueva
 concurrency:
   group: gh-pages-deploy
   cancel-in-progress: true
 
-# Permisos necesarios para que github-actions[bot] pueda hacer push a gh-pages
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build-and-deploy:
@@ -46,8 +46,24 @@ jobs:
           NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
           NEXT_PUBLIC_MASTER_PASSWORD: ${{ secrets.NEXT_PUBLIC_MASTER_PASSWORD }}
 
-      - name: Deploy to gh-pages
+      - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./out
+
+      - name: Upload GitHub Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy-to-pages:
+    needs: build-and-deploy
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
