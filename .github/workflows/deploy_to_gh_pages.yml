@@ -1,1 +1,51 @@
+name: Build & Deploy to gh-pages
 
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+# Cancela automáticamente cualquier run anterior en cola o en progreso al llegar una nueva
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: true
+
+# Permisos necesarios para que github-actions[bot] pueda hacer push a gh-pages
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+      NEXT_PUBLIC_MASTER_PASSWORD: ${{ secrets.NEXT_PUBLIC_MASTER_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+        env:
+          NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+          NEXT_PUBLIC_MASTER_PASSWORD: ${{ secrets.NEXT_PUBLIC_MASTER_PASSWORD }}
+
+      - name: Generate Workbox SW
+        run: npm run generate-workbox-sw || true
+
+      - name: Build (static export)
+        run: npm run build
+        env:
+          NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+          NEXT_PUBLIC_MASTER_PASSWORD: ${{ secrets.NEXT_PUBLIC_MASTER_PASSWORD }}
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
