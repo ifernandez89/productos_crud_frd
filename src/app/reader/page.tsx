@@ -20,6 +20,27 @@ export default function ReaderPage() {
   const [activeDoc, setActiveDoc] = useState<ReaderDocumentResponse | null>(null);
   const [loadingDoc, setLoadingDoc] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [backendUrlInput, setBackendUrlInput] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = window.localStorage.getItem("jarbees_backend_url");
+      if (saved) setBackendUrlInput(saved);
+    }
+  }, []);
+
+  const handleSaveBackendUrl = () => {
+    if (typeof window !== "undefined") {
+      if (backendUrlInput.trim()) {
+        window.localStorage.setItem("jarbees_backend_url", backendUrlInput.trim().replace(/\/$/, ""));
+      } else {
+        window.localStorage.removeItem("jarbees_backend_url");
+      }
+    }
+    setShowConfigModal(false);
+    loadLibrary();
+  };
 
   // Estados del reproductor de audio
   const [isPlaying, setIsPlaying] = useState(false);
@@ -234,6 +255,14 @@ export default function ReaderPage() {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowConfigModal(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-950/40 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-900/50 transition shadow-sm"
+              title="Configurar URL del backend Ngrok"
+            >
+              <span>⚙️</span>
+              <span className="hidden sm:inline">Backend URL</span>
+            </button>
+            <button
               onClick={() => router.push("/preguntas/new")}
               className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition shadow-sm"
             >
@@ -243,6 +272,41 @@ export default function ReaderPage() {
           </div>
         </div>
       </header>
+
+      {/* Modal / Banner de Configuración de Backend */}
+      {showConfigModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-cyan-500/30 bg-slate-900 p-6 shadow-2xl flex flex-col gap-4">
+            <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span>⚙️ Configurar URL del Backend</span>
+            </h3>
+            <p className="text-xs text-slate-400">
+              Ingresá tu URL pública de Ngrok (ej: <code className="text-cyan-300">https://xxxx.ngrok-free.app</code>). Se guardará en tu navegador para conectar el celular con la biblioteca de tu casa.
+            </p>
+            <input
+              type="text"
+              placeholder="https://tu-tunnel.ngrok-free.app"
+              value={backendUrlInput}
+              onChange={(e) => setBackendUrlInput(e.target.value)}
+              className="rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-slate-100 focus:border-cyan-500 focus:outline-none"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowConfigModal(false)}
+                className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-400 hover:bg-slate-800"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveBackendUrl}
+                className="rounded-xl bg-cyan-600 px-4 py-2 text-xs font-bold text-white hover:bg-cyan-500 transition"
+              >
+                Guardar y Reintentar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content Layout */}
       <main className="flex-1 mx-auto max-w-4xl w-full p-4 md:p-6 flex flex-col gap-6">
@@ -446,6 +510,15 @@ export default function ReaderPage() {
           ) : filteredLibrary.length === 0 ? (
             <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 text-center flex flex-col items-center gap-3">
               <p className="text-sm text-slate-400">No se encontraron libros en la biblioteca.</p>
+              <p className="text-xs text-slate-500 max-w-sm">
+                Si estás accediendo desde tu celular o GitHub Pages, configurá la URL de tu túnel de Ngrok para conectar con tu PC de casa.
+              </p>
+              <button
+                onClick={() => setShowConfigModal(true)}
+                className="mt-1 rounded-xl border border-cyan-500/30 bg-cyan-950/40 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-900/50 transition shadow-sm"
+              >
+                ⚙️ Configurar URL de Backend (Ngrok)
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

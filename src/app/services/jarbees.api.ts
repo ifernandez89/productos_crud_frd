@@ -168,11 +168,16 @@ export type LibraryIndexItem = {
 };
 
 export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
+  const customUrl = typeof window !== "undefined" ? window.localStorage.getItem("jarbees_backend_url") : null;
+  const lanHost = typeof window !== "undefined" && window.location.hostname !== "localhost" && !window.location.hostname.includes("ngrok") ? `http://${window.location.hostname}:4000` : null;
+
   const urlsToTry = [
+    customUrl,
     BASE_URL,
+    lanHost,
     "http://localhost:4000",
     "http://127.0.0.1:4000",
-  ];
+  ].filter((u): u is string => Boolean(u && u.trim().length > 0));
 
   for (const url of urlsToTry) {
     if (!url) continue;
@@ -240,11 +245,16 @@ export type ReaderDocumentResponse = {
 };
 
 export async function getReaderDocument(documentId: string | number): Promise<ReaderDocumentResponse> {
+  const customUrl = typeof window !== "undefined" ? window.localStorage.getItem("jarbees_backend_url") : null;
+  const lanHost = typeof window !== "undefined" && window.location.hostname !== "localhost" && !window.location.hostname.includes("ngrok") ? `http://${window.location.hostname}:4000` : null;
+
   const urlsToTry = [
+    customUrl,
     BASE_URL,
+    lanHost,
     "http://localhost:4000",
     "http://127.0.0.1:4000",
-  ];
+  ].filter((u): u is string => Boolean(u && u.trim().length > 0));
 
   for (const url of urlsToTry) {
     if (!url) continue;
