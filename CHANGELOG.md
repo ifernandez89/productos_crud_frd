@@ -16,6 +16,7 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
   - Controles completos de reproducción: Play, Pause, Stop, barra de progreso (`input range`) y selector de velocidad exclusivo (`0.75x`, `1x`, `1.25x`, `1.5x`, `2x`).
   - Endpoint API `GET /api/reader/[documentId]` para extracción e integración por bloques de texto con modelo local de Ollama (`sematre/orpheus:it_es-3b`).
   - Nuevo botón `🎧 Lector` integrado en el header del chat (`ChatInterfaceSimple`) para navegar directamente a la sección `/reader`.
+  - Integración estricta con los endpoints de audiolibros del backend NestJS (`/api/reader` y `/api/reader/:id`), garantizando la lectura secuencial ininterrumpida de todos los libros reales (hasta miles de bloques por obra).
 - **Autenticación JWT completa**:
   - `auth.api.ts`: Servicio con `login()`, `verifyToken()`, `logout()`, `getToken()`, `storeToken()`, `buildAuthHeaders()`
   - Token JWT con expiración de 30 días, guardado en `localStorage` bajo clave `jarbees_auth_token`
