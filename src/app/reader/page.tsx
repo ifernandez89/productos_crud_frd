@@ -2,8 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-
-import { getLibraryIndex, getReaderDocument, type LibraryIndexItem, type ReaderDocumentResponse } from "../services/jarbees.api";
+import {
+  getLibraryIndex,
+  getReaderDocument,
+  type LibraryIndexItem,
+  type ReaderDocumentResponse
+} from "../services/jarbees.api";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -13,43 +17,57 @@ export default function ReaderPage() {
   const [loading, setLoading] = useState(true);
   const [activeDoc, setActiveDoc] = useState<ReaderDocumentResponse | null>(null);
   const [loadingDoc, setLoadingDoc] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Estados del reproductor de audio
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
-  const [progress, setProgress] = useState(0); // 0 a 100%
-  const [currentTimeFormatted, setCurrentTimeFormatted] = useState("0:00");
-  const [durationFormatted, setDurationFormatted] = useState("0:00");
+  const [progress, setProgress] = useState(0);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Cargar índice de biblioteca desde backend
+  // Refs para control de flujo secuencial continuo
+  const blockIndexRef = useRef(0);
+  const activeDocRef = useRef<ReaderDocumentResponse | null>(null);
+  const isPlayingRef = useRef(false);
+
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
-      try {
-        const docs = await getLibraryIndex();
-        if (mounted) {
-          setLibrary(docs);
-        }
-      } catch (err) {
-        console.warn("Error cargando biblioteca en /reader:", err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
+    blockIndexRef.current = currentBlockIndex;
+  }, [currentBlockIndex]);
+
+  useEffect(() => {
+    activeDocRef.current = activeDoc;
+  }, [activeDoc]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  // Cargar lista completa de libros desde el backend en /api/reader
+  const loadLibrary = async () => {
+    setLoading(true);
+    setErrorMessage(null);
+    try {
+      const docs = await getLibraryIndex();
+      setLibrary(docs);
+    } catch (err) {
+      console.warn("Error cargando biblioteca en /reader:", err);
+      setErrorMessage("No se pudo conectar con la biblioteca del backend. Verificá que el backend esté corriendo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLibrary();
   }, []);
 
   // Filtrar biblioteca por búsqueda
   const filteredLibrary = library.filter((item) => {
     const q = searchQuery.toLowerCase();
-    const titleMatch = item.titulo.toLowerCase().includes(q);
+    const titleMatch = item.titulo ? item.titulo.toLowerCase().includes(q) : false;
     const authorMatch = item.autor ? item.autor.toLowerCase().includes(q) : false;
     return titleMatch || authorMatch;
   });
@@ -58,71 +76,107 @@ export default function ReaderPage() {
   const handleSelectBook = async (item: LibraryIndexItem) => {
     stopPlayback();
     setLoadingDoc(true);
-    const docId = item.id || item.titulo;
+    setErrorMessage(null);
+    const docId = item.id !== undefined ? item.id : item.titulo;
     try {
       const data = await getReaderDocument(docId);
-      setActiveDoc({
-        ...data,
-        title: item.titulo,
-        author: item.autor || data.author || "Autor Desconocido",
-        paginas: item.paginas || data.paginas || 180,
-      });
+      setActiveDoc(data);
       setCurrentBlockIndex(0);
+      blockIndexRef.current = 0;
       setProgress(0);
       setIsPlaying(true);
     } catch (err) {
       console.error("Error al cargar documento:", err);
+      setErrorMessage(`No se pudo cargar el texto del libro "${item.titulo}".`);
     } finally {
       setLoadingDoc(false);
     }
   };
 
-  // Efecto para controlar la lectura del bloque activo
-  useEffect(() => {
-    if (!isPlaying || !activeDoc || !activeDoc.blocks || activeDoc.blocks.length === 0) {
-      return;
-    }
-
-    const currentText = activeDoc.blocks[currentBlockIndex];
-    if (!currentText) return;
+  // Función para sintaxis y emisión del bloque activo
+  const speakCurrentBlock = (index: number) => {
+    const doc = activeDocRef.current;
+    if (!doc || !doc.blocks || !doc.blocks[index]) return;
 
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(currentText);
+      const textToSpeak = doc.blocks[index];
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = "es-ES";
       utterance.rate = playbackSpeed;
       utteranceRef.current = utterance;
 
       utterance.onend = () => {
-        if (currentBlockIndex < activeDoc.blocks.length - 1) {
-          setCurrentBlockIndex((prev) => prev + 1);
-          setProgress(((currentBlockIndex + 1) / activeDoc.blocks.length) * 100);
+        if (!isPlayingRef.current) return;
+        const nextIndex = blockIndexRef.current + 1;
+        const currentDoc = activeDocRef.current;
+        if (currentDoc && nextIndex < currentDoc.blocks.length) {
+          blockIndexRef.current = nextIndex;
+          setCurrentBlockIndex(nextIndex);
+          speakCurrentBlock(nextIndex);
         } else {
           setIsPlaying(false);
           setProgress(100);
         }
       };
 
-      utterance.onerror = () => {
-        setIsPlaying(false);
+      utterance.onerror = (e) => {
+        if (e.error !== "interrupted" && e.error !== "canceled") {
+          const nextIndex = blockIndexRef.current + 1;
+          const currentDoc = activeDocRef.current;
+          if (currentDoc && nextIndex < currentDoc.blocks.length && isPlayingRef.current) {
+            blockIndexRef.current = nextIndex;
+            setCurrentBlockIndex(nextIndex);
+            speakCurrentBlock(nextIndex);
+          } else {
+            setIsPlaying(false);
+          }
+        }
       };
 
       window.speechSynthesis.speak(utterance);
     }
+  };
 
-    // Actualizar progreso
-    const pct = ((currentBlockIndex + 1) / activeDoc.blocks.length) * 100;
-    setProgress(pct);
-    setCurrentTimeFormatted(`${currentBlockIndex + 1}:00`);
-    setDurationFormatted(`${activeDoc.blocks.length}:00`);
-  }, [isPlaying, currentBlockIndex, activeDoc, playbackSpeed]);
+  // Efecto al cambiar de bloque o estado de reproducción
+  useEffect(() => {
+    if (isPlaying && activeDoc && activeDoc.blocks && activeDoc.blocks.length > 0) {
+      speakCurrentBlock(currentBlockIndex);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying, currentBlockIndex, playbackSpeed]);
+
+  // Keep-alive en dispositivos móviles (Android / iOS)
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        if (typeof window !== "undefined" && window.speechSynthesis.speaking && window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+      }, 3000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPlaying]);
+
+  // Actualizar progreso %
+  useEffect(() => {
+    if (activeDoc && activeDoc.blocks && activeDoc.blocks.length > 0) {
+      const pct = ((currentBlockIndex + 1) / activeDoc.blocks.length) * 100;
+      setProgress(pct);
+    }
+  }, [currentBlockIndex, activeDoc]);
 
   const handlePlay = () => {
     if (!activeDoc) return;
     setIsPlaying(true);
     if (typeof window !== "undefined" && window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
+    } else {
+      speakCurrentBlock(currentBlockIndex);
     }
   };
 
@@ -136,6 +190,7 @@ export default function ReaderPage() {
   const stopPlayback = () => {
     setIsPlaying(false);
     setCurrentBlockIndex(0);
+    blockIndexRef.current = 0;
     setProgress(0);
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
@@ -187,6 +242,19 @@ export default function ReaderPage() {
 
       {/* Main Content Layout */}
       <main className="flex-1 mx-auto max-w-4xl w-full p-4 md:p-6 flex flex-col gap-6">
+        {/* Banner de Error */}
+        {errorMessage && (
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-xs text-red-300 flex items-center justify-between gap-3">
+            <span>⚠️ {errorMessage}</span>
+            <button
+              onClick={loadLibrary}
+              className="underline font-bold text-red-200 shrink-0"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+
         {/* Reproductor de Audio Activo */}
         {activeDoc && (
           <section className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/30 via-slate-900/80 to-blue-950/30 p-5 md:p-6 shadow-2xl backdrop-blur-md flex flex-col gap-5 relative overflow-hidden animate-fade-in">
@@ -201,7 +269,9 @@ export default function ReaderPage() {
                 <div>
                   <span className="text-[10px] uppercase font-bold tracking-widest text-cyan-400">Audiolibro en reproducción</span>
                   <h2 className="text-lg md:text-xl font-bold text-slate-100">{activeDoc.title}</h2>
-                  <p className="text-xs text-slate-400 font-medium">{activeDoc.author} • {activeDoc.paginas} páginas</p>
+                  <p className="text-xs text-slate-400 font-medium">
+                    {activeDoc.author} • {activeDoc.paginas} páginas • Total: {activeDoc.blocks.length} bloques
+                  </p>
                 </div>
               </div>
 
@@ -213,11 +283,11 @@ export default function ReaderPage() {
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
                       <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
                     </span>
-                    Reproduciendo bloque {currentBlockIndex + 1}/{activeDoc.blocks.length}
+                    Bloque {currentBlockIndex + 1} de {activeDoc.blocks.length}
                   </span>
                 ) : (
                   <span className="rounded-full bg-slate-800 border border-slate-700 px-3 py-1 text-xs text-slate-400">
-                    Pausado
+                    Pausado (Bloque {currentBlockIndex + 1} de {activeDoc.blocks.length})
                   </span>
                 )}
               </div>
@@ -230,33 +300,30 @@ export default function ReaderPage() {
               </p>
             </div>
 
-            {/* Barra de progreso */}
+            {/* Barra de progreso interactiva */}
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between text-[11px] font-semibold text-slate-400">
-                <span>{currentTimeFormatted}</span>
-                <span>{durationFormatted}</span>
+                <span>Bloque {currentBlockIndex + 1} / {activeDoc.blocks.length}</span>
+                <span>{Math.round(progress)}%</span>
               </div>
               <input
                 type="range"
                 min="0"
-                max="100"
-                value={progress}
+                max={Math.max(activeDoc.blocks.length - 1, 1)}
+                value={currentBlockIndex}
                 onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setProgress(val);
-                  if (activeDoc.blocks.length) {
-                    const idx = Math.min(
-                      Math.floor((val / 100) * activeDoc.blocks.length),
-                      activeDoc.blocks.length - 1
-                    );
-                    setCurrentBlockIndex(idx);
+                  const idx = Number(e.target.value);
+                  setCurrentBlockIndex(idx);
+                  blockIndexRef.current = idx;
+                  if (isPlaying) {
+                    speakCurrentBlock(idx);
                   }
                 }}
                 className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-800 accent-cyan-400"
               />
             </div>
 
-            {/* Elemento nativo HTML <audio> para background / lock screen */}
+            {/* Elemento nativo HTML <audio> */}
             <audio
               ref={audioRef}
               controls
@@ -292,6 +359,23 @@ export default function ReaderPage() {
                 >
                   <span>⏹</span>
                   <span className="text-xs">Stop</span>
+                </button>
+
+                {/* Botón Siguiente Bloque */}
+                <button
+                  onClick={() => {
+                    if (activeDoc && currentBlockIndex < activeDoc.blocks.length - 1) {
+                      const next = currentBlockIndex + 1;
+                      setCurrentBlockIndex(next);
+                      blockIndexRef.current = next;
+                      if (isPlaying) speakCurrentBlock(next);
+                    }
+                  }}
+                  disabled={!activeDoc || currentBlockIndex >= activeDoc.blocks.length - 1}
+                  className="flex h-11 px-3 items-center justify-center rounded-2xl border border-slate-700 bg-slate-800 text-slate-300 disabled:opacity-40 hover:bg-slate-700 transition text-xs font-semibold"
+                  title="Siguiente Bloque"
+                >
+                  ▶▶
                 </button>
               </div>
 
@@ -352,18 +436,18 @@ export default function ReaderPage() {
             <div className="flex h-48 items-center justify-center">
               <div className="flex flex-col items-center gap-3">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent shadow-lg shadow-cyan-500/20" />
-                <p className="text-xs text-slate-400">Consultando biblioteca en backend...</p>
+                <p className="text-xs text-slate-400">Consultando biblioteca en el backend...</p>
               </div>
             </div>
           ) : filteredLibrary.length === 0 ? (
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 text-center">
-              <p className="text-sm text-slate-400">No se encontraron libros que coincidan con la búsqueda.</p>
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 text-center flex flex-col items-center gap-3">
+              <p className="text-sm text-slate-400">No se encontraron libros en la biblioteca.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredLibrary.map((item, index) => (
                 <div
-                  key={index}
+                  key={item.id !== undefined ? String(item.id) : index}
                   className={`group rounded-2xl border p-4 transition-all duration-200 flex flex-col justify-between gap-3 shadow-md ${
                     activeDoc?.title === item.titulo
                       ? "border-cyan-500/50 bg-cyan-950/20 shadow-cyan-500/5"
@@ -385,8 +469,8 @@ export default function ReaderPage() {
                         <span className="rounded-md bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400 font-medium uppercase">
                           {item.formato || "PDF"}
                         </span>
-                        <span className="text-[10px] text-slate-500">
-                          {item.paginas || "PDF Completo"}
+                        <span className="text-[10px] text-cyan-400 font-medium">
+                          {item.paginas ? `${item.paginas} págs` : "PDF Completo"}
                         </span>
                       </div>
                     </div>
@@ -397,7 +481,11 @@ export default function ReaderPage() {
                     disabled={loadingDoc && activeDoc?.title === item.titulo}
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-800 border border-slate-700 py-2 text-xs font-semibold text-slate-200 transition group-hover:border-cyan-500/40 group-hover:bg-cyan-500/10 group-hover:text-cyan-300"
                   >
-                    <span>▶ Escuchar</span>
+                    {loadingDoc && activeDoc?.title === item.titulo ? (
+                      <span>Cargando libro completo...</span>
+                    ) : (
+                      <span>▶ Escuchar Libro Completo</span>
+                    )}
                   </button>
                 </div>
               ))}

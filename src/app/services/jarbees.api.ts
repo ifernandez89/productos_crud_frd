@@ -160,69 +160,23 @@ export type LibraryIndexItem = {
   categorias?: string[];
   embeddings?: string;
   paginas?: number;
+  cantidadChunks?: number;
 };
 
-const FALLBACK_TITLES: { titulo: string; autor?: string }[] = [
-  { titulo: "El Plano Astral", autor: "Charles Webster Leadbeater" },
-  { titulo: "Adventures Beyond the Body", autor: "William Buhlman" },
-  { titulo: "Los Nueve Ritos del Munay-Ki", autor: "Tradición Q'ero / Alberto Villoldo" },
-  { titulo: "Herbario y Plantas Medicinales", autor: "Recopilación propia" },
-  { titulo: "Sanaciones Populares y Oraciones Curativas", autor: "Tradición popular regional" },
-  { titulo: "Angeles Arrien Las Cuatro Sendas del Chaman", autor: "Angeles Arrien" },
-  { titulo: "The Etheric Double: The Health Aura of Man", autor: "Arthur E. Powell" },
-  { titulo: "El Kybalion", autor: "Tres Iniciados / Hermes Trismegisto" },
-  { titulo: "El hombre y sus símbolos", autor: "Carl Gustav Jung" },
-  { titulo: "La Doctrina Secreta", autor: "Helena Petrovna Blavatsky" },
-];
-
 export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
-  // 1. Intentar consultar el endpoint dedicado de audiolibros en /api/reader
-  try {
-    const res = await fetch(`${BASE_URL}/api/reader`, {
-      method: "GET",
-      headers: { "Accept": "application/json" }
-    });
+  const res = await fetch(`${BASE_URL}/api/reader`, {
+    method: "GET",
+    headers: { "Accept": "application/json" }
+  });
 
-    if (res.ok) {
-      const data = await res.json();
-      const docs = data?.documentos || data?.documents || (Array.isArray(data) ? data : null);
-      if (Array.isArray(docs) && docs.length > 0) {
-        return docs as LibraryIndexItem[];
-      }
-    }
-  } catch (error) {
-    console.warn("No se pudo obtener la biblioteca desde /api/reader:", error);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Error consultando biblioteca en /api/reader: ${text}`);
   }
 
-  // 2. Fallback a /api/jarbees/library/index
-  try {
-    const res = await fetch(`${BASE_URL}/api/jarbees/library/index`, {
-      method: "GET",
-      headers: { "Accept": "application/json" }
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      let list: unknown[] = [];
-      if (Array.isArray(data)) {
-        list = data;
-      } else if (data && typeof data === "object") {
-        list = (data as Record<string, unknown>).documentos as unknown[] ?? (data as Record<string, unknown>).documents as unknown[] ?? [];
-      }
-      if (Array.isArray(list) && list.length > 0) {
-        return list as LibraryIndexItem[];
-      }
-    }
-  } catch (error) {
-    console.warn("No se pudo cargar el índice desde el backend, usando fallback estático:", error);
-  }
-
-  return FALLBACK_TITLES.map((item) => ({
-    id: item.titulo,
-    titulo: item.titulo,
-    autor: item.autor,
-    formato: "pdf",
-  }));
+  const data = await res.json();
+  const list = data?.documentos || data?.documents || (Array.isArray(data) ? data : []);
+  return list as LibraryIndexItem[];
 }
 
 export type ReaderDocumentResponse = {
@@ -230,53 +184,22 @@ export type ReaderDocumentResponse = {
   title: string;
   author: string;
   paginas: number;
+  cantidadChunks?: number;
   blocks: string[];
 };
 
 export async function getReaderDocument(documentId: string | number): Promise<ReaderDocumentResponse> {
-  // 1. Intentar backend directo
-  try {
-    const res = await fetch(`${BASE_URL}/api/reader/${encodeURIComponent(documentId)}`, {
-      method: "GET",
-      headers: { "Accept": "application/json" },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.blocks && Array.isArray(data.blocks) && data.blocks.length > 0) {
-        return data as ReaderDocumentResponse;
-      }
-    }
-  } catch (err) {
-    console.warn("Error consultando backend /api/reader/:id directamente:", err);
+  const res = await fetch(`${BASE_URL}/api/reader/${encodeURIComponent(documentId)}`, {
+    method: "GET",
+    headers: { "Accept": "application/json" },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Error al obtener documento ${documentId}: ${text}`);
   }
 
-  // 2. Intentar API route proxy de Next.js (/api/reader/:id)
-  try {
-    const res = await fetch(`/api/reader/${encodeURIComponent(documentId)}`, {
-      method: "GET",
-      headers: { "Accept": "application/json" },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.blocks && Array.isArray(data.blocks) && data.blocks.length > 0) {
-        return data as ReaderDocumentResponse;
-      }
-    }
-  } catch (err) {
-    console.warn("Error al llamar a /api/reader proxy:", err);
-  }
-
-  return {
-    documentId,
-    title: String(documentId),
-    author: "Autor Desconocido",
-    paginas: 150,
-    blocks: [
-      `Inicio de la lectura de "${documentId}". Este documento se procesa en bloques para generar audiolibros fluidos.`,
-      `Bloque 2: Continuación de la lectura interactiva. Mientras escuchas este fragmento, el motor genera el siguiente bloque de audio en segundo plano.`,
-      `Bloque 3: JarBees Audiobook AI integra modelos locales TTS para ofrecer una experiencia continua y optimizada.`,
-    ],
-  };
+  return (await res.json()) as ReaderDocumentResponse;
 }
 
 export function connectGoogle(): void {
