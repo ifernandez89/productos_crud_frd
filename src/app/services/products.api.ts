@@ -1,6 +1,7 @@
-import { getBaseUrl } from "./jarbees.api";
-
+//funciones que piden al backend
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+// Use logical OR so an empty string secret falls back to the default localhost URL
+const BASE_URL = BACKEND_URL || "http://localhost:4000";
 const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
 const buildHeaders = (hasJson = false) => {
@@ -12,7 +13,7 @@ const buildHeaders = (hasJson = false) => {
 
 export async function getProducts() {
   try {
-    const res = await fetch(`${getBaseUrl()}/api/products`, {
+    const res = await fetch(`${BASE_URL}/api/products`, {
       method: "GET",
       cache: "no-store",
       headers: buildHeaders(false),
@@ -31,7 +32,7 @@ export async function getProducts() {
 }
 
 export async function getProduct(id: string) {
-  const data = await fetch(`${getBaseUrl()}/api/products/${id}`, {
+  const data = await fetch(`${BASE_URL}/api/products/${id}`, {
     method: "GET",
     cache: "no-store",
     headers: buildHeaders(false),
@@ -40,7 +41,7 @@ export async function getProduct(id: string) {
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProduct(productData: any) {
-  const res = await fetch(`${getBaseUrl()}/api/products`, {
+  const res = await fetch(`${BASE_URL}/api/products`, {
     method: "POST",
     headers: buildHeaders(true),
     body: JSON.stringify(productData),
@@ -52,7 +53,7 @@ export async function createProduct(productData: any) {
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateProduct(id: string, newProduct: any) {
-  const res = await fetch(`${getBaseUrl()}/api/products/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/products/${id}`, {
     method: "PATCH",
     headers: buildHeaders(true),
     body: JSON.stringify(newProduct),
@@ -62,7 +63,7 @@ export async function updateProduct(id: string, newProduct: any) {
 }
 
 export async function deleteProduct(id: string) {
-  const res = await fetch(`${getBaseUrl()}/api/products/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/products/${id}`, {
     method: "DELETE",
     headers: buildHeaders(false),
   });

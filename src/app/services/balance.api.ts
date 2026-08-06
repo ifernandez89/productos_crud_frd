@@ -1,4 +1,6 @@
-import { getBaseUrl } from "./jarbees.api";
+import { BACKEND_URL } from "./preguntas.api";
+
+const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
 
 export interface BalanceQuestion {
   id: number;
@@ -50,21 +52,12 @@ export interface BalanceReport {
   }>;
 }
 
-const buildHeaders = (hasJson = true): Record<string, string> => {
-  const headers: Record<string, string> = {
-    "ngrok-skip-browser-warning": "69420",
-  };
-  if (hasJson) headers["Content-Type"] = "application/json";
-  else headers["Accept"] = "application/json";
-  const token = process.env.NEXT_PUBLIC_API_TOKEN;
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  return headers;
-};
-
 export async function startBalanceSession(type = "manual"): Promise<BalanceSessionResponse> {
-  const res = await fetch(`${getBaseUrl()}/api/balance/start`, {
+  const res = await fetch(`${BASE_URL}/api/balance/start`, {
     method: "POST",
-    headers: buildHeaders(true),
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ type }),
   });
   if (!res.ok) {
@@ -78,9 +71,11 @@ export async function submitBalanceAnswer(
   questionId: number,
   answer: string
 ): Promise<SubmitAnswerResponse> {
-  const res = await fetch(`${getBaseUrl()}/api/balance/${sessionId}/answer`, {
+  const res = await fetch(`${BASE_URL}/api/balance/${sessionId}/answer`, {
     method: "POST",
-    headers: buildHeaders(true),
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ questionId, answer }),
   });
   if (!res.ok) {
@@ -90,9 +85,11 @@ export async function submitBalanceAnswer(
 }
 
 export async function finishBalanceSession(sessionId: number): Promise<BalanceReport> {
-  const res = await fetch(`${getBaseUrl()}/api/balance/${sessionId}/finish`, {
+  const res = await fetch(`${BASE_URL}/api/balance/${sessionId}/finish`, {
     method: "POST",
-    headers: buildHeaders(true),
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
   if (!res.ok) {
     throw new Error(`Error al finalizar balance: ${await res.text()}`);
@@ -101,9 +98,11 @@ export async function finishBalanceSession(sessionId: number): Promise<BalanceRe
 }
 
 export async function getLatestBalance(): Promise<BalanceReport | { message: string }> {
-  const res = await fetch(`${getBaseUrl()}/api/balance/latest`, {
+  const res = await fetch(`${BASE_URL}/api/balance/latest`, {
     method: "GET",
-    headers: buildHeaders(false),
+    headers: {
+      "Accept": "application/json",
+    },
   });
   if (!res.ok) {
     throw new Error(`Error al obtener el último balance: ${await res.text()}`);
@@ -112,9 +111,11 @@ export async function getLatestBalance(): Promise<BalanceReport | { message: str
 }
 
 export async function getBalanceHistory(): Promise<unknown[]> {
-  const res = await fetch(`${getBaseUrl()}/api/balance/history`, {
+  const res = await fetch(`${BASE_URL}/api/balance/history`, {
     method: "GET",
-    headers: buildHeaders(false),
+    headers: {
+      "Accept": "application/json",
+    },
   });
   if (!res.ok) {
     throw new Error(`Error al obtener historial de balances: ${await res.text()}`);

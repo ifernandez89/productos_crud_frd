@@ -10,11 +10,12 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 - **Botón "Mi Balance"**: Se eliminó el botón de acceso directo del header del chat, unificando la experiencia para usar únicamente el comando `/balance` (o `/balance!`).
 
 ### Fixed
-- **Unificación de Resolución de Backend (`getBaseUrl`)**: Sincronización idéntica de la resolución de URL de la API en todos los servicios (`jarbees.api.ts`, `preguntas.api.ts`, `balance.api.ts`, `products.api.ts`), garantizando que el Chatbot y el Lector apunten exactamente al mismo backend activo en PC, móviles y ngrok.
-- **Soporte Transparente para ngrok (`ngrok-skip-browser-warning`)**: Inclusión del header `"ngrok-skip-browser-warning": "69420"` en todas las solicitudes fetch para omitir la pantalla de advertencia de ngrok.
-- **Navegación Compatible con GitHub Pages (`useRouter`)**: Corrección de los enlaces de navegación interna en `/reader` para usar el enrutador de Next.js (`router.push`), evitando errores `404 File Not Found` por falta del prefijo de repositorio (`/productos_crud_frd`).
-- **Panel Interactivo de Servidor (`⚙️ Backend`)**: Botón y modal en el header y banners de error para actualizar la URL del servidor o ngrok en `localStorage` con un solo clic.
-- **Fallbacks Defensivos en Lectura de Audiolibros**: Manejo seguro en `getReaderDocument` para evitar errores de pantalla ante caídas temporales de red o cambios de URL de ngrok.
+- **Estándar Arquitectónico de Conexión al Backend (`BASE_URL`)**: Restaurada la lógica directa y limpia `export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL; const BASE_URL = BACKEND_URL ?? "http://localhost:4000";` en todos los servicios de API (`preguntas.api.ts`, `jarbees.api.ts`, `balance.api.ts`, `products.api.ts`), unificando el consumo del Chatbot y del Lector.
+- **Corrección de Bloqueo CORS Preflight (`ngrok-skip-browser-warning`)**: Condicionada la cabecera `ngrok-skip-browser-warning` únicamente a llamadas que contengan `ngrok` en la URL. Esto evita que solicitudes locales a `http://localhost:4000` fallen durante el preflight OPTIONS de los navegadores.
+- **Redirección Nativa de Servidor (`HomePage`)**: Actualizado `src/app/page.tsx` para usar `redirect("/preguntas/new")` de Next.js en lugar de un `useEffect` del cliente, eliminando retardos y pantallas de carga al ingresar a la raíz.
+- **Redirección Alias `/lector`**: Creada la página `src/app/lector/page.tsx` que redirige instantáneamente a `/reader`, permitiendo ambas URLs de acceso a la biblioteca.
+- **Claves Únicas en Renderizado de Lista (`React Key Duplicate`)**: Corregido el atributo `key` en `src/app/reader/page.tsx` a `key={`book-${item.id || item.titulo || index}-${index}`}`, resolviendo las 22 advertencias de React por claves duplicadas.
+- **Reglas Persistentes de Agente (`.agents/AGENTS.md`)**: Creado el archivo de reglas de espacio de trabajo para garantizar la preservación inalterable del estándar de comunicación frontend-backend en el desarrollo futuro.
 
 ### Added
 - **Módulo Lector de Audiolibros AI (`/reader`)**:

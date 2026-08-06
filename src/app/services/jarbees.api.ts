@@ -1,43 +1,13 @@
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
 const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
-export function getBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    const custom = window.localStorage.getItem("jarbees_backend_url");
-    if (custom && custom.trim().length > 0) {
-      return custom.trim().replace(/\/$/, "");
-    }
+const buildHeaders = (hasJson = false, targetUrl?: string) => {
+  const headers: Record<string, string> = {};
+  const isNgrok = targetUrl ? targetUrl.includes("ngrok") : (BASE_URL && BASE_URL.includes("ngrok"));
+  if (isNgrok) {
+    headers["ngrok-skip-browser-warning"] = "69420";
   }
-
-  const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-  if (envUrl && envUrl.trim().length > 0) {
-    return envUrl.trim().replace(/\/$/, "");
-  }
-
-  if (typeof window !== "undefined") {
-    const hostname = window.location.hostname;
-    if (hostname && /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
-      return `http://${hostname}:4000`;
-    }
-  }
-
-  return "http://localhost:4000";
-}
-
-export function setBackendUrl(url: string): void {
-  if (typeof window !== "undefined") {
-    if (url && url.trim().length > 0) {
-      window.localStorage.setItem("jarbees_backend_url", url.trim().replace(/\/$/, ""));
-    } else {
-      window.localStorage.removeItem("jarbees_backend_url");
-    }
-  }
-}
-
-const buildHeaders = (hasJson = false) => {
-  const headers: Record<string, string> = {
-    "ngrok-skip-browser-warning": "69420",
-  };
   if (hasJson) headers["Content-Type"] = "application/json";
   if (API_TOKEN) headers["Authorization"] = `Bearer ${API_TOKEN}`;
   return headers;
@@ -63,8 +33,8 @@ export async function analyzeImage(
   form.append("mode", options?.mode ?? "general");
   if (options?.sessionId) form.append("sessionId", options.sessionId);
 
-  const headers = buildHeaders(false);
-  const res = await fetch(`${getBaseUrl()}/api/jarbees/vision/analyze`, {
+  const headers = buildHeaders(false, BASE_URL);
+  const res = await fetch(`${BASE_URL}/api/jarbees/vision/analyze`, {
     method: "POST",
     headers,
     body: form,
@@ -99,8 +69,8 @@ export async function ingestPdf(
   if (options?.question) form.append("question", options.question);
   if (options?.sessionId) form.append("sessionId", options.sessionId);
 
-  const headers = buildHeaders(false);
-  const res = await fetch(`${getBaseUrl()}/api/jarbees/library/document/pdf`, {
+  const headers = buildHeaders(false, BASE_URL);
+  const res = await fetch(`${BASE_URL}/api/jarbees/library/document/pdf`, {
     method: "POST",
     headers,
     body: form,
@@ -123,9 +93,9 @@ export type IngestResponse = {
 };
 
 export async function ingestUrl(url: string, category?: string): Promise<IngestResponse> {
-  const res = await fetch(`${getBaseUrl()}/api/jarbees/library/document/url`, {
+  const res = await fetch(`${BASE_URL}/api/jarbees/library/document/url`, {
     method: "POST",
-    headers: buildHeaders(true),
+    headers: buildHeaders(true, BASE_URL),
     body: JSON.stringify({ url, category }),
   });
 
@@ -146,9 +116,9 @@ export type FeedbackBody = {
 };
 
 export async function sendFeedback(body: FeedbackBody): Promise<{ success: boolean }> {
-  const res = await fetch(`${getBaseUrl()}/api/jarbees/feedback`, {
+  const res = await fetch(`${BASE_URL}/api/jarbees/feedback`, {
     method: "POST",
-    headers: buildHeaders(true),
+    headers: buildHeaders(true, BASE_URL),
     body: JSON.stringify(body),
   });
 
@@ -171,9 +141,9 @@ export type PlannerResponse = {
 };
 
 export async function createPlanner(objective: string, sessionId?: string): Promise<PlannerResponse> {
-  const res = await fetch(`${getBaseUrl()}/api/jarbees/planner`, {
+  const res = await fetch(`${BASE_URL}/api/jarbees/planner`, {
     method: "POST",
-    headers: buildHeaders(true),
+    headers: buildHeaders(true, BASE_URL),
     body: JSON.stringify({ objective, sessionId }),
   });
 
@@ -197,64 +167,67 @@ export type LibraryIndexItem = {
   cantidadChunks?: number;
 };
 
-const FALLBACK_TITLES: { titulo: string; autor?: string }[] = [
-  { titulo: "El Plano Astral", autor: "Charles Webster Leadbeater" },
-  { titulo: "Adventures Beyond the Body", autor: "William Buhlman" },
-  { titulo: "Los Nueve Ritos del Munay-Ki", autor: "Tradición Q'ero / Alberto Villoldo" },
-  { titulo: "Herbario y Plantas Medicinales", autor: "Recopilación propia" },
-  { titulo: "Sanaciones Populares y Oraciones Curativas", autor: "Tradición popular regional" },
-  { titulo: "Angeles Arrien Las Cuatro Sendas del Chaman", autor: "Angeles Arrien" },
-  { titulo: "The Etheric Double: The Health Aura of Man", autor: "Arthur E. Powell" },
-  { titulo: "El Kybalion", autor: "Tres Iniciados / Hermes Trismegisto" },
-  { titulo: "El hombre y sus símbolos", autor: "Carl Gustav Jung" },
-  { titulo: "La Doctrina Secreta", autor: "Helena Petrovna Blavatsky" },
-];
-
 export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
-  const baseUrl = getBaseUrl();
-  const headers = buildHeaders(false);
+  const urlsToTry = [
+    BASE_URL,
+    "http://localhost:4000",
+    "http://127.0.0.1:4000",
+  ];
 
-  // 1. Intentar /api/reader
-  try {
-    const res = await fetch(`${baseUrl}/api/reader`, {
-      method: "GET",
-      headers,
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const docs = data?.documentos || data?.documents || (Array.isArray(data) ? data : null);
-      if (Array.isArray(docs) && docs.length > 0) {
-        return docs as LibraryIndexItem[];
+  for (const url of urlsToTry) {
+    if (!url) continue;
+    const cleanUrl = url.replace(/\/$/, "");
+    try {
+      const headers: Record<string, string> = { "Accept": "application/json" };
+      if (cleanUrl.includes("ngrok")) {
+        headers["ngrok-skip-browser-warning"] = "69420";
       }
+
+      const res = await fetch(`${cleanUrl}/api/reader`, {
+        method: "GET",
+        headers,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const list = data?.documentos || data?.documents || (Array.isArray(data) ? data : []);
+        if (Array.isArray(list) && list.length > 0) {
+          return list as LibraryIndexItem[];
+        }
+      }
+    } catch (err) {
+      console.warn(`[getLibraryIndex] Intentando ${cleanUrl} falló:`, err);
     }
-  } catch (err) {
-    console.warn(`Error consultando /api/reader en ${baseUrl}:`, err);
   }
 
-  // 2. Fallback /api/jarbees/library/index
-  try {
-    const res = await fetch(`${baseUrl}/api/jarbees/library/index`, {
-      method: "GET",
-      headers,
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const docs = data?.documentos || data?.documents || (Array.isArray(data) ? data : null);
-      if (Array.isArray(docs) && docs.length > 0) {
-        return docs as LibraryIndexItem[];
+  // Intentar endpoint alternativo /api/jarbees/library/index
+  for (const url of urlsToTry) {
+    if (!url) continue;
+    const cleanUrl = url.replace(/\/$/, "");
+    try {
+      const headers: Record<string, string> = { "Accept": "application/json" };
+      if (cleanUrl.includes("ngrok")) {
+        headers["ngrok-skip-browser-warning"] = "69420";
       }
+
+      const res = await fetch(`${cleanUrl}/api/jarbees/library/index`, {
+        method: "GET",
+        headers,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const list = data?.documentos || data?.documents || (Array.isArray(data) ? data : []);
+        if (Array.isArray(list) && list.length > 0) {
+          return list as LibraryIndexItem[];
+        }
+      }
+    } catch {
+      // Ignorar e intentar siguiente
     }
-  } catch (err) {
-    console.warn(`Error consultando /api/jarbees/library/index en ${baseUrl}:`, err);
   }
 
-  // 3. Fallback estático para asegurar que nunca se rompa la vista
-  return FALLBACK_TITLES.map((item) => ({
-    id: item.titulo,
-    titulo: item.titulo,
-    autor: item.autor,
-    formato: "pdf",
-  }));
+  return [];
 }
 
 export type ReaderDocumentResponse = {
@@ -267,57 +240,45 @@ export type ReaderDocumentResponse = {
 };
 
 export async function getReaderDocument(documentId: string | number): Promise<ReaderDocumentResponse> {
-  const baseUrl = getBaseUrl();
-  const headers = buildHeaders(false);
+  const urlsToTry = [
+    BASE_URL,
+    "http://localhost:4000",
+    "http://127.0.0.1:4000",
+  ];
 
-  try {
-    const res = await fetch(`${baseUrl}/api/reader/${encodeURIComponent(documentId)}`, {
-      method: "GET",
-      headers,
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.blocks && Array.isArray(data.blocks) && data.blocks.length > 0) {
-        return data as ReaderDocumentResponse;
+  for (const url of urlsToTry) {
+    if (!url) continue;
+    const cleanUrl = url.replace(/\/$/, "");
+    try {
+      const headers: Record<string, string> = { "Accept": "application/json" };
+      if (cleanUrl.includes("ngrok")) {
+        headers["ngrok-skip-browser-warning"] = "69420";
       }
+
+      const res = await fetch(`${cleanUrl}/api/reader/${encodeURIComponent(documentId)}`, {
+        method: "GET",
+        headers,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.blocks && Array.isArray(data.blocks) && data.blocks.length > 0) {
+          return data as ReaderDocumentResponse;
+        }
+      }
+    } catch {
+      // Probar siguiente
     }
-  } catch (err) {
-    console.warn(`Error al consultar documento ${documentId} en ${baseUrl}:`, err);
   }
 
-  try {
-    const res = await fetch(`${baseUrl}/api/jarbees/library/document/${encodeURIComponent(documentId)}`, {
-      method: "GET",
-      headers,
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.blocks && Array.isArray(data.blocks) && data.blocks.length > 0) {
-        return data as ReaderDocumentResponse;
-      }
-    }
-  } catch (err) {
-    console.warn(`Error al consultar /api/jarbees/library/document/${documentId}:`, err);
-  }
-
-  return {
-    documentId,
-    title: String(documentId),
-    author: "Autor Desconocido",
-    paginas: 150,
-    blocks: [
-      `Inicio de la lectura de "${documentId}". Este documento se procesa en bloques para generar audiolibros fluidos.`,
-      `Bloque 2: Continuación de la lectura interactiva. Mientras escuchas este fragmento, el motor genera el siguiente bloque de audio en segundo plano.`,
-      `Bloque 3: JarBees Audiobook AI integra modelos locales TTS para ofrecer una experiencia continua y optimizada.`,
-    ],
-  };
+  throw new Error(`No se pudo obtener el documento ${documentId}`);
 }
 
 export function connectGoogle(): void {
   if (typeof window === "undefined") return;
-  window.location.assign(`${getBaseUrl()}/api/jarbees/google/login`);
+  window.location.assign(`${BASE_URL}/api/jarbees/google/login`);
 }
 
-const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle, getLibraryIndex, getReaderDocument, getBaseUrl, setBackendUrl };
+const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle, getLibraryIndex, getReaderDocument };
 
 export default jarbeesApi;

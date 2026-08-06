@@ -2,9 +2,8 @@
 
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 
-import { getBaseUrl } from "./jarbees.api";
-
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
 
 // ─── Keys localStorage ────────────────────────────────────────────────────────
 const JARBEES_SESSION_KEY        = "jarbees_session_id";
@@ -143,15 +142,10 @@ const resolveGeoCoords = async (message: string): Promise<GeoCoords | null> => {
   } catch { return null; }
 };
 
-const buildHeaders = (): Record<string, string> => {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "69420",
-  };
-  const token = process.env.NEXT_PUBLIC_API_TOKEN;
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  return headers;
-};
+// ─── Headers helper ───────────────────────────────────────────────────────────
+const buildHeaders = (): Record<string, string> => ({
+  "Content-Type": "application/json",
+});
 
 // ─── NIVEL 1: Obtener / crear sesión ─────────────────────────────────────────
 /**
@@ -163,8 +157,8 @@ export async function initSession(): Promise<string | null> {
   try {
     const stored = getStoredSessionId();
     const url = stored
-      ? `${getBaseUrl()}/api/jarbees/session?sessionId=${stored}`
-      : `${getBaseUrl()}/api/jarbees/session`;
+      ? `${BASE_URL}/api/jarbees/session?sessionId=${stored}`
+      : `${BASE_URL}/api/jarbees/session`;
 
     const res = await fetch(url, { method: "GET", headers: buildHeaders() });
     if (!res.ok) return stored;
@@ -184,7 +178,7 @@ export async function initSession(): Promise<string | null> {
 export async function fetchHistory(sessionId: string): Promise<HistoryMessage[]> {
   try {
     const res = await fetch(
-      `${getBaseUrl()}/api/jarbees/history?sessionId=${sessionId}`,
+      `${BASE_URL}/api/jarbees/history?sessionId=${sessionId}`,
       { method: "GET", headers: buildHeaders() }
     );
     if (!res.ok) return [];
@@ -225,7 +219,7 @@ export async function hacerPregunta(
       body.longitude = longitude;
     }
 
-    const res = await fetch(`${getBaseUrl()}/api/jarbees/query`, {
+    const res = await fetch(`${BASE_URL}/api/jarbees/query`, {
       method: "POST",
       headers: buildHeaders(),
       body: JSON.stringify(body),
