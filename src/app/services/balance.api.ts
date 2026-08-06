@@ -50,12 +50,21 @@ export interface BalanceReport {
   }>;
 }
 
+const buildHeaders = (hasJson = true): Record<string, string> => {
+  const headers: Record<string, string> = {
+    "ngrok-skip-browser-warning": "69420",
+  };
+  if (hasJson) headers["Content-Type"] = "application/json";
+  else headers["Accept"] = "application/json";
+  const token = process.env.NEXT_PUBLIC_API_TOKEN;
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+};
+
 export async function startBalanceSession(type = "manual"): Promise<BalanceSessionResponse> {
   const res = await fetch(`${getBaseUrl()}/api/balance/start`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildHeaders(true),
     body: JSON.stringify({ type }),
   });
   if (!res.ok) {
@@ -71,9 +80,7 @@ export async function submitBalanceAnswer(
 ): Promise<SubmitAnswerResponse> {
   const res = await fetch(`${getBaseUrl()}/api/balance/${sessionId}/answer`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildHeaders(true),
     body: JSON.stringify({ questionId, answer }),
   });
   if (!res.ok) {
@@ -85,9 +92,7 @@ export async function submitBalanceAnswer(
 export async function finishBalanceSession(sessionId: number): Promise<BalanceReport> {
   const res = await fetch(`${getBaseUrl()}/api/balance/${sessionId}/finish`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildHeaders(true),
   });
   if (!res.ok) {
     throw new Error(`Error al finalizar balance: ${await res.text()}`);
@@ -98,9 +103,7 @@ export async function finishBalanceSession(sessionId: number): Promise<BalanceRe
 export async function getLatestBalance(): Promise<BalanceReport | { message: string }> {
   const res = await fetch(`${getBaseUrl()}/api/balance/latest`, {
     method: "GET",
-    headers: {
-      "Accept": "application/json",
-    },
+    headers: buildHeaders(false),
   });
   if (!res.ok) {
     throw new Error(`Error al obtener el último balance: ${await res.text()}`);
@@ -111,9 +114,7 @@ export async function getLatestBalance(): Promise<BalanceReport | { message: str
 export async function getBalanceHistory(): Promise<unknown[]> {
   const res = await fetch(`${getBaseUrl()}/api/balance/history`, {
     method: "GET",
-    headers: {
-      "Accept": "application/json",
-    },
+    headers: buildHeaders(false),
   });
   if (!res.ok) {
     throw new Error(`Error al obtener historial de balances: ${await res.text()}`);

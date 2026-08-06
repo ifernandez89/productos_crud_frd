@@ -23,9 +23,13 @@ export async function GET(
 
     // Consultar al backend principal (NestJS) en /api/reader/:documentId
     try {
+      const apiToken = process.env.NEXT_PUBLIC_API_TOKEN;
       const res = await fetch(`${backendUrl}/api/reader/${encodeURIComponent(documentId)}`, {
-        headers: { Accept: "application/json" },
-        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          "ngrok-skip-browser-warning": "69420",
+          ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
+        },
       });
 
       if (res.ok) {

@@ -7,12 +7,21 @@ export function getBaseUrl(): string {
     if (custom && custom.trim().length > 0) {
       return custom.trim().replace(/\/$/, "");
     }
+  }
+
+  const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (envUrl && envUrl.trim().length > 0) {
+    return envUrl.trim().replace(/\/$/, "");
+  }
+
+  if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
-    if (hostname && hostname !== "localhost" && hostname !== "127.0.0.1" && !hostname.endsWith("github.io")) {
+    if (hostname && /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
       return `http://${hostname}:4000`;
     }
   }
-  return (BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
+
+  return "http://localhost:4000";
 }
 
 export function setBackendUrl(url: string): void {

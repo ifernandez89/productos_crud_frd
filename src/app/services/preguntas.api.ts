@@ -143,11 +143,15 @@ const resolveGeoCoords = async (message: string): Promise<GeoCoords | null> => {
   } catch { return null; }
 };
 
-// ─── Headers helper ───────────────────────────────────────────────────────────
-const buildHeaders = (): Record<string, string> => ({
-  "Content-Type": "application/json",
-  "ngrok-skip-browser-warning": "69420",
-});
+const buildHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "69420",
+  };
+  const token = process.env.NEXT_PUBLIC_API_TOKEN;
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+};
 
 // ─── NIVEL 1: Obtener / crear sesión ─────────────────────────────────────────
 /**
