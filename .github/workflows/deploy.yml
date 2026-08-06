@@ -2,7 +2,7 @@ name: Build & Deploy to gh-pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   workflow_dispatch: {}
 
 # Cancela automáticamente cualquier run anterior en cola o en progreso al llegar una nueva
