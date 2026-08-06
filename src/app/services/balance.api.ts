@@ -1,6 +1,4 @@
-import { BACKEND_URL } from "./preguntas.api";
-
-const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
+import { getBaseUrl } from "./jarbees.api";
 
 export interface BalanceQuestion {
   id: number;
@@ -53,7 +51,7 @@ export interface BalanceReport {
 }
 
 export async function startBalanceSession(type = "manual"): Promise<BalanceSessionResponse> {
-  const res = await fetch(`${BASE_URL}/api/balance/start`, {
+  const res = await fetch(`${getBaseUrl()}/api/balance/start`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -71,7 +69,7 @@ export async function submitBalanceAnswer(
   questionId: number,
   answer: string
 ): Promise<SubmitAnswerResponse> {
-  const res = await fetch(`${BASE_URL}/api/balance/${sessionId}/answer`, {
+  const res = await fetch(`${getBaseUrl()}/api/balance/${sessionId}/answer`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -85,7 +83,7 @@ export async function submitBalanceAnswer(
 }
 
 export async function finishBalanceSession(sessionId: number): Promise<BalanceReport> {
-  const res = await fetch(`${BASE_URL}/api/balance/${sessionId}/finish`, {
+  const res = await fetch(`${getBaseUrl()}/api/balance/${sessionId}/finish`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -98,7 +96,7 @@ export async function finishBalanceSession(sessionId: number): Promise<BalanceRe
 }
 
 export async function getLatestBalance(): Promise<BalanceReport | { message: string }> {
-  const res = await fetch(`${BASE_URL}/api/balance/latest`, {
+  const res = await fetch(`${getBaseUrl()}/api/balance/latest`, {
     method: "GET",
     headers: {
       "Accept": "application/json",
@@ -111,7 +109,7 @@ export async function getLatestBalance(): Promise<BalanceReport | { message: str
 }
 
 export async function getBalanceHistory(): Promise<unknown[]> {
-  const res = await fetch(`${BASE_URL}/api/balance/history`, {
+  const res = await fetch(`${getBaseUrl()}/api/balance/history`, {
     method: "GET",
     headers: {
       "Accept": "application/json",

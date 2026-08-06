@@ -1,5 +1,30 @@
+export function getBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const stored = window.localStorage.getItem("jarbees_backend_url");
+    if (stored && stored.trim().length > 0) {
+      return stored.trim().replace(/\/$/, "");
+    }
+
+    const hostname = window.location.hostname;
+    if (hostname && hostname !== "localhost" && hostname !== "127.0.0.1" && !hostname.endsWith("github.io")) {
+      return `http://${hostname}:4000`;
+    }
+  }
+
+  return (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000").replace(/\/$/, "");
+}
+
+export function setBackendUrl(url: string): void {
+  if (typeof window !== "undefined") {
+    if (url && url.trim().length > 0) {
+      window.localStorage.setItem("jarbees_backend_url", url.trim().replace(/\/$/, ""));
+    } else {
+      window.localStorage.removeItem("jarbees_backend_url");
+    }
+  }
+}
+
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
 const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
 const buildHeaders = (hasJson = false) => {
@@ -30,7 +55,7 @@ export async function analyzeImage(
   if (options?.sessionId) form.append("sessionId", options.sessionId);
 
   const headers = buildHeaders(false);
-  const res = await fetch(`${BASE_URL}/api/jarbees/vision/analyze`, {
+  const res = await fetch(`${getBaseUrl()}/api/jarbees/vision/analyze`, {
     method: "POST",
     headers,
     body: form,
@@ -66,7 +91,7 @@ export async function ingestPdf(
   if (options?.sessionId) form.append("sessionId", options.sessionId);
 
   const headers = buildHeaders(false);
-  const res = await fetch(`${BASE_URL}/api/jarbees/library/document/pdf`, {
+  const res = await fetch(`${getBaseUrl()}/api/jarbees/library/document/pdf`, {
     method: "POST",
     headers,
     body: form,
@@ -89,7 +114,7 @@ export type IngestResponse = {
 };
 
 export async function ingestUrl(url: string, category?: string): Promise<IngestResponse> {
-  const res = await fetch(`${BASE_URL}/api/jarbees/library/document/url`, {
+  const res = await fetch(`${getBaseUrl()}/api/jarbees/library/document/url`, {
     method: "POST",
     headers: buildHeaders(true),
     body: JSON.stringify({ url, category }),
@@ -112,7 +137,7 @@ export type FeedbackBody = {
 };
 
 export async function sendFeedback(body: FeedbackBody): Promise<{ success: boolean }> {
-  const res = await fetch(`${BASE_URL}/api/jarbees/feedback`, {
+  const res = await fetch(`${getBaseUrl()}/api/jarbees/feedback`, {
     method: "POST",
     headers: buildHeaders(true),
     body: JSON.stringify(body),
@@ -137,7 +162,7 @@ export type PlannerResponse = {
 };
 
 export async function createPlanner(objective: string, sessionId?: string): Promise<PlannerResponse> {
-  const res = await fetch(`${BASE_URL}/api/jarbees/planner`, {
+  const res = await fetch(`${getBaseUrl()}/api/jarbees/planner`, {
     method: "POST",
     headers: buildHeaders(true),
     body: JSON.stringify({ objective, sessionId }),
@@ -164,7 +189,8 @@ export type LibraryIndexItem = {
 };
 
 export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
-  const res = await fetch(`${BASE_URL}/api/reader`, {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/reader`, {
     method: "GET",
     headers: { "Accept": "application/json" }
   });
@@ -189,7 +215,8 @@ export type ReaderDocumentResponse = {
 };
 
 export async function getReaderDocument(documentId: string | number): Promise<ReaderDocumentResponse> {
-  const res = await fetch(`${BASE_URL}/api/reader/${encodeURIComponent(documentId)}`, {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/reader/${encodeURIComponent(documentId)}`, {
     method: "GET",
     headers: { "Accept": "application/json" },
   });
@@ -204,9 +231,9 @@ export async function getReaderDocument(documentId: string | number): Promise<Re
 
 export function connectGoogle(): void {
   if (typeof window === "undefined") return;
-  window.location.assign(`${BASE_URL}/api/jarbees/google/login`);
+  window.location.assign(`${getBaseUrl()}/api/jarbees/google/login`);
 }
 
-const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle, getLibraryIndex, getReaderDocument };
+const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle, getLibraryIndex, getReaderDocument, getBaseUrl, setBackendUrl };
 
 export default jarbeesApi;
