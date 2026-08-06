@@ -155,30 +155,23 @@ export default function ReaderPage() {
         utterance.rate = playbackSpeed;
         utteranceRef.current = utterance;
 
-        const startTime = Date.now();
-
         utterance.onend = () => {
           if (!isPlayingRef.current) return;
-          // Salvaguarda: Si el sintetizador móvil finaliza en < 150ms, el motor nativo del celular falló o rechazó la voz
-          const elapsed = Date.now() - startTime;
-          if (elapsed < 150 && sentenceIndex === 0 && sentences.length > 1) {
-            console.warn("[Reader] El motor de voz del celular canceló la emisión instantáneamente. Pausando reproductor.");
-            setIsPlaying(false);
-            isPlayingRef.current = false;
-            return;
-          }
-
           sentenceIndex++;
           speakNextSentence();
         };
 
         utterance.onerror = (e) => {
-          console.warn("[Reader] Error en Web Speech API:", e);
+          console.warn("[Reader] Evento onerror en Web Speech API:", e);
           if (e.error !== "interrupted" && e.error !== "canceled") {
-            setIsPlaying(false);
-            isPlayingRef.current = false;
+            sentenceIndex++;
+            speakNextSentence();
           }
         };
+
+        if (typeof window !== "undefined" && window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
 
         window.speechSynthesis.speak(utterance);
       };
