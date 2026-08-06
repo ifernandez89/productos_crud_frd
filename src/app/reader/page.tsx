@@ -116,7 +116,7 @@ export default function ReaderPage() {
     }
   };
 
-  // Función para síntesis y emisión del bloque activo
+  // Función para síntesis y emisión del bloque activo (oración por oración)
   const speakCurrentBlock = (index: number) => {
     const doc = activeDocRef.current;
     if (!doc || !doc.blocks || !doc.blocks[index]) return;
@@ -126,35 +126,64 @@ export default function ReaderPage() {
       window.speechSynthesis.cancel();
 
       const textToSpeak = doc.blocks[index];
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = "es-ES";
-      utterance.rate = playbackSpeed;
-      utteranceRef.current = utterance;
+      // Dividir el bloque en oraciones para que los sintetizadores de voz móviles no fallen por longitud excesiva
+      const rawSentences = textToSpeak.match(/[^.!?]+[.!?\s]+/g) || [textToSpeak];
+      const sentences = rawSentences.map((s) => s.trim()).filter((s) => s.length > 0);
+      let sentenceIndex = 0;
 
-      utterance.onend = () => {
+      const speakNextSentence = () => {
         if (!isPlayingRef.current) return;
-        const nextIndex = blockIndexRef.current + 1;
-        const currentDoc = activeDocRef.current;
-        if (currentDoc && nextIndex < currentDoc.blocks.length) {
-          blockIndexRef.current = nextIndex;
-          setCurrentBlockIndex(nextIndex);
-        } else {
-          setIsPlaying(false);
-          isPlayingRef.current = false;
-          setProgress(100);
+
+        if (sentenceIndex >= sentences.length) {
+          // Bloque completado
+          const nextIndex = blockIndexRef.current + 1;
+          const currentDoc = activeDocRef.current;
+          if (currentDoc && nextIndex < currentDoc.blocks.length) {
+            blockIndexRef.current = nextIndex;
+            setCurrentBlockIndex(nextIndex);
+          } else {
+            setIsPlaying(false);
+            isPlayingRef.current = false;
+            setProgress(100);
+          }
+          return;
         }
+
+        const sentenceText = sentences[sentenceIndex];
+        const utterance = new SpeechSynthesisUtterance(sentenceText);
+        utterance.lang = "es-ES";
+        utterance.rate = playbackSpeed;
+        utteranceRef.current = utterance;
+
+        const startTime = Date.now();
+
+        utterance.onend = () => {
+          if (!isPlayingRef.current) return;
+          // Salvaguarda: Si el sintetizador móvil finaliza en < 150ms, el motor nativo del celular falló o rechazó la voz
+          const elapsed = Date.now() - startTime;
+          if (elapsed < 150 && sentenceIndex === 0 && sentences.length > 1) {
+            console.warn("[Reader] El motor de voz del celular canceló la emisión instantáneamente. Pausando reproductor.");
+            setIsPlaying(false);
+            isPlayingRef.current = false;
+            return;
+          }
+
+          sentenceIndex++;
+          speakNextSentence();
+        };
+
+        utterance.onerror = (e) => {
+          console.warn("[Reader] Error en Web Speech API:", e);
+          if (e.error !== "interrupted" && e.error !== "canceled") {
+            setIsPlaying(false);
+            isPlayingRef.current = false;
+          }
+        };
+
+        window.speechSynthesis.speak(utterance);
       };
 
-      utterance.onerror = (e) => {
-        // En móviles, si la API bloquea o cancela el audio, NO saltar en bucle al siguiente bloque
-        console.warn("[Reader] Evento onerror en Web Speech API:", e);
-        if (e.error !== "interrupted" && e.error !== "canceled") {
-          setIsPlaying(false);
-          isPlayingRef.current = false;
-        }
-      };
-
-      window.speechSynthesis.speak(utterance);
+      speakNextSentence();
     }
   };
 
