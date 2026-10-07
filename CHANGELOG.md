@@ -36,6 +36,7 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 
 
 ### Fixed
+- **Doble Despliegue en GitHub Actions (`deploy.yml`)**: Eliminado el paso redundante `peaceiris/actions-gh-pages` que hacía push a la rama `gh-pages` y activaba innecesariamente un segundo workflow paralelo de GitHub (`pages-build-deployment` del bot). Se consolidó el despliegue directo oficial mediante `actions/upload-pages-artifact` y `actions/deploy-pages`, añadiendo además caché de dependencias (`cache: "npm"`) para acelerar sustancialmente los tiempos de compilación.
 - **Estándar Arquitectónico de Conexión al Backend (`BASE_URL`)**: Restaurada la lógica directa y limpia `export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL; const BASE_URL = BACKEND_URL ?? "http://localhost:4000";` en todos los servicios de API (`preguntas.api.ts`, `jarbees.api.ts`, `balance.api.ts`, `products.api.ts`), unificando el consumo del Chatbot y del Lector.
 - **Corrección de Bloqueo CORS Preflight (`ngrok-skip-browser-warning`)**: Condicionada la cabecera `ngrok-skip-browser-warning` únicamente a llamadas que contengan `ngrok` en la URL. Esto evita que solicitudes locales a `http://localhost:4000` fallen durante el preflight OPTIONS de los navegadores.
 - **Redirección Nativa de Servidor (`HomePage`)**: Actualizado `src/app/page.tsx` para usar `redirect("/preguntas/new")` de Next.js en lugar de un `useEffect` del cliente, eliminando retardos y pantallas de carga al ingresar a la raíz.
