@@ -63,21 +63,21 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       // Headers
       if (trimmed.startsWith("### ")) {
         return (
-          <h4 key={`h3-${lineIdx}`} className="font-semibold text-slate-100 text-sm mt-3 mb-1">
+          <h4 key={`h3-${lineIdx}`} className="font-semibold text-white text-sm mt-3 mb-1">
             {renderInlineMarkdown(trimmed.replace(/^### /, ""))}
           </h4>
         );
       }
       if (trimmed.startsWith("## ")) {
         return (
-          <h3 key={`h2-${lineIdx}`} className="font-bold text-slate-100 text-base mt-4 mb-1">
+          <h3 key={`h2-${lineIdx}`} className="font-bold text-white text-base mt-4 mb-1">
             {renderInlineMarkdown(trimmed.replace(/^## /, ""))}
           </h3>
         );
       }
       if (trimmed.startsWith("# ")) {
         return (
-          <h2 key={`h1-${lineIdx}`} className="font-extrabold text-slate-100 text-lg mt-4 mb-2">
+          <h2 key={`h1-${lineIdx}`} className="font-extrabold text-white text-lg mt-4 mb-2">
             {renderInlineMarkdown(trimmed.replace(/^# /, ""))}
           </h2>
         );
@@ -88,8 +88,8 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         const bulletText = trimmed.replace(/^[-*•]\s+/, "");
         return (
           <div key={`bullet-${lineIdx}`} className="flex items-start gap-2 ml-2 my-0.5">
-            <span className="text-cyan-400 mt-1 text-xs select-none">•</span>
-            <span className="text-sm leading-relaxed text-slate-200">
+            <span className="text-[#0078d7] mt-1 text-xs select-none">•</span>
+            <span className="text-sm leading-relaxed text-[#e0e0e0]">
               {renderInlineMarkdown(bulletText)}
             </span>
           </div>
@@ -101,10 +101,10 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       if (numMatch) {
         return (
           <div key={`num-${lineIdx}`} className="flex items-start gap-2 ml-2 my-0.5">
-            <span className="text-cyan-400 font-mono text-xs mt-0.5 shrink-0 select-none">
+            <span className="text-[#0078d7] font-mono text-xs mt-0.5 shrink-0 select-none">
               {numMatch[1]}.
             </span>
-            <span className="text-sm leading-relaxed text-slate-200">
+            <span className="text-sm leading-relaxed text-[#e0e0e0]">
               {renderInlineMarkdown(numMatch[2])}
             </span>
           </div>
@@ -116,7 +116,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         return (
           <blockquote
             key={`quote-${lineIdx}`}
-            className="border-l-2 border-cyan-500/50 bg-cyan-950/20 px-3 py-1.5 my-1.5 rounded-r-lg text-xs italic text-slate-300"
+            className="border-l-2 border-[#0078d7] bg-[#1a1a1a] px-3 py-1.5 my-1.5 rounded-r-lg text-xs italic text-[#b3b3b3]"
           >
             {renderInlineMarkdown(trimmed.replace(/^>\s*/, ""))}
           </blockquote>
@@ -125,7 +125,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
 
       // Standard paragraph line
       return (
-        <p key={`p-${lineIdx}`} className="text-sm leading-relaxed text-slate-200">
+        <p key={`p-${lineIdx}`} className="text-sm leading-relaxed text-[#e5e5e5]">
           {renderInlineMarkdown(line)}
         </p>
       );
@@ -150,7 +150,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         parts.push(
           <code
             key={`inline-code-${match.index}`}
-            className="rounded bg-slate-800/90 px-1.5 py-0.5 font-mono text-xs text-cyan-300 border border-slate-700/60"
+            className="rounded bg-[#1f1f1f] px-1.5 py-0.5 font-mono text-xs text-[#e0e0e0] border border-white/[0.08]"
           >
             {matchText.slice(1, -1)}
           </code>
@@ -158,14 +158,14 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       } else if (matchText.startsWith("**") && matchText.endsWith("**")) {
         // Bold
         parts.push(
-          <strong key={`bold-${match.index}`} className="font-semibold text-slate-100">
+          <strong key={`bold-${match.index}`} className="font-semibold text-white">
             {matchText.slice(2, -2)}
           </strong>
         );
       } else if (matchText.startsWith("*") && matchText.endsWith("*")) {
         // Italic
         parts.push(
-          <em key={`italic-${match.index}`} className="italic text-slate-200">
+          <em key={`italic-${match.index}`} className="italic text-[#d4d4d4]">
             {matchText.slice(1, -1)}
           </em>
         );
@@ -181,7 +181,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     return parts.length > 0 ? parts : line;
   };
 
-  return <div className="space-y-3 font-normal">{renderBlocks(content)}</div>;
+  return <div className="space-y-2.5 font-normal">{renderBlocks(content)}</div>;
 }
 
 function CodeBlock({ language, code }: { language: string; code: string }) {
@@ -198,16 +198,16 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   };
 
   return (
-    <div className="my-3 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-lg">
+    <div className="my-2.5 overflow-hidden rounded-xl border border-white/[0.08] bg-[#121212] shadow-xl">
       {/* Code Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/80 px-4 py-1.5 text-xs text-slate-400">
-        <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-300">
-          <Terminal className="h-3.5 w-3.5 text-cyan-400" />
+      <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#1b1b1b] px-4 py-1.5 text-xs text-[#9e9e9e]">
+        <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#cccccc]">
+          <Terminal className="h-3.5 w-3.5 text-[#429ce3]" />
           <span className="uppercase tracking-wider">{language || "code"}</span>
         </div>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 rounded-md bg-slate-800/80 px-2.5 py-1 text-[11px] text-slate-300 transition hover:bg-slate-700 hover:text-white"
+          className="flex items-center gap-1.5 rounded bg-[#242424] border border-white/[0.08] px-2.5 py-1 text-[11px] text-[#cccccc] transition hover:bg-[#2d2d2d] hover:text-white"
           title="Copiar código al portapapeles"
         >
           {copied ? (
@@ -217,7 +217,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
             </>
           ) : (
             <>
-              <Copy className="h-3 w-3 text-slate-400" />
+              <Copy className="h-3 w-3 text-[#9e9e9e]" />
               <span>Copiar</span>
             </>
           )}
@@ -225,7 +225,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
       </div>
 
       {/* Code Body */}
-      <pre className="overflow-x-auto p-4 font-mono text-xs leading-relaxed text-slate-100">
+      <pre className="overflow-x-auto p-4 font-mono text-xs leading-relaxed text-[#f0f0f0]">
         <code>{code}</code>
       </pre>
     </div>

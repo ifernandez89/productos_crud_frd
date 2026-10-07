@@ -265,12 +265,12 @@ export default function ReaderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#0c0c0c] text-white flex flex-col font-sans">
       {/* Header Bar */}
-      <header className="border-b border-slate-800 bg-slate-950/80 px-4 py-3 sticky top-0 z-50 backdrop-blur-md">
+      <header className="border-b border-white/[0.08] bg-[#101010]/85 px-4 py-3 sticky top-0 z-50 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 p-1.5 shadow-md shadow-cyan-500/10">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1c1c1c] border border-white/[0.10] p-1.5 shadow-sm">
               <Image
                 src={`${BASE_PATH}/JarBees_logo.png`}
                 alt="JarBees Logo"
@@ -280,20 +280,20 @@ export default function ReaderPage() {
               />
             </div>
             <div>
-              <h1 className="text-base font-bold text-slate-100 flex items-center gap-2">
+              <h1 className="text-base font-bold text-white flex items-center gap-2">
                 <span>🎧 JarBees Reader</span>
-                <span className="rounded-md bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 text-[10px] text-cyan-400 font-semibold uppercase tracking-wider">
+                <span className="rounded bg-[#0078d7]/15 border border-[#0078d7]/30 px-2 py-0.5 text-[10px] text-[#429ce3] font-semibold uppercase tracking-wider">
                   Audiobook AI
                 </span>
               </h1>
-              <p className="text-xs text-slate-400">Escuchá tus libros con lectura sintética inteligente</p>
+              <p className="text-xs text-[#9e9e9e]">Escuchá tus libros con lectura sintética inteligente</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowConfigModal(true)}
-              className="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-950/40 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-900/50 transition shadow-sm"
+              className="flex items-center gap-1.5 rounded-lg border border-white/[0.10] bg-[#1c1c1c] px-3 py-1.5 text-xs font-semibold text-[#d4d4d4] hover:bg-[#282828] hover:text-white transition shadow-sm"
               title="Configurar URL del backend Ngrok"
             >
               <span>⚙️</span>
@@ -301,7 +301,7 @@ export default function ReaderPage() {
             </button>
             <button
               onClick={() => router.push("/preguntas/new")}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition shadow-sm"
+              className="flex items-center gap-1.5 rounded-lg border border-white/[0.10] bg-[#1c1c1c] px-3.5 py-1.5 text-xs font-semibold text-[#d4d4d4] hover:bg-[#282828] hover:text-white transition shadow-sm"
             >
               <span>💬</span>
               <span>Volver al Chat</span>

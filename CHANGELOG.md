@@ -27,10 +27,12 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
   - Placeholder del `textarea` en [`ChatInputSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInputSimple.tsx) actualizado en tiempo real con el `suggestedPrompt` del modo seleccionado.
   - Píldora interactiva de inserción rápida (`usar ↵`) sobre la barra de entrada.
   - Tarjetas de bienvenida y botones de acceso directo a especialistas en el estado inicial de conversación.
-- **Renderizador Enriquecido de Mensajes & Bloques de Código**:
-  - Nuevo componente [`MarkdownRenderer.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/MarkdownRenderer.tsx) para formatear bloques de código con etiqueta de lenguaje y botón **"Copiar código"** con feedback visual.
-  - Soporte para listas, negritas, cursivas, encabezados y citas en [`ChatMessageCompact.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatMessageCompact.tsx).
-  - Badge identificador de la disciplina/modo en las respuestas del asistente.
+- **Rediseño Visual: Windows 10 Dark Acrylic**:
+  - Implementada la paleta base de diseño "Windows 10 Dark" con fondo neutral profundo (`#0c0c0c`), superficies acrílicas translúcidas (`#101010`, `#181818`, `#1f1f1f`), bordes sutiles (`rgba(255, 255, 255, 0.08)`) y efecto backdrop blur intenso (`blur(20px)` a `blur(24px)`).
+  - Acento unificado **Windows Blue (`#0078d7` / `#429ce3`)** para selección de especialistas, estado activo, indicador de modo, botón de envío y viñetas de Markdown, eliminando el tinte azul/cian saturado anterior.
+  - Píldoras del selector de disciplinas rediseñadas con estilo acrílico uniforme, borde activo iluminado con acento azul sutil y tipografía nítida.
+  - Mensajes del chat, avatares de usuario y asistente, y barra de entrada (`ChatInputSimple`) alineados con la estética Fluent/Acrylic dark.
+
 
 
 ### Fixed

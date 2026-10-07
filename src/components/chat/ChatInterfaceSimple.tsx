@@ -634,28 +634,28 @@ export default function ChatInterfaceSimple() {
 
   const renderProactivityPrompt = () => {
     return (
-      <div className="mx-auto my-4 max-w-2xl rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 to-blue-950/40 p-4 shadow-lg shadow-cyan-500/5 backdrop-blur-sm animate-fade-in flex items-center justify-between gap-4">
+      <div className="mx-auto my-4 max-w-2xl rounded-2xl border border-white/[0.10] bg-[#161616]/90 p-4 shadow-xl backdrop-blur-md animate-fade-in flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0078d7]/15 text-[#429ce3] border border-[#0078d7]/30">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
               <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clipRule="evenodd" />
             </svg>
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-slate-100">Balance Energético Recomendado</h4>
-            <p className="text-xs text-slate-400">Pasaron más de 15 días desde tu último balance de estado o no tenés registros previos.</p>
+            <h4 className="text-sm font-semibold text-white">Balance Energético Recomendado</h4>
+            <p className="text-xs text-[#9e9e9e]">Pasaron más de 15 días desde tu último balance de estado o no tenés registros previos.</p>
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
           <button
             onClick={() => setShowBalancePrompt(false)}
-            className="rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-slate-800 transition"
+            className="rounded-lg px-3 py-1.5 text-xs text-[#9e9e9e] hover:bg-[#252525] hover:text-white transition"
           >
             Ignorar
           </button>
           <button
             onClick={handleStartBalance}
-            className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-1.5 text-xs font-medium text-white shadow-md shadow-cyan-500/20 hover:from-cyan-400 hover:to-blue-500 transition"
+            className="rounded-lg bg-[#0078d7] px-4 py-1.5 text-xs font-medium text-white shadow-md hover:bg-[#106ebe] transition"
           >
             Realizar Hoy
           </button>
@@ -982,12 +982,12 @@ export default function ChatInterfaceSimple() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-slate-950 text-slate-100">
+    <div className="flex h-screen flex-col bg-[#0c0c0c] text-white">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-950/80 px-4 py-3 backdrop-blur-sm">
+      <header className="border-b border-white/[0.08] bg-[#101010]/85 px-4 py-3 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-1.5 shadow-lg shadow-cyan-500/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1c1c1c] border border-white/[0.10] p-1.5 shadow-sm">
               <Image
                 src={`${BASE_PATH}/JarBees_logo.png`}
                 alt="JarBees"
@@ -997,15 +997,15 @@ export default function ChatInterfaceSimple() {
               />
             </div>
             <div>
-              <h1 className="text-base font-semibold text-slate-100">JarBees</h1>
-              <p className="text-xs text-slate-400">Asistente modular por disciplinas</p>
+              <h1 className="text-base font-semibold text-white">JarBees</h1>
+              <p className="text-xs text-[#9e9e9e]">Asistente modular por disciplinas</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => router.push("/reader")}
-              className="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20 hover:border-cyan-500/50 shadow-sm"
+              className="flex items-center gap-1.5 rounded-lg border border-white/[0.12] bg-[#1c1c1c] px-3 py-1.5 text-xs font-medium text-[#d4d4d4] transition hover:bg-[#282828] hover:border-[#0078d7] hover:text-white shadow-sm"
               title="Abrir Lector de Audiolibros"
             >
               <span>🎧</span>
@@ -1015,7 +1015,7 @@ export default function ChatInterfaceSimple() {
             {isSpeaking && (
               <button
                 onClick={stopSpeaking}
-                className="flex items-center gap-2 rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/20"
+                className="flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/20"
                 title="Detener lectura"
               >
                 <span className="relative flex h-2 w-2">
@@ -1044,9 +1044,9 @@ export default function ChatInterfaceSimple() {
         {balanceLoadingStatus ? (
           <div className="flex h-full flex-col items-center justify-center px-4 py-8">
             <div className="max-w-md text-center flex flex-col items-center gap-4">
-              <div className="h-16 w-16 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent shadow-lg shadow-cyan-500/20" />
-              <h3 className="text-lg font-semibold text-slate-100 animate-pulse">Generando Informe...</h3>
-              <p className="text-xs text-slate-400 leading-relaxed italic">
+              <div className="h-14 w-14 animate-spin rounded-full border-4 border-[#0078d7] border-t-transparent shadow-lg shadow-[#0078d7]/20" />
+              <h3 className="text-lg font-semibold text-white animate-pulse">Generando Informe...</h3>
+              <p className="text-xs text-[#9e9e9e] leading-relaxed italic">
                 {balanceLoadingStatus}
               </p>
             </div>
@@ -1063,14 +1063,14 @@ export default function ChatInterfaceSimple() {
             {messages.length === 0 && !isTyping && (
               <div className="flex h-full items-center justify-center px-4 py-10">
                 <div className="max-w-lg text-center flex flex-col items-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/15 to-blue-600/15 p-3 shadow-xl shadow-cyan-500/10 border border-cyan-500/20">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1c1c1c] p-3 shadow-xl border border-white/[0.10]">
                     <span className="text-3xl select-none">{activeDiscipline.icon}</span>
                   </div>
 
-                  <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     Especialista: {activeDiscipline.name}
                   </h2>
-                  <p className="mt-1.5 text-xs text-slate-400 max-w-sm leading-relaxed">
+                  <p className="mt-1.5 text-xs text-[#9e9e9e] max-w-sm leading-relaxed">
                     {activeDiscipline.description}
                   </p>
 
@@ -1082,17 +1082,17 @@ export default function ChatInterfaceSimple() {
                         onClick={() => {
                           setInputValue(activeDiscipline.suggestedPrompt);
                         }}
-                        className="group w-full rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-left shadow-lg backdrop-blur-sm transition-all hover:border-cyan-500/40 hover:bg-slate-900 hover:shadow-cyan-500/5"
+                        className="group w-full rounded-2xl border border-white/[0.08] bg-[#161616]/80 p-4 text-left shadow-lg backdrop-blur-sm transition hover:border-[#0078d7] hover:bg-[#1a1a1a]"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-400">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-[#429ce3]">
                             💡 Sugerencia para {activeDiscipline.name}
                           </span>
-                          <span className="text-[11px] text-slate-400 group-hover:text-cyan-300">
+                          <span className="text-[11px] text-[#737373] group-hover:text-white transition">
                             Click para probar →
                           </span>
                         </div>
-                        <p className="mt-1.5 text-xs font-mono text-slate-200 italic leading-relaxed">
+                        <p className="mt-1.5 text-xs font-mono text-[#d4d4d4] leading-relaxed">
                           &ldquo;{activeDiscipline.suggestedPrompt}&rdquo;
                         </p>
                       </button>
@@ -1107,8 +1107,8 @@ export default function ChatInterfaceSimple() {
                         onClick={() => handleSelectDiscipline(d)}
                         className={`rounded-full px-2.5 py-1 text-[11px] transition ${
                           selectedMode === d.id
-                            ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-medium"
-                            : "bg-slate-900/60 text-slate-400 border border-slate-800 hover:text-slate-200 hover:bg-slate-800"
+                            ? "bg-[#0078d7]/20 text-white border border-[#0078d7] font-medium"
+                            : "bg-[#181818] text-[#9e9e9e] border border-white/[0.08] hover:text-white hover:bg-[#252525]"
                         }`}
                       >
                         {d.icon} {d.name}

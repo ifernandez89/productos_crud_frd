@@ -141,24 +141,24 @@ export function ChatInputSimple({
   const canSend = (value.trim() || attachedFile) && !isTyping;
 
   return (
-    <div className="border-t border-slate-800 bg-slate-950 px-4 py-3">
+    <div className="border-t border-white/[0.08] bg-[#101010]/95 backdrop-blur-2xl px-4 py-3">
       <div className="mx-auto max-w-3xl">
 
         {/* Tools menu */}
         {showTools && (
-          <div className="mb-3 flex flex-wrap gap-2 rounded-xl border border-slate-800 bg-slate-900/50 p-3">
+          <div className="mb-3 flex flex-wrap gap-2 rounded-xl border border-white/[0.10] bg-[#1a1a1a] p-2.5 shadow-xl">
             <button
               onClick={() => imageInputRef.current?.click()}
-              className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-300 transition-colors hover:border-cyan-500/30 hover:bg-slate-800 hover:text-cyan-400"
+              className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#222222] px-3 py-2 text-sm text-[#d4d4d4] transition hover:border-[#0078d7] hover:bg-[#2c2c2c] hover:text-white"
             >
-              <ImageIcon className="h-4 w-4" />
+              <ImageIcon className="h-4 w-4 text-[#429ce3]" />
               Imagen
             </button>
             <button
               onClick={() => pdfInputRef.current?.click()}
-              className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-300 transition-colors hover:border-cyan-500/30 hover:bg-slate-800 hover:text-cyan-400"
+              className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#222222] px-3 py-2 text-sm text-[#d4d4d4] transition hover:border-[#0078d7] hover:bg-[#2c2c2c] hover:text-white"
             >
-              <FileText className="h-4 w-4" />
+              <FileText className="h-4 w-4 text-[#429ce3]" />
               PDF
             </button>
           </div>
@@ -166,17 +166,17 @@ export function ChatInputSimple({
 
         {/* File preview */}
         {attachedFile && (
-          <div className="mb-2 flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2">
+          <div className="mb-2 flex items-center gap-2 rounded-xl border border-white/[0.10] bg-[#1c1c1c] px-3 py-2">
             {attachedFile.type === "image" && attachedFile.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={attachedFile.previewUrl} alt="preview" className="h-10 w-10 rounded-lg object-cover" />
             ) : (
-              <FileText className="h-6 w-6 flex-shrink-0 text-cyan-400" />
+              <FileText className="h-6 w-6 flex-shrink-0 text-[#429ce3]" />
             )}
-            <span className="flex-1 truncate text-xs text-slate-300">{attachedFile.file.name}</span>
+            <span className="flex-1 truncate text-xs text-[#d4d4d4]">{attachedFile.file.name}</span>
             <button
               onClick={() => onFileAttach?.(null)}
-              className="rounded-full p-1 text-slate-500 hover:text-red-400"
+              className="rounded-full p-1 text-[#737373] hover:text-red-400"
               title="Quitar archivo"
             >
               <X className="h-4 w-4" />
@@ -187,18 +187,18 @@ export function ChatInputSimple({
         {/* Quick Suggested Prompt Pill */}
         {suggestedPrompt && !value && !attachedFile && (
           <div className="mb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 animate-fade-in">
-            <span className="text-[10px] uppercase font-semibold text-slate-500 shrink-0">Sugerencia:</span>
+            <span className="text-[10px] uppercase font-semibold text-[#737373] shrink-0">Sugerencia:</span>
             <button
               type="button"
               onClick={() => {
                 onChange(suggestedPrompt);
                 setTimeout(() => textareaRef.current?.focus(), 0);
               }}
-              className="group flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/80 px-2.5 py-1 text-xs text-slate-300 transition hover:border-cyan-500/40 hover:bg-slate-800 hover:text-cyan-300 max-w-full truncate"
+              className="group flex items-center gap-2 rounded-full border border-white/[0.08] bg-[#181818] px-3 py-1 text-xs text-[#d4d4d4] transition hover:border-[#0078d7] hover:bg-[#242424] hover:text-white max-w-full truncate shadow-sm"
               title="Click para usar esta sugerencia"
             >
-              <span className="truncate italic font-mono text-[11px]">&ldquo;{suggestedPrompt}&rdquo;</span>
-              <span className="text-[10px] text-cyan-400 opacity-70 group-hover:opacity-100 font-sans">usar ↵</span>
+              <span className="truncate text-[11px] text-[#cccccc]">&ldquo;{suggestedPrompt}&rdquo;</span>
+              <span className="text-[10px] text-[#429ce3] group-hover:text-white font-medium">usar ↵</span>
             </button>
           </div>
         )}
@@ -208,10 +208,10 @@ export function ChatInputSimple({
           {/* Plus button */}
           <button
             onClick={() => setShowTools(!showTools)}
-            className={`flex-shrink-0 rounded-full p-2.5 transition-colors ${
+            className={`flex-shrink-0 rounded-full p-2.5 transition ${
               showTools
-                ? "bg-cyan-500/20 text-cyan-400"
-                : "text-slate-400 hover:bg-slate-800 hover:text-slate-300"
+                ? "bg-[#0078d7]/20 text-[#429ce3]"
+                : "text-[#9e9e9e] hover:bg-[#222222] hover:text-white"
             }`}
             title="Adjuntar archivo"
           >
@@ -233,29 +233,29 @@ export function ChatInputSimple({
               disabled={isTyping}
               rows={1}
               maxLength={maxLength}
-              className="w-full resize-none rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 pr-12 text-sm text-slate-100 placeholder-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 disabled:opacity-50"
-              style={{ maxHeight: "200px", minHeight: "44px" }}
+              className="w-full resize-none rounded-xl border border-white/[0.10] bg-[#181818] px-4 py-2.5 pr-12 text-sm text-white placeholder-[#737373] focus:border-[#0078d7] focus:outline-none focus:ring-1 focus:ring-[#0078d7] disabled:opacity-50 transition"
+              style={{ maxHeight: "200px", minHeight: "42px" }}
             />
 
             {showDropdown && (
-              <div className="absolute bottom-full left-0 z-50 mb-2 w-full max-h-60 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900 shadow-2xl p-1">
+              <div className="absolute bottom-full left-0 z-50 mb-2 w-full max-h-60 overflow-y-auto rounded-xl border border-white/[0.10] bg-[#181818] shadow-2xl p-1">
                 {filteredSuggestions.slice(0, 8).map((suggestion, idx) => (
                   <button
                     key={suggestion.titulo}
                     type="button"
                     onClick={() => selectSuggestion(suggestion.titulo)}
                     onMouseEnter={() => setHighlightedIndex(idx)}
-                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
                       idx === highlightedIndex
-                        ? "bg-cyan-500/20 text-cyan-400"
-                        : "text-slate-300 hover:bg-slate-800"
+                        ? "bg-[#0078d7]/20 text-white"
+                        : "text-[#d4d4d4] hover:bg-[#252525]"
                     }`}
                   >
-                    <BookOpen className="h-4 w-4 flex-shrink-0 text-cyan-500" />
+                    <BookOpen className="h-4 w-4 flex-shrink-0 text-[#0078d7]" />
                     <div className="flex flex-col text-left truncate flex-1">
-                      <span className="truncate font-medium text-slate-100">{suggestion.titulo}</span>
+                      <span className="truncate font-medium text-white">{suggestion.titulo}</span>
                       {suggestion.autor && (
-                        <span className="truncate text-[11px] text-slate-400 mt-0.5">{suggestion.autor}</span>
+                        <span className="truncate text-[11px] text-[#9e9e9e] mt-0.5">{suggestion.autor}</span>
                       )}
                     </div>
                   </button>
@@ -272,10 +272,10 @@ export function ChatInputSimple({
           <button
             onClick={onVoiceToggle}
             disabled={isTyping}
-            className={`flex-shrink-0 rounded-full p-2.5 transition-colors ${
+            className={`flex-shrink-0 rounded-full p-2.5 transition ${
               isListening
                 ? "animate-pulse bg-red-500/20 text-red-400"
-                : "text-slate-400 hover:bg-slate-800 hover:text-slate-300 disabled:opacity-50"
+                : "text-[#9e9e9e] hover:bg-[#222222] hover:text-white disabled:opacity-50"
             }`}
             title={isListening ? "Detener grabación" : "Grabar voz"}
           >
@@ -286,7 +286,7 @@ export function ChatInputSimple({
           <button
             onClick={onSubmit}
             disabled={!canSend}
-            className="flex-shrink-0 rounded-full bg-cyan-500 p-2.5 text-white transition-colors hover:bg-cyan-400 disabled:opacity-50 disabled:hover:bg-cyan-500"
+            className="flex-shrink-0 rounded-full bg-[#0078d7] p-2.5 text-white transition hover:bg-[#106ebe] disabled:opacity-40 disabled:hover:bg-[#0078d7] shadow-sm"
             title="Enviar mensaje"
           >
             <Send className="h-5 w-5" />
