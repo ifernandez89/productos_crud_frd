@@ -6,8 +6,32 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 
 ## [Unreleased]
 
-### Removed
-- **Botón "Mi Balance"**: Se eliminó el botón de acceso directo del header del chat, unificando la experiencia para usar únicamente el comando `/balance` (o `/balance`).
+### Added
+- **Selector Modular de Especialistas y Disciplinas de IA**:
+  - Implementado [`DisciplineSelector.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/DisciplineSelector.tsx) con barra de píldoras horizontal (*pills carousel*), scroll suave, gradientes dinámicos, borde resplandeciente (*glow effect*) e indicador del modelo del backend.
+  - Soporte completo para las 10 disciplinas de JarBees:
+    - 🧭 **Automático (`auto`)**: Enrutador inteligente según la intención del prompt.
+    - 💬 **Chat General (`chatbot`)**: Asistencia general y conversación libre (`qwen2.5:7b`).
+    - 💻 **Código & Dev (`coder`)**: Programación, debugging y arquitectura (`qwen2.5-coder:7b`).
+    - 🌐 **Traductor (`traductor`)**: Traducción directa (`RogerBen/hy-mt1.5-1.8b:latest`).
+    - 🎙️ **Lector & Audio (`reader`)**: Optimizado para lectura y síntesis de voz (`sematre/orpheus:it_es-3b`).
+    - 📄 **PDF / OCR (`ocr`)**: Extracción de texto y análisis de documentos (`yemifo/qwen25-vl-3b-q4km:latest`).
+    - 🎬 **Video Analysis (`video`)**: Análisis de frames y multimedia (`yemifo/qwen25-vl-3b-q4km:latest`).
+    - 🔎 **Búsqueda RAG (`rag`)**: Recuperación vectorial sobre memoria (`bge-m3:latest`).
+    - 🧠 **Planner (`planner`)**: Planificación y orquestación multi-paso de tareas.
+    - 🛠️ **Herramientas (`tools`)**: Ejecución de herramientas (Google Calendar, Tasks, Gmail, Clima, etc.).
+  - Consulta dinámica del catálogo vía `GET /aichat/disciplines` y `GET /jarbees/disciplines` con fallback robusto.
+  - Persistencia de modo activo en `localStorage` (`jarbees_active_discipline_mode`).
+  - Envío automático del campo `mode` en la carga útil JSON de las consultas al backend.
+- **Sugerencias y Placeholders Dinámicos de Prompts**:
+  - Placeholder del `textarea` en [`ChatInputSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInputSimple.tsx) actualizado en tiempo real con el `suggestedPrompt` del modo seleccionado.
+  - Píldora interactiva de inserción rápida (`usar ↵`) sobre la barra de entrada.
+  - Tarjetas de bienvenida y botones de acceso directo a especialistas en el estado inicial de conversación.
+- **Renderizador Enriquecido de Mensajes & Bloques de Código**:
+  - Nuevo componente [`MarkdownRenderer.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/MarkdownRenderer.tsx) para formatear bloques de código con etiqueta de lenguaje y botón **"Copiar código"** con feedback visual.
+  - Soporte para listas, negritas, cursivas, encabezados y citas en [`ChatMessageCompact.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatMessageCompact.tsx).
+  - Badge identificador de la disciplina/modo en las respuestas del asistente.
+
 
 ### Fixed
 - **Estándar Arquitectónico de Conexión al Backend (`BASE_URL`)**: Restaurada la lógica directa y limpia `export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL; const BASE_URL = BACKEND_URL ?? "http://localhost:4000";` en todos los servicios de API (`preguntas.api.ts`, `jarbees.api.ts`, `balance.api.ts`, `products.api.ts`), unificando el consumo del Chatbot y del Lector.

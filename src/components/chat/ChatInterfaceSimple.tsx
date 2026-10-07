@@ -1,13 +1,25 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ChatInputSimple } from "./ChatInputSimple";
 import { ChatMessageCompact } from "./ChatMessageCompact";
+import { DisciplineSelector } from "./DisciplineSelector";
 import { loadConversation, saveConversation } from "@/lib/db";
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
-import { hacerPregunta, classifyError, initSession, fetchHistory, type HistoryMessage } from "../../app/services/preguntas.api";
-import { analyzeImage, ingestPdf, getLibraryIndex, type LibraryIndexItem } from "../../app/services/jarbees.api";
+import {
+  hacerPregunta,
+  classifyError,
+  initSession,
+  fetchHistory,
+  fetchDisciplines,
+  DEFAULT_DISCIPLINES,
+  getStoredDisciplineMode,
+  storeDisciplineMode,
+  type Discipline,
+  type HistoryMessage,
+} from "../../app/services/preguntas.api";
+import { analyzeImage, ingestPdf, getLibraryIndex, type LibraryIndexItem, type VisionMode } from "../../app/services/jarbees.api";
 import type { AttachedFile } from "./ChatInputSimple";
 import { startBalanceSession, submitBalanceAnswer, finishBalanceSession, getLatestBalance, type BalanceReport, type BalanceQuestion } from "../../app/services/balance.api";
 
@@ -20,6 +32,7 @@ interface Message {
   timestamp: Date;
   responseTime?: number;
   isError?: boolean;
+  mode?: string;
 }
 
 interface SpeechRecognitionEventLike extends Event {
@@ -66,6 +79,37 @@ export default function ChatInterfaceSimple() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const [librarySuggestions, setLibrarySuggestions] = useState<LibraryIndexItem[]>([]);
+
+  // Especialistas / Disciplinas
+  const [disciplines, setDisciplines] = useState<Discipline[]>(DEFAULT_DISCIPLINES);
+  const [selectedMode, setSelectedMode] = useState<string>("auto");
+
+  // Cargar catálogo de disciplinas y recuperar modo persistente
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const storedMode = getStoredDisciplineMode();
+        setSelectedMode(storedMode);
+        const list = await fetchDisciplines();
+        if (mounted && list.length > 0) {
+          setDisciplines(list);
+        }
+      } catch (err) {
+        console.warn("No se pudo cargar disciplinas:", err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const handleSelectDiscipline = (disc: Discipline) => {
+    setSelectedMode(disc.id);
+    storeDisciplineMode(disc.id);
+  };
+
+  const activeDiscipline = useMemo(() => {
+    return disciplines.find((d) => d.id === selectedMode) || disciplines[0] || DEFAULT_DISCIPLINES[0];
+  }, [disciplines, selectedMode]);
 
   // Estado Energético Questionnaire & Report States
   const [showBalancePrompt, setShowBalancePrompt] = useState(false);
@@ -519,9 +563,10 @@ export default function ChatInterfaceSimple() {
       let responseTime: number;
 
       if (currentFile?.type === "image") {
+        const visionMode: VisionMode = selectedMode === "ocr" ? "ocr" : "general";
         const result = await analyzeImage(currentFile.file, {
           question: trimmedInput || undefined,
-          mode: "general",
+          mode: visionMode,
           sessionId,
         });
         responseTime = result.latencyMs ?? performance.now() - startTime;
@@ -541,7 +586,10 @@ export default function ChatInterfaceSimple() {
           : `✅ PDF "${result.title}" guardado en tu biblioteca. Se procesaron ${result.chunks} fragmentos y ya está disponible para consultas.`;
 
       } else {
-        const result = await hacerPregunta(trimmedInput, "ollama", { autoGeolocation: true });
+        const result = await hacerPregunta(trimmedInput, "ollama", {
+          autoGeolocation: true,
+          mode: selectedMode,
+        });
         responseTime = performance.now() - startTime;
         answer = result.answer;
       }
@@ -553,6 +601,7 @@ export default function ChatInterfaceSimple() {
         content: "",
         timestamp: new Date(),
         responseTime,
+        mode: selectedMode,
       });
 
       const tokens = answer.split(/(\s+)/);
@@ -949,7 +998,7 @@ export default function ChatInterfaceSimple() {
             </div>
             <div>
               <h1 className="text-base font-semibold text-slate-100">JarBees</h1>
-              <p className="text-xs text-slate-400">Asistente conversacional</p>
+              <p className="text-xs text-slate-400">Asistente modular por disciplinas</p>
             </div>
           </div>
 
@@ -980,6 +1029,16 @@ export default function ChatInterfaceSimple() {
         </div>
       </header>
 
+      {/* Selector de Especialistas y Disciplinas */}
+      {!isBalanceActive && !balanceReport && (
+        <DisciplineSelector
+          disciplines={disciplines}
+          selectedMode={selectedMode}
+          onSelectMode={handleSelectDiscipline}
+          isLoading={isTyping}
+        />
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         {balanceLoadingStatus ? (
@@ -1002,24 +1061,60 @@ export default function ChatInterfaceSimple() {
             {showBalancePrompt && renderProactivityPrompt()}
 
             {messages.length === 0 && !isTyping && (
-              <div className="flex h-full items-center justify-center px-4 py-16">
-                <div className="max-w-md text-center">
-                  <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-600/10 p-4 shadow-lg shadow-cyan-500/20">
-                    <Image
-                      src={`${BASE_PATH}/JarBees_logo.png`}
-                      alt="JarBees"
-                      width={64}
-                      height={64}
-                      className="object-contain"
-                    />
+              <div className="flex h-full items-center justify-center px-4 py-10">
+                <div className="max-w-lg text-center flex flex-col items-center">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/15 to-blue-600/15 p-3 shadow-xl shadow-cyan-500/10 border border-cyan-500/20">
+                    <span className="text-3xl select-none">{activeDiscipline.icon}</span>
                   </div>
-                  <h2 className="text-xl font-semibold text-slate-100">JarBees está listo</h2>
-                  <p className="mt-2 text-sm text-slate-400">
-                    Iniciá una conversación por voz o texto
+
+                  <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                    Especialista: {activeDiscipline.name}
+                  </h2>
+                  <p className="mt-1.5 text-xs text-slate-400 max-w-sm leading-relaxed">
+                    {activeDiscipline.description}
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-2">
-                    Escribí <code className="text-cyan-400">/balance</code> para iniciar tu cuestionario de estado energético.
-                  </p>
+
+                  {/* Suggested Prompt Card */}
+                  {activeDiscipline.suggestedPrompt && (
+                    <div className="mt-5 w-full">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInputValue(activeDiscipline.suggestedPrompt);
+                        }}
+                        className="group w-full rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-left shadow-lg backdrop-blur-sm transition-all hover:border-cyan-500/40 hover:bg-slate-900 hover:shadow-cyan-500/5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-400">
+                            💡 Sugerencia para {activeDiscipline.name}
+                          </span>
+                          <span className="text-[11px] text-slate-400 group-hover:text-cyan-300">
+                            Click para probar →
+                          </span>
+                        </div>
+                        <p className="mt-1.5 text-xs font-mono text-slate-200 italic leading-relaxed">
+                          &ldquo;{activeDiscipline.suggestedPrompt}&rdquo;
+                        </p>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Quick Discipline Shortcuts */}
+                  <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+                    {disciplines.slice(0, 5).map((d) => (
+                      <button
+                        key={`shortcut-${d.id}`}
+                        onClick={() => handleSelectDiscipline(d)}
+                        className={`rounded-full px-2.5 py-1 text-[11px] transition ${
+                          selectedMode === d.id
+                            ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-medium"
+                            : "bg-slate-900/60 text-slate-400 border border-slate-800 hover:text-slate-200 hover:bg-slate-800"
+                        }`}
+                      >
+                        {d.icon} {d.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -1032,6 +1127,7 @@ export default function ChatInterfaceSimple() {
                 timestamp={msg.timestamp}
                 responseTime={msg.responseTime}
                 isError={msg.isError}
+                mode={msg.mode}
               />
             ))}
 
@@ -1039,6 +1135,7 @@ export default function ChatInterfaceSimple() {
               <ChatMessageCompact
                 role="assistant"
                 content="Escribiendo..."
+                mode={selectedMode}
               />
             )}
 
@@ -1066,6 +1163,8 @@ export default function ChatInterfaceSimple() {
           isTyping={isTyping}
           maxLength={MAX_MESSAGE_LENGTH}
           errorMessage={inputError ?? undefined}
+          placeholder={activeDiscipline.suggestedPrompt || "Escribe un mensaje..."}
+          suggestedPrompt={activeDiscipline.suggestedPrompt}
           attachedFile={attachedFile}
           onFileAttach={setAttachedFile}
           suggestions={librarySuggestions}

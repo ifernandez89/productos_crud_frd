@@ -17,6 +17,8 @@ interface ChatInputSimpleProps {
   isTyping: boolean;
   maxLength: number;
   errorMessage?: string;
+  placeholder?: string;
+  suggestedPrompt?: string;
   // archivo adjunto
   attachedFile?: AttachedFile | null;
   onFileAttach?: (file: AttachedFile | null) => void;
@@ -33,6 +35,8 @@ export function ChatInputSimple({
   isTyping,
   maxLength,
   errorMessage,
+  placeholder,
+  suggestedPrompt,
   attachedFile,
   onFileAttach,
   suggestions = [],
@@ -180,6 +184,25 @@ export function ChatInputSimple({
           </div>
         )}
 
+        {/* Quick Suggested Prompt Pill */}
+        {suggestedPrompt && !value && !attachedFile && (
+          <div className="mb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 animate-fade-in">
+            <span className="text-[10px] uppercase font-semibold text-slate-500 shrink-0">Sugerencia:</span>
+            <button
+              type="button"
+              onClick={() => {
+                onChange(suggestedPrompt);
+                setTimeout(() => textareaRef.current?.focus(), 0);
+              }}
+              className="group flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/80 px-2.5 py-1 text-xs text-slate-300 transition hover:border-cyan-500/40 hover:bg-slate-800 hover:text-cyan-300 max-w-full truncate"
+              title="Click para usar esta sugerencia"
+            >
+              <span className="truncate italic font-mono text-[11px]">&ldquo;{suggestedPrompt}&rdquo;</span>
+              <span className="text-[10px] text-cyan-400 opacity-70 group-hover:opacity-100 font-sans">usar ↵</span>
+            </button>
+          </div>
+        )}
+
         {/* Input bar */}
         <div className="flex items-end gap-2">
           {/* Plus button */}
@@ -202,7 +225,11 @@ export function ChatInputSimple({
               value={value}
               onChange={handleTextChange}
               onKeyDown={handleKeyDown}
-              placeholder={attachedFile ? "Agregá una pregunta (opcional)..." : "Escribe un mensaje..."}
+              placeholder={
+                attachedFile
+                  ? "Agregá una pregunta (opcional)..."
+                  : placeholder || "Escribe un mensaje..."
+              }
               disabled={isTyping}
               rows={1}
               maxLength={maxLength}
