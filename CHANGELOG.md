@@ -27,6 +27,17 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
   - Placeholder del `textarea` en [`ChatInputSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInputSimple.tsx) actualizado en tiempo real con el `suggestedPrompt` del modo seleccionado.
   - Píldora interactiva de inserción rápida (`usar ↵`) sobre la barra de entrada.
   - Tarjetas de bienvenida y botones de acceso directo a especialistas en el estado inicial de conversación.
+- **Avatar Interactivo JarBee con Motor de Vida Procedural**:
+  - Implementado [`JarBeeAvatar.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/JarBeeAvatar.tsx): Avatar vector SVG estilizado de abeja-drone cibernética ultra ligero (<15 KB, sin dependencias pesadas 3D), renderizado a 60 FPS con aceleración por hardware CSS y compatible tanto con escritorio como con dispositivos móviles.
+  - Diseñado con visor OLED digital, ojos expresivos interactivos (`◉ ◉`, `^ ^`, `- -`, `• • ↗`), antenas con sensores pulsantes de radar y alas translúcidas con estética acrílica.
+  - Implementado [`useJarBeeEngine.ts`](file:///c:/Projects/productos_crud_frd/src/components/chat/useJarBeeEngine.ts): Motor de vida procedural con estados de atención y ciclos autónomos:
+    - **Seguimiento ocular de mirada**: Ojos que siguen la posición del cursor/mouse en tiempo real con suavizado angular y retorno natural al centro.
+    - **Parpadeo estocástico natural**: Intervalos biológicos aleatorios de parpadeo (entre 2.5s y 6s).
+    - **Modo reposo/sueño inteligente**: Entra en suspensión profunda (`sleepy` con emisión de `z`) tras 75s de inactividad, despertando instantáneamente ante interacciones del usuario (movimiento, toque táctil, tipeo).
+    - **Reacción táctil al click**: Dispara expresión de alegría (`happy` `^ ^`) y aceleración temporal de aleteo al hacer click o pulsar el avatar.
+    - **Lip-sync y modulación de voz**: Sincronización labial dinámica de apertura bucal durante la lectura por voz (TTS).
+    - **Sensor de escucha de audio**: Pulso y ondas de radar visuales en las antenas cuando el reconocimiento de voz (`SpeechRecognition`) está activo.
+  - Integrado en [`ChatInterfaceSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInterfaceSimple.tsx) (cabecera interactiva y bienvenida) y en [`ChatMessageCompact.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatMessageCompact.tsx) para los mensajes del asistente.
 - **Rediseño Visual: Windows 10 Dark Acrylic**:
   - Implementada la paleta base de diseño "Windows 10 Dark" con fondo neutral profundo (`#0c0c0c`), superficies acrílicas translúcidas (`#101010`, `#181818`, `#1f1f1f`), bordes sutiles (`rgba(255, 255, 255, 0.08)`) y efecto backdrop blur intenso (`blur(20px)` a `blur(24px)`).
   - Acento unificado **Windows Blue (`#0078d7` / `#429ce3`)** para selección de especialistas, estado activo, indicador de modo, botón de envío y viñetas de Markdown, eliminando el tinte azul/cian saturado anterior.

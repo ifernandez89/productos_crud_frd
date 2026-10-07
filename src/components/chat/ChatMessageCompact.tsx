@@ -1,10 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { Clock, AlertTriangle, Copy, Check } from "lucide-react";
-import Image from "next/image";
 import { MarkdownRenderer } from "./MarkdownRenderer";
-
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+import { JarBeeAvatar } from "./JarBeeAvatar";
 
 interface ChatMessageCompactProps {
   role: "user" | "assistant" | "system";
@@ -64,14 +62,8 @@ export function ChatMessageCompact({
               Tú
             </div>
           ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1c1c1c] border border-white/[0.10] p-1.5 shadow-sm">
-              <Image
-                src={`${BASE_PATH}/JarBees_logo.png`}
-                alt="JarBees"
-                width={22}
-                height={22}
-                className="object-contain"
-              />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1c1c1c] border border-white/[0.10] shadow-sm">
+              <JarBeeAvatar size="sm" interactive={false} showStatusGlow={false} />
             </div>
           )}
         </div>

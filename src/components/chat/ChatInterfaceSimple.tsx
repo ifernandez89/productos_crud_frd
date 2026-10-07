@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { ChatInputSimple } from "./ChatInputSimple";
 import { ChatMessageCompact } from "./ChatMessageCompact";
 import { DisciplineSelector } from "./DisciplineSelector";
+import { JarBeeAvatar } from "./JarBeeAvatar";
 import { loadConversation, saveConversation } from "@/lib/db";
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 import {
@@ -22,8 +22,6 @@ import {
 import { analyzeImage, ingestPdf, getLibraryIndex, type LibraryIndexItem, type VisionMode } from "../../app/services/jarbees.api";
 import type { AttachedFile } from "./ChatInputSimple";
 import { startBalanceSession, submitBalanceAnswer, finishBalanceSession, getLatestBalance, type BalanceReport, type BalanceQuestion } from "../../app/services/balance.api";
-
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 interface Message {
   id: string;
@@ -987,17 +985,35 @@ export default function ChatInterfaceSimple() {
       <header className="border-b border-white/[0.08] bg-[#101010]/85 px-4 py-3 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1c1c1c] border border-white/[0.10] p-1.5 shadow-sm">
-              <Image
-                src={`${BASE_PATH}/JarBees_logo.png`}
-                alt="JarBees"
-                width={32}
-                height={32}
-                className="object-contain"
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1c1c1c] border border-white/[0.10] p-0.5 shadow-sm relative">
+              <JarBeeAvatar
+                size="md"
+                isListening={isListening}
+                isThinking={isTyping}
+                isSpeaking={isSpeaking}
+                interactive={true}
               />
             </div>
             <div>
-              <h1 className="text-base font-semibold text-white">JarBees</h1>
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-base font-semibold text-white">JarBees</h1>
+                {isListening && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#0078d7]/20 border border-[#0078d7]/40 px-1.5 py-0.2 text-[9px] font-mono text-[#429ce3] animate-pulse">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#429ce3] animate-ping" />
+                    Escuchando
+                  </span>
+                )}
+                {isTyping && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 px-1.5 py-0.2 text-[9px] font-mono text-cyan-300">
+                    Procesando...
+                  </span>
+                )}
+                {isSpeaking && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-1.5 py-0.2 text-[9px] font-mono text-emerald-300">
+                    Hablando
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-[#9e9e9e]">Asistente modular por disciplinas</p>
             </div>
           </div>
@@ -1063,8 +1079,20 @@ export default function ChatInterfaceSimple() {
             {messages.length === 0 && !isTyping && (
               <div className="flex h-full items-center justify-center px-4 py-10">
                 <div className="max-w-lg text-center flex flex-col items-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1c1c1c] p-3 shadow-xl border border-white/[0.10]">
-                    <span className="text-3xl select-none">{activeDiscipline.icon}</span>
+                  <div className="relative mb-3 flex items-center justify-center">
+                    <JarBeeAvatar
+                      size="xl"
+                      isListening={isListening}
+                      isThinking={isTyping}
+                      isSpeaking={isSpeaking}
+                      interactive={true}
+                    />
+                    <div
+                      className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-lg bg-[#1c1c1c] border border-white/[0.12] text-sm shadow-md"
+                      title={`Especialista activo: ${activeDiscipline.name}`}
+                    >
+                      {activeDiscipline.icon}
+                    </div>
                   </div>
 
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">

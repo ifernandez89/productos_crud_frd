@@ -103,3 +103,64 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* Animaciones del Avatar JarBee */
+@keyframes jarbee-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3.5px);
+  }
+}
+
+@keyframes wing-flap-left {
+  0%, 100% {
+    transform: rotate(0deg) scaleX(1);
+  }
+  50% {
+    transform: rotate(-18deg) scaleX(0.75);
+  }
+}
+
+@keyframes wing-flap-right {
+  0%, 100% {
+    transform: rotate(0deg) scaleX(1);
+  }
+  50% {
+    transform: rotate(18deg) scaleX(0.75);
+  }
+}
+
+.animate-jarbee-float {
+  animation: jarbee-float 3.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-wing-slow-left {
+  animation: wing-flap-left 1.8s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-wing-slow-right {
+  animation: wing-flap-right 1.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-wing-normal-left {
+  animation: wing-flap-left 0.7s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-wing-normal-right {
+  animation: wing-flap-right 0.7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-wing-fast-left {
+  animation: wing-flap-left 0.18s ease-in-out infinite;
+  will-change: transform;
+}
+.animate-wing-fast-right {
+  animation: wing-flap-right 0.18s ease-in-out infinite;
+  will-change: transform;
+}
+
+
