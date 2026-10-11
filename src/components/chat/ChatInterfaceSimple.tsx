@@ -19,7 +19,14 @@ import {
   type Discipline,
   type HistoryMessage,
 } from "../../app/services/preguntas.api";
-import { analyzeImage, ingestPdf, getLibraryIndex, type LibraryIndexItem, type VisionMode } from "../../app/services/jarbees.api";
+import {
+  analyzeImage,
+  ingestPdf,
+  getLibraryIndex,
+  sendVoiceChat,
+  type LibraryIndexItem,
+  type VisionMode,
+} from "../../app/services/jarbees.api";
 import type { AttachedFile } from "./ChatInputSimple";
 import { startBalanceSession, submitBalanceAnswer, finishBalanceSession, getLatestBalance, type BalanceReport, type BalanceQuestion } from "../../app/services/balance.api";
 
@@ -510,6 +517,84 @@ export default function ChatInterfaceSimple() {
     }
   };
 
+  const handleVoiceRecorded = async (audioBlob: Blob, durationSeconds: number) => {
+    stopSpeaking();
+    setIsTyping(true);
+    const startTime = performance.now();
+    const sessionId =
+      typeof window !== "undefined"
+        ? (window.localStorage.getItem("jarbees_session_id") ?? undefined)
+        : undefined;
+
+    const userMsgId = Date.now().toString();
+    addMessage({
+      id: userMsgId,
+      role: "user",
+      content: `🎙️ Audio (${durationSeconds}s)... procesando`,
+      timestamp: new Date(),
+    });
+
+    try {
+      const result = await sendVoiceChat(audioBlob, { sessionId });
+      const responseTime = performance.now() - startTime;
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === userMsgId
+            ? { ...m, content: `🎙️ "${result.transcription}"` }
+            : m
+        )
+      );
+
+      const answer = result.answer || "He recibido tu mensaje de audio.";
+      const assistantId = (Date.now() + 1).toString();
+      addMessage({
+        id: assistantId,
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+        responseTime,
+        mode: selectedMode,
+      });
+
+      const tokens = answer.split(/(\s+)/);
+      let accumulated = "";
+      tokens.forEach((tok, idx) => {
+        setTimeout(() => {
+          accumulated += tok;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === assistantId ? { ...m, content: accumulated } : m))
+          );
+          if (idx === tokens.length - 1) {
+            setIsTyping(false);
+            if (audioEnabled && !isSpeaking) speakText(answer);
+          }
+        }, 35 * idx);
+      });
+    } catch (error) {
+      console.warn("Fallo al enviar mensaje de voz:", error);
+      setIsTyping(false);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === userMsgId
+            ? {
+                ...m,
+                content: `🎙️ Audio (${durationSeconds}s) [No procesado: backend de voz desconectado]`,
+              }
+            : m
+        )
+      );
+      addMessage({
+        id: (Date.now() + 1).toString(),
+        role: "system",
+        content:
+          "⚠️ El servicio de voz del backend no respondió. Verificá que el backend tenga activo el endpoint /jarbees/voice/chat o usá dictado de texto.",
+        timestamp: new Date(),
+        isError: true,
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     const trimmedInput = inputValue.trim();
 
@@ -533,8 +618,8 @@ export default function ChatInterfaceSimple() {
 
     const userContent = attachedFile
       ? trimmedInput
-        ? `[${attachedFile.type === "image" ? "Imagen" : "PDF"}: ${attachedFile.file.name}] ${trimmedInput}`
-        : `[${attachedFile.type === "image" ? "Imagen" : "PDF"}: ${attachedFile.file.name}]`
+        ? `[${attachedFile.type === "image" ? "Imagen" : attachedFile.type === "audio" ? "Audio/Sample" : "PDF"}: ${attachedFile.file.name}] ${trimmedInput}`
+        : `[${attachedFile.type === "image" ? "Imagen" : attachedFile.type === "audio" ? "Audio/Sample" : "PDF"}: ${attachedFile.file.name}]`
       : trimmedInput;
 
     addMessage({
@@ -577,11 +662,20 @@ export default function ChatInterfaceSimple() {
           sessionId,
         });
         responseTime = performance.now() - startTime;
-        // Si el backend respondió una pregunta, mostramos esa respuesta;
-        // si no, confirmamos la ingestión
         answer = result.answer
           ? result.answer
           : `✅ PDF "${result.title}" guardado en tu biblioteca. Se procesaron ${result.chunks} fragmentos y ya está disponible para consultas.`;
+
+      } else if (currentFile?.type === "audio") {
+        const audioPrompt = trimmedInput
+          ? `[Pista de audio: ${currentFile.file.name}] ${trimmedInput}`
+          : `Analiza esta pista de audio o sample musical "${currentFile.file.name}". Proporciona detalles útiles como BPM estimado, escala/tono, sugerencias de ecualización o integración en Studio One / FL Studio.`;
+        const result = await hacerPregunta(audioPrompt, "ollama", {
+          autoGeolocation: true,
+          mode: selectedMode === "audio" ? "audio" : selectedMode,
+        });
+        responseTime = performance.now() - startTime;
+        answer = result.answer;
 
       } else {
         const result = await hacerPregunta(trimmedInput, "ollama", {
@@ -1147,15 +1241,17 @@ export default function ChatInterfaceSimple() {
               </div>
             )}
 
-            {messages.map((msg) => (
+            {messages.map((msg, index) => (
               <ChatMessageCompact
-                key={msg.id}
+                key={`msg-${msg.id || index}-${index}`}
                 role={msg.role}
                 content={msg.content}
                 timestamp={msg.timestamp}
                 responseTime={msg.responseTime}
                 isError={msg.isError}
                 mode={msg.mode}
+                onSpeak={speakText}
+                isSpeakingThis={isSpeaking}
               />
             ))}
 
@@ -1187,6 +1283,7 @@ export default function ChatInterfaceSimple() {
           }}
           onSubmit={handleSubmit}
           onVoiceToggle={toggleVoiceInput}
+          onVoiceRecorded={handleVoiceRecorded}
           isListening={isListening}
           isTyping={isTyping}
           maxLength={MAX_MESSAGE_LENGTH}

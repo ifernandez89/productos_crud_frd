@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Clock, AlertTriangle, Copy, Check } from "lucide-react";
+import { Clock, AlertTriangle, Copy, Check, Volume2, VolumeX } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { JarBeeAvatar } from "./JarBeeAvatar";
 
@@ -11,6 +11,8 @@ interface ChatMessageCompactProps {
   responseTime?: number;
   isError?: boolean;
   mode?: string;
+  onSpeak?: (text: string) => void;
+  isSpeakingThis?: boolean;
 }
 
 export function ChatMessageCompact({
@@ -19,6 +21,8 @@ export function ChatMessageCompact({
   responseTime,
   isError,
   mode,
+  onSpeak,
+  isSpeakingThis = false,
 }: ChatMessageCompactProps) {
   const [copied, setCopied] = useState(false);
   const isUser = role === "user";
@@ -83,25 +87,46 @@ export function ChatMessageCompact({
               )}
             </div>
 
-            {/* Quick copy on hover */}
+            {/* Quick actions on hover: Escuchar & Copiar */}
             {!isUser && content && (
-              <button
-                onClick={handleCopy}
-                className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 rounded bg-[#1f1f1f] border border-white/[0.08] px-2 py-0.5 text-[11px] text-[#9e9e9e] hover:bg-[#282828] hover:text-white"
-                title="Copiar texto"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-3 w-3 text-emerald-400" />
-                    <span className="text-emerald-400 font-medium">Copiado</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3 w-3" />
-                    <span>Copiar</span>
-                  </>
+              <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition">
+                {onSpeak && (
+                  <button
+                    onClick={() => onSpeak(content)}
+                    className="flex items-center gap-1 rounded bg-[#1f1f1f] border border-white/[0.08] px-2 py-0.5 text-[11px] text-[#9e9e9e] hover:bg-[#282828] hover:text-white"
+                    title={isSpeakingThis ? "Detener lectura de voz" : "Escuchar respuesta (Voz)"}
+                  >
+                    {isSpeakingThis ? (
+                      <>
+                        <VolumeX className="h-3 w-3 text-red-400" />
+                        <span className="text-red-400 font-medium">Detener</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="h-3 w-3 text-cyan-400" />
+                        <span>Escuchar</span>
+                      </>
+                    )}
+                  </button>
                 )}
-              </button>
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1 rounded bg-[#1f1f1f] border border-white/[0.08] px-2 py-0.5 text-[11px] text-[#9e9e9e] hover:bg-[#282828] hover:text-white"
+                  title="Copiar texto"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3 w-3 text-emerald-400" />
+                      <span className="text-emerald-400 font-medium">Copiado</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" />
+                      <span>Copiar</span>
+                    </>
+                  )}
+                </button>
+              </div>
             )}
           </div>
 

@@ -284,11 +284,96 @@ export async function getReaderDocument(documentId: string | number): Promise<Re
   throw new Error(`No se pudo obtener el documento ${documentId}`);
 }
 
+// ─── Voice: enviar audio grabado para transcripción y respuesta ──────────────────
+export type VoiceChatResponse = {
+  transcription: string;
+  answer: string;
+  audioUrl?: string;
+  durationSeconds?: number;
+};
+
+export async function sendVoiceChat(
+  audioBlob: Blob,
+  options?: { sessionId?: string; questionHint?: string }
+): Promise<VoiceChatResponse> {
+  const form = new FormData();
+  const ext = audioBlob.type.includes("ogg")
+    ? "ogg"
+    : audioBlob.type.includes("wav")
+    ? "wav"
+    : "webm";
+  form.append("audio", audioBlob, `voice_message.${ext}`);
+  if (options?.sessionId) form.append("sessionId", options.sessionId);
+  if (options?.questionHint) form.append("question", options.questionHint);
+
+  const customUrl = typeof window !== "undefined" ? window.localStorage.getItem("jarbees_backend_url") : null;
+  const urlsToTry = [
+    customUrl,
+    BASE_URL,
+    "http://localhost:4000",
+    "http://127.0.0.1:4000",
+  ].filter((u): u is string => Boolean(u && u.trim().length > 0));
+
+  let lastError: Error | null = null;
+
+  for (const url of urlsToTry) {
+    if (!url) continue;
+    const cleanUrl = url.replace(/\/$/, "");
+    const headers = buildHeaders(false, cleanUrl);
+
+    // Intentar /api/jarbees/voice/chat y /jarbees/voice/chat
+    const endpoints = [
+      `${cleanUrl}/api/jarbees/voice/chat`,
+      `${cleanUrl}/jarbees/voice/chat`,
+      `${cleanUrl}/api/voice/chat`,
+    ];
+
+    for (const endpoint of endpoints) {
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers,
+          body: form,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          return {
+            transcription:
+              data?.transcription ||
+              data?.transcript ||
+              data?.pregunta ||
+              data?.text ||
+              "Mensaje de voz",
+            answer:
+              data?.answer ||
+              data?.response ||
+              data?.reply ||
+              data?.respuesta ||
+              "",
+            audioUrl: data?.audioUrl,
+            durationSeconds: data?.durationSeconds,
+          };
+        }
+      } catch (err) {
+        lastError = err as Error;
+      }
+    }
+  }
+
+  throw (
+    lastError ||
+    new Error(
+      "No se pudo conectar con el endpoint de voz del backend. Verificá que el backend esté activo."
+    )
+  );
+}
+
 export function connectGoogle(): void {
   if (typeof window === "undefined") return;
   window.location.assign(`${BASE_URL}/api/jarbees/google/login`);
 }
 
-const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle, getLibraryIndex, getReaderDocument };
+const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle, getLibraryIndex, getReaderDocument, sendVoiceChat };
 
 export default jarbeesApi;

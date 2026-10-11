@@ -13,3 +13,4 @@ export { ActionButton } from "./ActionButton";
 export { AudioControls } from "./AudioControls";
 export { JarBeeAvatar } from "./JarBeeAvatar";
 export { useJarBeeEngine } from "./useJarBeeEngine";
+export { useVoiceRecorder } from "./useVoiceRecorder";

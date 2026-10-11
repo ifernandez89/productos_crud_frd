@@ -7,6 +7,18 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 ## [Unreleased]
 
 ### Added
+- **Grabación de Voz Nativa con MediaRecorder y Visualizador de Ondas**:
+  - Implementado [`useVoiceRecorder.ts`](file:///c:/Projects/productos_crud_frd/src/components/chat/useVoiceRecorder.ts): Hook reutilizable para captura de audio con códecs Opus/WebM (`audio/webm;codecs=opus`, `audio/ogg;codecs=opus`, `audio/wav`), temporizador digital en vivo y liberación automática de hardware/micrófono al cancelar o desmontar.
+  - Análisis espectral sonoro en tiempo real: Integración de la API Web Audio (`AudioContext` + `AnalyserNode`) para calcular la amplitud acústica y renderizar ondas ecualizadoras dinámicas reactivas a la voz del usuario.
+  - Barra de grabación interactiva en [`ChatInputSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInputSimple.tsx): Transformación visual suave del área de texto al presionar el micrófono, con pulso rojo `REC`, contador de duración (`00:04`), ondas sonoras, botón de descarte (`✕`) y botón de envío directo (`✓`).
+  - Orquestación en [`ChatInterfaceSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInterfaceSimple.tsx): Flujo completo de envío del audio vía [`sendVoiceChat`](file:///c:/Projects/productos_crud_frd/src/app/services/jarbees.api.ts), renderizado inmediato de la transcripción del usuario (`🎙️ "..."`), streaming de respuesta y síntesis TTS con manejo de errores no bloqueante.
+- **Soporte de Herramientas de Audio, Samples y Producción Musical**:
+  - Menú de adjuntos con **Audio / Sample**: Soporte para adjuntar archivos de audio (`.wav`, `.mp3`, `.ogg`, `.flac`, `.aiff`, `.m4a`) en [`ChatInputSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInputSimple.tsx) con badge de formato, peso y tamaño en MB.
+  - Nueva disciplina **Audio & Samples (🎚️)** en [`preguntas.api.ts`](file:///c:/Projects/productos_crud_frd/src/app/services/preguntas.api.ts): Orientada al análisis de loops/samples (tempo, BPM, escala/tono root), integración con DAWs (FL Studio, Studio One) y masterización sonora EBU R128.
+  - Autocompletado de comandos rápidos en `/`: Inclusión de `/audio` (análisis de muestras musicales), `/podcast` (generación de audiolibros y resúmenes MP3) y `/balance`.
+  - Botón de escucha rápida en respuestas: Integrado botón **Escuchar** (`Volume2`) en [`ChatMessageCompact.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatMessageCompact.tsx) en el hover de cada respuesta del asistente para reproducir la voz individualmente.
+- **Servicio de Voz Backend (`sendVoiceChat`)**:
+  - Implementado en [`jarbees.api.ts`](file:///c:/Projects/productos_crud_frd/src/app/services/jarbees.api.ts) con soporte para multipart/form-data (`voice_message.opus`/`webm`), resolución estándar `BACKEND_URL`, política de bypass ngrok y fallback de rutas (`/api/jarbees/voice/chat`, `/jarbees/voice/chat`, `/api/voice/chat`).
 - **Selector Modular de Especialistas y Disciplinas de IA**:
   - Implementado [`DisciplineSelector.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/DisciplineSelector.tsx) con barra de píldoras horizontal (*pills carousel*), scroll suave, gradientes dinámicos, borde resplandeciente (*glow effect*) e indicador del modelo del backend.
   - Soporte completo para las 10 disciplinas de JarBees:

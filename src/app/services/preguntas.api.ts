@@ -84,6 +84,16 @@ export const DEFAULT_DISCIPLINES: Discipline[] = [
     tags: ["audio", "reader", "tts", "voz"],
   },
   {
+    id: "audio",
+    name: "Audio & Samples",
+    icon: "🎚️",
+    category: "Sonido & Estudio",
+    model: "Audio DSP & IA",
+    description: "Análisis de samples musicales (BPM, tono), exportación MP3 y masterización sonora.",
+    suggestedPrompt: "¿Podrías analizar este sample de audio y decirme su BPM y escala/tono?",
+    tags: ["audio", "samples", "bpm", "flstudio", "studioone", "mp3"],
+  },
+  {
     id: "ocr",
     name: "PDF / OCR",
     icon: "📄",
