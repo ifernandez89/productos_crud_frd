@@ -27,6 +27,16 @@ export async function loadConversation(id: string) {
   return db.get(STORE_CONV, id);
 }
 
+export async function deleteConversation(id: string) {
+  const db = await getDB();
+  return db.delete(STORE_CONV, id);
+}
+
+export async function clearConversations() {
+  const db = await getDB();
+  return db.clear(STORE_CONV);
+}
+
 export async function savePreference(key: string, value: unknown) {
   const db = await getDB();
   return db.put(STORE_PREF, value, key);
@@ -43,4 +53,4 @@ export async function listConversations() {
 }
 
 // avoid anonymous default export to satisfy lint rules
-export const db = { saveConversation, loadConversation, savePreference, loadPreference, listConversations };
+export const db = { saveConversation, loadConversation, deleteConversation, clearConversations, savePreference, loadPreference, listConversations };

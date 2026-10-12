@@ -1,16 +1,19 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { RotateCcw, Check } from "lucide-react";
 import { ChatInputSimple } from "./ChatInputSimple";
 import { ChatMessageCompact } from "./ChatMessageCompact";
 import { DisciplineSelector } from "./DisciplineSelector";
 import { JarBeeAvatar } from "./JarBeeAvatar";
-import { loadConversation, saveConversation } from "@/lib/db";
+import { loadConversation, saveConversation, deleteConversation } from "@/lib/db";
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
 import {
   hacerPregunta,
   classifyError,
   initSession,
+  resetSession,
+  clearBackendHistory,
   fetchHistory,
   fetchDisciplines,
   DEFAULT_DISCIPLINES,
@@ -84,6 +87,8 @@ export default function ChatInterfaceSimple() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const [librarySuggestions, setLibrarySuggestions] = useState<LibraryIndexItem[]>([]);
+  const [isClearing, setIsClearing] = useState(false);
+  const [justCleared, setJustCleared] = useState(false);
 
   // Especialistas / Disciplinas
   const [disciplines, setDisciplines] = useState<Discipline[]>(DEFAULT_DISCIPLINES);
@@ -354,6 +359,59 @@ export default function ChatInterfaceSimple() {
     });
   };
 
+  // ─── Limpiar y reiniciar conversación del Chat General ─────────────────────
+  const handleClearChat = async () => {
+    if (isClearing) return;
+    setIsClearing(true);
+    stopSpeaking();
+
+    if (isListening && recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // ignore
+      }
+      setIsListening(false);
+    }
+
+    try {
+      // 1. Limpiar estado en memoria
+      setMessages([]);
+      setInputValue("");
+      setInputError(null);
+      setAttachedFile(null);
+      setIsTyping(false);
+
+      // 2. Limpiar base de datos local (IndexedDB)
+      try {
+        await deleteConversation("default");
+        await saveConversation("default", []);
+      } catch (err) {
+        console.warn("No se pudo limpiar IndexedDB:", err);
+      }
+
+      // 3. Limpiar sesión en el backend y solicitar una sesión limpia
+      try {
+        await clearBackendHistory();
+      } catch {
+        // endpoint opcional
+      }
+
+      try {
+        await resetSession();
+      } catch (err) {
+        console.warn("No se pudo reiniciar la sesión en backend:", err);
+      }
+
+      setJustCleared(true);
+      setTimeout(() => {
+        setJustCleared(false);
+      }, 1800);
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   // ─── Métodos del Cuestionario de Balance Energético ───────────────────────────────
   const handleStartBalance = async () => {
     setIsTyping(true);
@@ -606,6 +664,12 @@ export default function ChatInterfaceSimple() {
     if (trimmedInput.toLowerCase() === "/balance" || trimmedInput.toLowerCase() === "/cuestionario") {
       setInputValue("");
       handleStartBalance();
+      return;
+    }
+
+    if (trimmedInput.toLowerCase() === "/limpiar" || trimmedInput.toLowerCase() === "/clear") {
+      setInputValue("");
+      await handleClearChat();
       return;
     }
 
@@ -1120,6 +1184,43 @@ export default function ChatInterfaceSimple() {
             >
               <span>🎧</span>
               <span>Lector</span>
+            </button>
+
+            {/* Botón sutil para limpiar y actualizar los mensajes del chat general */}
+            <button
+              type="button"
+              onClick={handleClearChat}
+              disabled={messages.length === 0 && !isTyping && !isClearing}
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition shadow-sm ${
+                justCleared
+                  ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+                  : messages.length === 0 && !isTyping
+                  ? "border-white/[0.05] bg-[#141414]/60 text-[#555555] cursor-not-allowed opacity-40"
+                  : "border-white/[0.10] bg-[#1c1c1c] text-[#a0a0a0] hover:border-white/[0.20] hover:bg-[#252525] hover:text-white"
+              }`}
+              title={
+                messages.length === 0
+                  ? "No hay mensajes para limpiar"
+                  : "Limpiar y actualizar mensajes del chat general"
+              }
+              aria-label="Limpiar mensajes del chat general"
+            >
+              {justCleared ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Limpio</span>
+                </>
+              ) : isClearing ? (
+                <>
+                  <RotateCcw className="h-3.5 w-3.5 animate-spin text-[#9e9e9e]" />
+                  <span>Limpiando...</span>
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="h-3.5 w-3.5 text-[#9e9e9e] transition group-hover:text-white" />
+                  <span>Limpiar</span>
+                </>
+              )}
             </button>
 
             {isSpeaking && (

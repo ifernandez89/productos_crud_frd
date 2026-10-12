@@ -7,6 +7,16 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 ## [Unreleased]
 
 ### Added
+- **Botón Sutil "Limpiar" para Actualizar Mensajes del Chat General**:
+  - Implementado botón sutil "Limpiar" en la cabecera fija de [`ChatInterfaceSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInterfaceSimple.tsx) con estética Windows 10 Dark Acrylic, icono reactivo `RotateCcw` y feedback visual temporal de confirmación (`Check` con estado "Limpio").
+  - Deshabilitado y atenuado con elegancia cuando el chat ya se encuentra vacío, evitando clics innecesarios y garantizando consistencia visual.
+  - Orquestación completa de limpieza y actualización de contexto:
+    - Vaciado instantáneo del estado de mensajes en memoria y reseteo de campos de entrada y archivos adjuntos.
+    - Cancelación inmediata de lectura por voz activa (`SpeechSynthesis`) y detención de reconocimiento por micrófono (`SpeechRecognition`).
+    - Eliminación de la conversación persistida en IndexedDB (`jarbees-db`) a través de las nuevas utilidades `deleteConversation` y `clearConversations` en [`db.ts`](file:///c:/Projects/productos_crud_frd/src/lib/db.ts).
+    - Limpieza de `localStorage` (`jarbees_session_id`, `jarbees_last_assistant_message`) y generación de nueva sesión de backend limpia (`resetSession` y `clearBackendHistory` en [`preguntas.api.ts`](file:///c:/Projects/productos_crud_frd/src/app/services/preguntas.api.ts)) para evitar contaminación de memoria o contexto residual en el LLM.
+  - Soporte para comando rápido de barra `/limpiar` y `/clear` integrado en [`ChatInputSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInputSimple.tsx) con autocompletado en el menú de sugerencias.
+  - Soporte alineado de limpieza en cabecera de [`ChatInterface.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInterface.tsx).
 - **Grabación de Voz Nativa con MediaRecorder y Visualizador de Ondas**:
   - Implementado [`useVoiceRecorder.ts`](file:///c:/Projects/productos_crud_frd/src/components/chat/useVoiceRecorder.ts): Hook reutilizable para captura de audio con códecs Opus/WebM (`audio/webm;codecs=opus`, `audio/ogg;codecs=opus`, `audio/wav`), temporizador digital en vivo y liberación automática de hardware/micrófono al cancelar o desmontar.
   - Análisis espectral sonoro en tiempo real: Integración de la API Web Audio (`AudioContext` + `AnalyserNode`) para calcular la amplitud acústica y renderizar ondas ecualizadoras dinámicas reactivas a la voz del usuario.

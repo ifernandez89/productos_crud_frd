@@ -45,6 +45,11 @@ const BUILT_IN_COMMANDS = [
     autor: "Generar síntesis hablada en MP3 para escuchar",
     iconType: "audio" as const,
   },
+  {
+    titulo: "/limpiar",
+    autor: "Limpiar y actualizar los mensajes del chat general",
+    iconType: "command" as const,
+  },
 ];
 
 export function ChatInputSimple({

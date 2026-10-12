@@ -202,11 +202,13 @@ POST /api/aichat/preguntar?agente=true
 5. IA responde y lee la respuesta
 ```
 
-### 3. Usuario limpia historial
+### 3. Usuario limpia / actualiza el chat
 ```
-1. Click en "Limpiar chat"
-2. Historial se vacía
-3. Panel muestra estado vacío
+1. Click en botón sutil "Limpiar" (cabecera superior) o escribir comando "/limpiar" en la barra de texto
+2. Se cancela cualquier lectura por voz activa (TTS) y escucha de micrófono (STT)
+3. Los mensajes en memoria y en IndexedDB (`jarbees-db`) se vacían inmediatamente
+4. Se renueva la sesión del backend (`resetSession` / `initSession`) para evitar contaminación de contexto
+5. El botón muestra confirmación visual ("Limpio ✓") y vuelve al estado inicial de bienvenida
 ```
 
 ---

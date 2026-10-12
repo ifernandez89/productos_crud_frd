@@ -212,6 +212,12 @@ const storeLastAssistantMessage = (message: string | null) => {
   window.localStorage.setItem(LAST_ASSISTANT_MESSAGE_KEY, message);
 };
 
+export const clearStoredSession = () => {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(JARBEES_SESSION_KEY);
+  window.localStorage.removeItem(LAST_ASSISTANT_MESSAGE_KEY);
+};
+
 export const getLastAssistantMessage = (): string | null => {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(LAST_ASSISTANT_MESSAGE_KEY);
@@ -369,6 +375,30 @@ export async function fetchHistory(sessionId: string): Promise<HistoryMessage[]>
   } catch {
     return [];
   }
+}
+
+// ─── Limpiar historial y reiniciar sesión ─────────────────────────────────────
+/**
+ * Intenta eliminar el historial en el backend para la sesión activa o especificada.
+ */
+export async function clearBackendHistory(sessionId?: string): Promise<boolean> {
+  const sid = sessionId || getStoredSessionId();
+  if (!sid) return false;
+  try {
+    const url = `${BASE_URL}/api/jarbees/history?sessionId=${sid}`;
+    const res = await fetch(url, { method: "DELETE", headers: buildHeaders(url) });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Reinicia la sesión: borra el sessionId de localStorage e inicializa una nueva sesión en el backend.
+ */
+export async function resetSession(): Promise<string | null> {
+  clearStoredSession();
+  return initSession();
 }
 
 // ─── NIVEL 1/2/3: Enviar pregunta con modo de especialista ───────────────────

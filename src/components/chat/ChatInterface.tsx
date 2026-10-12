@@ -475,7 +475,13 @@ export default function ChatInterface() {
 
   // Handle clear chat
   const handleClearChat = () => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
     setMessages([]);
+    setInputValue("");
+    setInputError(null);
   };
 
   return (
@@ -500,6 +506,14 @@ export default function ChatInterface() {
               title="Repetir última respuesta"
             >
               🔁 Repetir
+            </button>
+            <button
+              onClick={handleClearChat}
+              disabled={messages.length === 0}
+              className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-[11px] text-slate-200 transition hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Limpiar mensajes del chat general"
+            >
+              Limpiar
             </button>
             <button
               onClick={() => setAudioEnabled(!audioEnabled)}
