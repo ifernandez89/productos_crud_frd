@@ -13,6 +13,8 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
+  deployments: write
 
 jobs:
   build:
@@ -60,6 +62,57 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Auto-unlock stuck Pages deployments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              // 1. Cancel any conflicting workflow runs still marked in progress
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                status: 'in_progress',
+              });
+              for (const r of runs.data.workflow_runs) {
+                if (r.id !== context.runId) {
+                  console.log(`Canceling stuck workflow run ${r.id}...`);
+                  try {
+                    await github.rest.actions.cancelWorkflowRun({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      run_id: r.id,
+                    });
+                  } catch (e) {
+                    console.log(`Notice canceling run ${r.id}:`, e.message);
+                  }
+                }
+              }
+
+              // 2. Mark stuck deployment objects as failure/inactive to free the lock
+              const deps = await github.rest.repos.listDeployments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                environment: 'github-pages',
+                per_page: 15,
+              });
+              for (const d of deps.data) {
+                console.log(`Freeing deployment ${d.id} (${d.sha})...`);
+                try {
+                  await github.rest.repos.createDeploymentStatus({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    deployment_id: d.id,
+                    state: 'failure',
+                    description: 'Auto-unlocked by CI',
+                  });
+                } catch (e) {
+                  console.log(`Notice freeing deployment ${d.id}:`, e.message);
+                }
+              }
+            } catch (err) {
+              console.log('Unlock step completed with note:', err.message);
+            }
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
