@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import { JarBeeAvatar } from "./JarBeeAvatar";
 interface ChatMessageProps {
   messageId?: string;
   role: "user" | "assistant";
@@ -48,17 +48,15 @@ export function ChatMessage({ messageId, role, content, timestamp, isTyping = fa
       }`}
     >
       {/* Avatar */}
-      <div
-        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-          isUser
-            ? "bg-gradient-to-br from-cyan-500 to-blue-600 text-white"
-            : "bg-gradient-to-br from-emerald-500 to-green-600 text-white"
-        }`}
-      >
+      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center">
         {isUser ? (
-          "Tú"
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-xs font-bold text-white shadow-sm">
+            Tú
+          </div>
         ) : (
-          <Image src="/JarBees_logo.png" alt="JarBees" width={20} height={20} className="object-contain" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1c1c1c] border border-white/[0.10] shadow-sm">
+            <JarBeeAvatar size="sm" interactive={false} showStatusGlow={false} />
+          </div>
         )}
       </div>
 

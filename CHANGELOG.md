@@ -7,6 +7,27 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 ## [Unreleased]
 
 ### Added
+- **Dron Cibernético JarBee 3D (Cyber Avatar Three.js)**:
+  - Reemplazo y evolución del avatar anterior hacia un modelo 3D fotorrealista WebGL interactivo ([`JarBeeCyberAvatar3D.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/JarBeeCyberAvatar3D.tsx)) basado en el modelo optimizado [`jarbee_robot.glb`](file:///c:/Projects/productos_crud_frd/public/models/jarbee/jarbee_robot.glb) (4.37 MB) y [`jarbee_robot.draco.glb`](file:///c:/Projects/productos_crud_frd/public/models/jarbee/jarbee_robot.draco.glb) (2.76 MB).
+  - **Estética Cyber Robot**: Carrocería blindada en gunmetal oscuro (`#16171b`) con placas de esmalte ámbar industrial (`#f7a317`), paneles solares hexagonales en vidrio ahumado azul con venas cian conductoras, visor óptico HUD con scanlines reflectantes y patas/antenas en fibra de carbono y uniones de latón/cobre.
+  - **Rig de 107 huesos y animaciones cinemáticas nativas**:
+    - `"hover"`: Vuelo estacionario continuo en loop con aleteo rápido y levitación sinusoidal física.
+    - `"idle"`: Reposo relajado para el estado de inactividad/suspensión (`isSleeping`).
+    - `"take_off_and_land"`: Despegue, pirueta acrobática y aterrizaje suave al hacer clic o saludar.
+  - **Iluminación de Estudio y Luces Reactivas**:
+    - Iluminación de tres puntos (Key warm light ámbar, Fill cyan light y Rim light eléctrico posterior).
+    - PointLight emisivo en el visor HUD que cambia de color e intensidad en tiempo real según el estado cognitivo de JarBee:
+      - 🔵 **Escuchando (`isListening`)**: Azul corporativo (`#0078d7`) con pulso receptor.
+      - 💠 **Procesando (`isThinking`)**: Cian eléctrico (`#00f0ff`) con aleteo a 1.35x.
+      - 🟡 **Hablando (`isSpeaking`)**: Ámbar dorado (`#ffb703`) con aleteo acelerado a 1.6x.
+      - 🟢 **Saludo / Interacción (`isSaluting`)**: Verde esmeralda (`#10b981`) con maniobra 3D.
+      - 💤 **Reposo (`isSleeping`)**: Azul tenue nocturno (`#1e3a8a`) a 0.65x.
+  - **Seguimiento de Mirada (Gaze Tracking)**:
+    - Inclinación y orientación suave del dron hacia las coordenadas del cursor del usuario en pantalla mediante interpolación LERP reactiva.
+  - **Optimización de Recursos y Fallback Vectorial**:
+    - Integración transparente en [`JarBeeAvatar.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/JarBeeAvatar.tsx): renderizado 3D WebGL para cabecera (`md`) y estado de bienvenida (`xl`), y versión vectorial robótica de alta definición para mensajes compactos repetitivos (`sm`) previniendo saturación de contextos WebGL.
+    - Pausa automática del bucle de renderizado en pestañas inactivas (`document.hidden`) para preservar batería y GPU.
+  - Documentación de arquitectura y guía técnica creada en [`docs/JARBEE_3D_AVATAR_INTEGRATION.md`](file:///c:/Projects/productos_crud_frd/docs/JARBEE_3D_AVATAR_INTEGRATION.md).
 - **Botón Sutil "Limpiar" para Actualizar Mensajes del Chat General**:
   - Implementado botón sutil "Limpiar" en la cabecera fija de [`ChatInterfaceSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInterfaceSimple.tsx) con estética Windows 10 Dark Acrylic, icono reactivo `RotateCcw` y feedback visual temporal de confirmación (`Check` con estado "Limpio").
   - Deshabilitado y atenuado con elegancia cuando el chat ya se encuentra vacío, evitando clics innecesarios y garantizando consistencia visual.
