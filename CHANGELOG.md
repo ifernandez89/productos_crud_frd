@@ -7,6 +7,9 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 ## [Unreleased]
 
 ### Added
+- **Optimización de Despliegue CI/CD en GitHub Pages**:
+  - Ajustado [`.github/workflows/deploy.yml`](file:///c:/Projects/productos_crud_frd/.github/workflows/deploy.yml) para prevenir el timeout de 10 minutos en `actions/deploy-pages@v4` aumentando el tiempo de espera a 20 minutos (`1200000 ms`) y configurando reintentos automáticos (`error_count: 10`).
+  - Desactivado `cancel-in-progress` en el grupo de concurrencia `pages` para evitar candados huérfanos y estados `updating_pages` congelados en la infraestructura interna de GitHub.
 - **Dron Cibernético JarBee 3D (Cyber Avatar Three.js)**:
   - Reemplazo y evolución del avatar anterior hacia un modelo 3D fotorrealista WebGL interactivo ([`JarBeeCyberAvatar3D.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/JarBeeCyberAvatar3D.tsx)) basado en el modelo optimizado [`jarbee_robot.glb`](file:///c:/Projects/productos_crud_frd/public/models/jarbee/jarbee_robot.glb) (4.37 MB) y [`jarbee_robot.draco.glb`](file:///c:/Projects/productos_crud_frd/public/models/jarbee/jarbee_robot.draco.glb) (2.76 MB).
   - **Estética Cyber Robot**: Carrocería blindada en gunmetal oscuro (`#16171b`) con placas de esmalte ámbar industrial (`#f7a317`), paneles solares hexagonales en vidrio ahumado azul con venas cian conductoras, visor óptico HUD con scanlines reflectantes y patas/antenas en fibra de carbono y uniones de latón/cobre.
