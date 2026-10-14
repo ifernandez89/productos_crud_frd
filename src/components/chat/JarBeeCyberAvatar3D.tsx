@@ -5,22 +5,54 @@ import * as THREE from "three";
 import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as SkeletonUtils from "three/examples/jsm/utils/SkeletonUtils.js";
 
-// Cached GLTF promise to download and parse the model only once
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
+// Candidate URLs to support local dev, GitHub Pages (/productos_crud_frd) and custom domains
+const CANDIDATE_URLS = Array.from(
+  new Set([
+    `${BASE_PATH}/models/jarbee/jarbee_robot.glb`,
+    "/productos_crud_frd/models/jarbee/jarbee_robot.glb",
+    "/models/jarbee/jarbee_robot.glb",
+    "./models/jarbee/jarbee_robot.glb",
+    "models/jarbee/jarbee_robot.glb",
+  ].filter(Boolean))
+);
+
 let cachedGltfPromise: Promise<GLTF> | null = null;
 
 function loadJarBeeRobotModel(): Promise<GLTF> {
   if (!cachedGltfPromise) {
     const loader = new GLTFLoader();
+
     cachedGltfPromise = new Promise((resolve, reject) => {
-      loader.load(
-        "/models/jarbee/jarbee_robot.glb",
-        (gltf) => resolve(gltf),
-        undefined,
-        (err) => {
-          console.error("Error loading JarBee Robot 3D model:", err);
-          reject(err);
+      let candidateIndex = 0;
+
+      const tryLoad = () => {
+        if (candidateIndex >= CANDIDATE_URLS.length) {
+          const errMsg = `Failed to load JarBee Robot 3D model from all candidate URLs: ${CANDIDATE_URLS.join(", ")}`;
+          console.error(errMsg);
+          reject(new Error(errMsg));
+          return;
         }
-      );
+
+        const currentUrl = CANDIDATE_URLS[candidateIndex];
+        candidateIndex++;
+
+        loader.load(
+          currentUrl,
+          (gltf) => {
+            console.log(`[JarBee 3D] Loaded successfully from: ${currentUrl}`);
+            resolve(gltf);
+          },
+          undefined,
+          (err) => {
+            console.warn(`[JarBee 3D] Could not load from "${currentUrl}", trying next candidate...`, err);
+            tryLoad();
+          }
+        );
+      };
+
+      tryLoad();
     });
   }
   return cachedGltfPromise;
