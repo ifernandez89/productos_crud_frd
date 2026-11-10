@@ -8,10 +8,10 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 
 ### Added
 - **Optimización de Despliegue CI/CD en GitHub Pages**:
-  - Ajustado [`.github/workflows/deploy.yml`](file:///c:/Projects/productos_crud_frd/.github/workflows/deploy.yml) para prevenir el timeout de 10 minutos en `actions/deploy-pages@v4` aumentando el tiempo de espera a 20 minutos (`1200000 ms`) y configurando reintentos automáticos (`error_count: 10`).
+  - Ajustado [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) para prevenir el timeout de 10 minutos en `actions/deploy-pages@v4` aumentando el tiempo de espera a 20 minutos (`1200000 ms`) y configurando reintentos automáticos (`error_count: 10`).
   - Desactivado `cancel-in-progress` en el grupo de concurrencia `pages` para evitar candados huérfanos y estados `updating_pages` congelados en la infraestructura interna de GitHub.
 - **Dron Cibernético JarBee 3D (Cyber Avatar Three.js)**:
-  - Reemplazo y evolución del avatar anterior hacia un modelo 3D fotorrealista WebGL interactivo ([`JarBeeCyberAvatar3D.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/JarBeeCyberAvatar3D.tsx)) basado en el modelo optimizado [`jarbee_robot.glb`](file:///c:/Projects/productos_crud_frd/public/models/jarbee/jarbee_robot.glb) (4.37 MB) y [`jarbee_robot.draco.glb`](file:///c:/Projects/productos_crud_frd/public/models/jarbee/jarbee_robot.draco.glb) (2.76 MB).
+  - Reemplazo y evolución del avatar anterior hacia un modelo 3D fotorrealista WebGL interactivo ([`JarBeeCyberAvatar3D.tsx`](src/components/chat/JarBeeCyberAvatar3D.tsx)) basado en el modelo optimizado [`jarbee_robot.glb`](public/models/jarbee/jarbee_robot.glb) (4.37 MB) y [`jarbee_robot.draco.glb`](public/models/jarbee/jarbee_robot.draco.glb) (2.76 MB).
   - **Estética Cyber Robot**: Carrocería blindada en gunmetal oscuro (`#16171b`) con placas de esmalte ámbar industrial (`#f7a317`), paneles solares hexagonales en vidrio ahumado azul con venas cian conductoras, visor óptico HUD con scanlines reflectantes y patas/antenas en fibra de carbono y uniones de latón/cobre.
   - **Rig de 107 huesos y animaciones cinemáticas nativas**:
     - `"hover"`: Vuelo estacionario continuo en loop con aleteo rápido y levitación sinusoidal física.
@@ -28,33 +28,33 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
   - **Seguimiento de Mirada (Gaze Tracking)**:
     - Inclinación y orientación suave del dron hacia las coordenadas del cursor del usuario en pantalla mediante interpolación LERP reactiva.
   - **Optimización de Recursos y Fallback Vectorial**:
-    - Integración transparente en [`JarBeeAvatar.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/JarBeeAvatar.tsx): renderizado 3D WebGL para cabecera (`md`) y estado de bienvenida (`xl`), y versión vectorial robótica de alta definición para mensajes compactos repetitivos (`sm`) previniendo saturación de contextos WebGL.
+    - Integración transparente en [`JarBeeAvatar.tsx`](src/components/chat/JarBeeAvatar.tsx): renderizado 3D WebGL para cabecera (`md`) y estado de bienvenida (`xl`), y versión vectorial robótica de alta definición para mensajes compactos repetitivos (`sm`) previniendo saturación de contextos WebGL.
     - Pausa automática del bucle de renderizado en pestañas inactivas (`document.hidden`) para preservar batería y GPU.
-  - Documentación de arquitectura y guía técnica creada en [`docs/JARBEE_3D_AVATAR_INTEGRATION.md`](file:///c:/Projects/productos_crud_frd/docs/JARBEE_3D_AVATAR_INTEGRATION.md).
+  - Documentación de arquitectura y guía técnica creada en [`docs/JARBEE_3D_AVATAR_INTEGRATION.md`](docs/JARBEE_3D_AVATAR_INTEGRATION.md).
 - **Botón Sutil "Limpiar" para Actualizar Mensajes del Chat General**:
-  - Implementado botón sutil "Limpiar" en la cabecera fija de [`ChatInterfaceSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInterfaceSimple.tsx) con estética Windows 10 Dark Acrylic, icono reactivo `RotateCcw` y feedback visual temporal de confirmación (`Check` con estado "Limpio").
+  - Implementado botón sutil "Limpiar" en la cabecera fija de [`ChatInterfaceSimple.tsx`](src/components/chat/ChatInterfaceSimple.tsx) con estética Windows 10 Dark Acrylic, icono reactivo `RotateCcw` y feedback visual temporal de confirmación (`Check` con estado "Limpio").
   - Deshabilitado y atenuado con elegancia cuando el chat ya se encuentra vacío, evitando clics innecesarios y garantizando consistencia visual.
   - Orquestación completa de limpieza y actualización de contexto:
     - Vaciado instantáneo del estado de mensajes en memoria y reseteo de campos de entrada y archivos adjuntos.
     - Cancelación inmediata de lectura por voz activa (`SpeechSynthesis`) y detención de reconocimiento por micrófono (`SpeechRecognition`).
-    - Eliminación de la conversación persistida en IndexedDB (`jarbees-db`) a través de las nuevas utilidades `deleteConversation` y `clearConversations` en [`db.ts`](file:///c:/Projects/productos_crud_frd/src/lib/db.ts).
-    - Limpieza de `localStorage` (`jarbees_session_id`, `jarbees_last_assistant_message`) y generación de nueva sesión de backend limpia (`resetSession` y `clearBackendHistory` en [`preguntas.api.ts`](file:///c:/Projects/productos_crud_frd/src/app/services/preguntas.api.ts)) para evitar contaminación de memoria o contexto residual en el LLM.
-  - Soporte para comando rápido de barra `/limpiar` y `/clear` integrado en [`ChatInputSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInputSimple.tsx) con autocompletado en el menú de sugerencias.
-  - Soporte alineado de limpieza en cabecera de [`ChatInterface.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInterface.tsx).
+    - Eliminación de la conversación persistida en IndexedDB (`jarbees-db`) a través de las nuevas utilidades `deleteConversation` y `clearConversations` en [`db.ts`](src/lib/db.ts).
+    - Limpieza de `localStorage` (`jarbees_session_id`, `jarbees_last_assistant_message`) y generación de nueva sesión de backend limpia (`resetSession` y `clearBackendHistory` en [`preguntas.api.ts`](src/app/services/preguntas.api.ts)) para evitar contaminación de memoria o contexto residual en el LLM.
+  - Soporte para comando rápido de barra `/limpiar` y `/clear` integrado en [`ChatInputSimple.tsx`](src/components/chat/ChatInputSimple.tsx) con autocompletado en el menú de sugerencias.
+  - Soporte alineado de limpieza en cabecera de [`ChatInterface.tsx`](src/components/chat/ChatInterface.tsx).
 - **Grabación de Voz Nativa con MediaRecorder y Visualizador de Ondas**:
-  - Implementado [`useVoiceRecorder.ts`](file:///c:/Projects/productos_crud_frd/src/components/chat/useVoiceRecorder.ts): Hook reutilizable para captura de audio con códecs Opus/WebM (`audio/webm;codecs=opus`, `audio/ogg;codecs=opus`, `audio/wav`), temporizador digital en vivo y liberación automática de hardware/micrófono al cancelar o desmontar.
+  - Implementado [`useVoiceRecorder.ts`](src/components/chat/useVoiceRecorder.ts): Hook reutilizable para captura de audio con códecs Opus/WebM (`audio/webm;codecs=opus`, `audio/ogg;codecs=opus`, `audio/wav`), temporizador digital en vivo y liberación automática de hardware/micrófono al cancelar o desmontar.
   - Análisis espectral sonoro en tiempo real: Integración de la API Web Audio (`AudioContext` + `AnalyserNode`) para calcular la amplitud acústica y renderizar ondas ecualizadoras dinámicas reactivas a la voz del usuario.
-  - Barra de grabación interactiva en [`ChatInputSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInputSimple.tsx): Transformación visual suave del área de texto al presionar el micrófono, con pulso rojo `REC`, contador de duración (`00:04`), ondas sonoras, botón de descarte (`✕`) y botón de envío directo (`✓`).
-  - Orquestación en [`ChatInterfaceSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInterfaceSimple.tsx): Flujo completo de envío del audio vía [`sendVoiceChat`](file:///c:/Projects/productos_crud_frd/src/app/services/jarbees.api.ts), renderizado inmediato de la transcripción del usuario (`🎙️ "..."`), streaming de respuesta y síntesis TTS con manejo de errores no bloqueante.
+  - Barra de grabación interactiva en [`ChatInputSimple.tsx`](src/components/chat/ChatInputSimple.tsx): Transformación visual suave del área de texto al presionar el micrófono, con pulso rojo `REC`, contador de duración (`00:04`), ondas sonoras, botón de descarte (`✕`) y botón de envío directo (`✓`).
+  - Orquestación en [`ChatInterfaceSimple.tsx`](src/components/chat/ChatInterfaceSimple.tsx): Flujo completo de envío del audio vía [`sendVoiceChat`](src/app/services/jarbees.api.ts), renderizado inmediato de la transcripción del usuario (`🎙️ "..."`), streaming de respuesta y síntesis TTS con manejo de errores no bloqueante.
 - **Soporte de Herramientas de Audio, Samples y Producción Musical**:
-  - Menú de adjuntos con **Audio / Sample**: Soporte para adjuntar archivos de audio (`.wav`, `.mp3`, `.ogg`, `.flac`, `.aiff`, `.m4a`) en [`ChatInputSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInputSimple.tsx) con badge de formato, peso y tamaño en MB.
-  - Nueva disciplina **Audio & Samples (🎚️)** en [`preguntas.api.ts`](file:///c:/Projects/productos_crud_frd/src/app/services/preguntas.api.ts): Orientada al análisis de loops/samples (tempo, BPM, escala/tono root), integración con DAWs (FL Studio, Studio One) y masterización sonora EBU R128.
+  - Menú de adjuntos con **Audio / Sample**: Soporte para adjuntar archivos de audio (`.wav`, `.mp3`, `.ogg`, `.flac`, `.aiff`, `.m4a`) en [`ChatInputSimple.tsx`](src/components/chat/ChatInputSimple.tsx) con badge de formato, peso y tamaño en MB.
+  - Nueva disciplina **Audio & Samples (🎚️)** en [`preguntas.api.ts`](src/app/services/preguntas.api.ts): Orientada al análisis de loops/samples (tempo, BPM, escala/tono root), integración con DAWs (FL Studio, Studio One) y masterización sonora EBU R128.
   - Autocompletado de comandos rápidos en `/`: Inclusión de `/audio` (análisis de muestras musicales), `/podcast` (generación de audiolibros y resúmenes MP3) y `/balance`.
-  - Botón de escucha rápida en respuestas: Integrado botón **Escuchar** (`Volume2`) en [`ChatMessageCompact.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatMessageCompact.tsx) en el hover de cada respuesta del asistente para reproducir la voz individualmente.
+  - Botón de escucha rápida en respuestas: Integrado botón **Escuchar** (`Volume2`) en [`ChatMessageCompact.tsx`](src/components/chat/ChatMessageCompact.tsx) en el hover de cada respuesta del asistente para reproducir la voz individualmente.
 - **Servicio de Voz Backend (`sendVoiceChat`)**:
-  - Implementado en [`jarbees.api.ts`](file:///c:/Projects/productos_crud_frd/src/app/services/jarbees.api.ts) con soporte para multipart/form-data (`voice_message.opus`/`webm`), resolución estándar `BACKEND_URL`, política de bypass ngrok y fallback de rutas (`/api/jarbees/voice/chat`, `/jarbees/voice/chat`, `/api/voice/chat`).
+  - Implementado en [`jarbees.api.ts`](src/app/services/jarbees.api.ts) con soporte para multipart/form-data (`voice_message.opus`/`webm`), resolución estándar `BACKEND_URL`, política de bypass ngrok y fallback de rutas (`/api/jarbees/voice/chat`, `/jarbees/voice/chat`, `/api/voice/chat`).
 - **Selector Modular de Especialistas y Disciplinas de IA**:
-  - Implementado [`DisciplineSelector.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/DisciplineSelector.tsx) con barra de píldoras horizontal (*pills carousel*), scroll suave, gradientes dinámicos, borde resplandeciente (*glow effect*) e indicador del modelo del backend.
+  - Implementado [`DisciplineSelector.tsx`](src/components/chat/DisciplineSelector.tsx) con barra de píldoras horizontal (*pills carousel*), scroll suave, gradientes dinámicos, borde resplandeciente (*glow effect*) e indicador del modelo del backend.
   - Soporte completo para las 10 disciplinas de JarBees:
     - 🧭 **Automático (`auto`)**: Enrutador inteligente según la intención del prompt.
     - 💬 **Chat General (`chatbot`)**: Asistencia general y conversación libre (`qwen2.5:7b`).
@@ -70,20 +70,20 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
   - Persistencia de modo activo en `localStorage` (`jarbees_active_discipline_mode`).
   - Envío automático del campo `mode` en la carga útil JSON de las consultas al backend.
 - **Sugerencias y Placeholders Dinámicos de Prompts**:
-  - Placeholder del `textarea` en [`ChatInputSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInputSimple.tsx) actualizado en tiempo real con el `suggestedPrompt` del modo seleccionado.
+  - Placeholder del `textarea` en [`ChatInputSimple.tsx`](src/components/chat/ChatInputSimple.tsx) actualizado en tiempo real con el `suggestedPrompt` del modo seleccionado.
   - Píldora interactiva de inserción rápida (`usar ↵`) sobre la barra de entrada.
   - Tarjetas de bienvenida y botones de acceso directo a especialistas en el estado inicial de conversación.
 - **Avatar Interactivo JarBee con Motor de Vida Procedural**:
-  - Implementado [`JarBeeAvatar.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/JarBeeAvatar.tsx): Avatar vector SVG estilizado de abeja-drone cibernética ultra ligero (<15 KB, sin dependencias pesadas 3D), renderizado a 60 FPS con aceleración por hardware CSS y compatible tanto con escritorio como con dispositivos móviles.
+  - Implementado [`JarBeeAvatar.tsx`](src/components/chat/JarBeeAvatar.tsx): Avatar vector SVG estilizado de abeja-drone cibernética ultra ligero (<15 KB, sin dependencias pesadas 3D), renderizado a 60 FPS con aceleración por hardware CSS y compatible tanto con escritorio como con dispositivos móviles.
   - Diseñado con visor OLED digital, ojos expresivos interactivos (`◉ ◉`, `^ ^`, `- -`, `• • ↗`), antenas con sensores pulsantes de radar y alas translúcidas con estética acrílica.
-  - Implementado [`useJarBeeEngine.ts`](file:///c:/Projects/productos_crud_frd/src/components/chat/useJarBeeEngine.ts): Motor de vida procedural con estados de atención y ciclos autónomos:
+  - Implementado [`useJarBeeEngine.ts`](src/components/chat/useJarBeeEngine.ts): Motor de vida procedural con estados de atención y ciclos autónomos:
     - **Seguimiento ocular de mirada**: Ojos que siguen la posición del cursor/mouse en tiempo real con suavizado angular y retorno natural al centro.
     - **Parpadeo estocástico natural**: Intervalos biológicos aleatorios de parpadeo (entre 2.5s y 6s).
     - **Modo reposo/sueño inteligente**: Entra en suspensión profunda (`sleepy` con emisión de `z`) tras 75s de inactividad, despertando instantáneamente ante interacciones del usuario (movimiento, toque táctil, tipeo).
     - **Reacción táctil al click**: Dispara expresión de alegría (`happy` `^ ^`) y aceleración temporal de aleteo al hacer click o pulsar el avatar.
     - **Lip-sync y modulación de voz**: Sincronización labial dinámica de apertura bucal durante la lectura por voz (TTS).
     - **Sensor de escucha de audio**: Pulso y ondas de radar visuales en las antenas cuando el reconocimiento de voz (`SpeechRecognition`) está activo.
-  - Integrado en [`ChatInterfaceSimple.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatInterfaceSimple.tsx) (cabecera interactiva y bienvenida) y en [`ChatMessageCompact.tsx`](file:///c:/Projects/productos_crud_frd/src/components/chat/ChatMessageCompact.tsx) para los mensajes del asistente.
+  - Integrado en [`ChatInterfaceSimple.tsx`](src/components/chat/ChatInterfaceSimple.tsx) (cabecera interactiva y bienvenida) y en [`ChatMessageCompact.tsx`](src/components/chat/ChatMessageCompact.tsx) para los mensajes del asistente.
 - **Rediseño Visual: Windows 10 Dark Acrylic**:
   - Implementada la paleta base de diseño "Windows 10 Dark" con fondo neutral profundo (`#0c0c0c`), superficies acrílicas translúcidas (`#101010`, `#181818`, `#1f1f1f`), bordes sutiles (`rgba(255, 255, 255, 0.08)`) y efecto backdrop blur intenso (`blur(20px)` a `blur(24px)`).
   - Acento unificado **Windows Blue (`#0078d7` / `#429ce3`)** para selección de especialistas, estado activo, indicador de modo, botón de envío y viñetas de Markdown, eliminando el tinte azul/cian saturado anterior.
@@ -95,7 +95,7 @@ The format is based on "Keep a Changelog" and uses Semantic Versioning.
 ### Fixed
 - **Doble Despliegue en GitHub Actions (`deploy.yml`)**: Eliminado el paso redundante `peaceiris/actions-gh-pages` que hacía push a la rama `gh-pages` y activaba innecesariamente un segundo workflow paralelo de GitHub (`pages-build-deployment` del bot). Se consolidó el despliegue directo oficial mediante `actions/upload-pages-artifact` y `actions/deploy-pages`, añadiendo además caché de dependencias (`cache: "npm"`) para acelerar sustancialmente los tiempos de compilación.
 - **Estándar Arquitectónico de Conexión al Backend (`BASE_URL`)**: Restaurada la lógica directa y limpia `export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL; const BASE_URL = BACKEND_URL ?? "http://localhost:4000";` en todos los servicios de API (`preguntas.api.ts`, `jarbees.api.ts`, `balance.api.ts`, `products.api.ts`), unificando el consumo del Chatbot y del Lector.
-- **Corrección de Bloqueo CORS Preflight (`ngrok-skip-browser-warning`)**: Condicionada la cabecera `ngrok-skip-browser-warning` únicamente a llamadas que contengan `ngrok` en la URL. Esto evita que solicitudes locales a `http://localhost:4000` fallen durante el preflight OPTIONS de los navegadores.
+- **Corrección de Bloqueo CORS Preflight (`<custom-tunnel-header>`)**: Condicionada la cabecera `<custom-tunnel-header>` únicamente a llamadas que contengan `ngrok` en la URL. Esto evita que solicitudes locales a `http://localhost:4000` fallen durante el preflight OPTIONS de los navegadores.
 - **Redirección Nativa de Servidor (`HomePage`)**: Actualizado `src/app/page.tsx` para usar `redirect("/preguntas/new")` de Next.js en lugar de un `useEffect` del cliente, eliminando retardos y pantallas de carga al ingresar a la raíz.
 - **Redirección Alias `/lector`**: Creada la página `src/app/lector/page.tsx` que redirige instantáneamente a `/reader`, permitiendo ambas URLs de acceso a la biblioteca.
 - **Claves Únicas en Renderizado de Lista (`React Key Duplicate`)**: Corregido el atributo `key` en `src/app/reader/page.tsx` a `key={`book-${item.id || item.titulo || index}-${index}`}`, resolviendo las 22 advertencias de React por claves duplicadas.

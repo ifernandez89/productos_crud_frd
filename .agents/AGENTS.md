@@ -15,7 +15,7 @@
 - **Document Detail**: Consume `GET ${BASE_URL}/api/reader/:documentId` to fetch blocks for synthesized audio playback.
 
 ### 3. Ngrok Header Policy
-- Header `"ngrok-skip-browser-warning": "69420"` MUST ONLY be attached when the target URL string explicitly includes `"ngrok"`.
+- Header `"<custom-tunnel-header>": "<configured>"` MUST ONLY be attached when the target URL string explicitly includes `"ngrok"`.
 - Do NOT attach custom headers like `"ngrok-skip-browser-warning"` on local `localhost` or `127.0.0.1` requests, as it triggers failed CORS OPTIONS preflight checks in web browsers.
 
 ### 4. Component Rendering Keys

@@ -17,7 +17,7 @@ Esta guía documenta la arquitectura de conexión del frontend con el backend al
 ┌─────────────────────────────────────────────────────────┐
 │                    NGROK TUNNEL                         │
 │  - URL pública tipo: https://xxxx-xxxx.ngrok-free.app   │
-│  - Header requerido: ngrok-skip-browser-warning: 69420  │
+│  - Header requerido: <custom-tunnel-header>: <configured>  │
 └───────────────────────────┬─────────────────────────────┘
                             │ (Puerto local 4000)
                             ▼
@@ -49,7 +49,7 @@ NEXT_PUBLIC_API_TOKEN=tu_token_secreto_aqui
 
 ## 🔒 3. Reglas de Código Obligatorias (¡NO MODIFICAR NI ROMPER!)
 
-La resolución central de la URL del backend se administra en [`src/app/services/jarbees.api.ts`](file:///c:/next/productos_crud_frd/src/app/services/jarbees.api.ts) mediante la función `getBaseUrl()`.
+La resolución central de la URL del backend se administra en [`src/app/services/jarbees.api.ts`](src/app/services/jarbees.api.ts) mediante la función `getBaseUrl()`.
 
 ### 🚨 Regla de Oro para Desarrolladores / IAs:
 **NUNCA** sustituir `NEXT_PUBLIC_BACKEND_URL` concatenando el puerto `:4000` a `window.location.hostname`.
@@ -103,7 +103,7 @@ Ngrok en su plan gratuito muestra una página intermedia de aviso HTML (*"You ar
 Todas las llamadas HTTP (`fetch`) al backend deben incluir en sus cabeceras:
 
 ```typescript
-"ngrok-skip-browser-warning": "69420"
+"<custom-tunnel-header>": "<configured>"
 ```
 
 Todos los servicios del proyecto (`jarbees.api.ts`, `preguntas.api.ts`, `products.api.ts`, `balance.api.ts` y `/api/reader/[documentId]/route.ts`) usan funciones `buildHeaders()` que incluyen automáticamente este encabezado.

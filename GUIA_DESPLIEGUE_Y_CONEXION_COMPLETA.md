@@ -16,8 +16,8 @@ const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
 
 > ⚠️ **REGLA DE ORO:** No utilizar anulaciones dinámicas en `localStorage` para la URL base. Guardar URLs expiradas de Ngrok en `localStorage` destruye las peticiones locales y provoca fallos de conexión.
 
-### B. Política Estricta de Cabecera `ngrok-skip-browser-warning`
-- La cabecera `"ngrok-skip-browser-warning": "69420"` **SOLO SE DEBE ADJUNTAR** cuando la URL destino contiene explícitamente la palabra `"ngrok"`.
+### B. Política Estricta de Cabecera `<custom-tunnel-header>`
+- La cabecera `"<custom-tunnel-header>": "<configured>"` **SOLO SE DEBE ADJUNTAR** cuando la URL destino contiene explícitamente la palabra `"ngrok"`.
 - **NUNCA** enviar esta cabecera en peticiones locales a `localhost` o `127.0.0.1`. Los navegadores envían un chequeo `OPTIONS` (Preflight) previo; si la cabecera personalizada no está en la lista blanca de CORS del servidor NestJS, el navegador bloquea la petición con `TypeError: Failed to fetch`.
 
 ```typescript
