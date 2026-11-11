@@ -9,6 +9,11 @@ import {
   type LibraryIndexItem,
   type ReaderDocumentResponse
 } from "../services/jarbees.api";
+import {
+  AUTH_CHANGED_EVENT,
+  getAuthSession,
+  openOperatorLoginModal,
+} from "../services/auth.api";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -72,6 +77,11 @@ export default function ReaderPage() {
   const loadLibrary = async () => {
     setLoading(true);
     setErrorMessage(null);
+    if (!getAuthSession().isAuthenticated) {
+      setLibrary([]);
+      setLoading(false);
+      return;
+    }
     try {
       const docs = await getLibraryIndex();
       setLibrary(docs);
@@ -85,6 +95,11 @@ export default function ReaderPage() {
 
   useEffect(() => {
     loadLibrary();
+    const onAuthChange = () => {
+      loadLibrary();
+    };
+    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChange);
+    return () => window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChange);
   }, []);
 
   // Filtrar biblioteca por búsqueda
@@ -550,12 +565,20 @@ export default function ReaderPage() {
               <p className="text-xs text-slate-500 max-w-sm">
                 Si estás accediendo desde tu celular o GitHub Pages, configurá la URL de tu túnel de Ngrok para conectar con tu PC de casa.
               </p>
-              <button
-                onClick={() => setShowConfigModal(true)}
-                className="mt-1 rounded-xl border border-cyan-500/30 bg-cyan-950/40 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-900/50 transition shadow-sm"
-              >
-                ⚙️ Configurar URL de Backend (Ngrok)
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+                <button
+                  onClick={() => openOperatorLoginModal("Iniciá sesión para cargar tu biblioteca de audiolibros.")}
+                  className="rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-4 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-900/50 transition shadow-sm"
+                >
+                  🔒 Iniciar sesión
+                </button>
+                <button
+                  onClick={() => setShowConfigModal(true)}
+                  className="rounded-xl border border-cyan-500/30 bg-cyan-950/40 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-900/50 transition shadow-sm"
+                >
+                  ⚙️ Configurar URL de Backend (Ngrok)
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

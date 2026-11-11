@@ -1,7 +1,13 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { RotateCcw, Check } from "lucide-react";
+import { RotateCcw, Check, Lock, LogOut } from "lucide-react";
+import {
+  AUTH_CHANGED_EVENT,
+  clearAuthSession,
+  getAuthSession,
+  openOperatorLoginModal,
+} from "../../app/services/auth.api";
 import { ChatInputSimple } from "./ChatInputSimple";
 import { ChatMessageCompact } from "./ChatMessageCompact";
 import { DisciplineSelector } from "./DisciplineSelector";
@@ -90,6 +96,21 @@ export default function ChatInterfaceSimple() {
   const [isClearing, setIsClearing] = useState(false);
   const [justCleared, setJustCleared] = useState(false);
 
+  // Autenticación de operador (Security Kernel B1)
+  const [authOperator, setAuthOperator] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const syncAuth = () => {
+      const session = getAuthSession();
+      setIsAuthenticated(session.isAuthenticated);
+      setAuthOperator(session.operatorId);
+    };
+    syncAuth();
+    window.addEventListener(AUTH_CHANGED_EVENT, syncAuth);
+    return () => window.removeEventListener(AUTH_CHANGED_EVENT, syncAuth);
+  }, []);
+
   // Especialistas / Disciplinas
   const [disciplines, setDisciplines] = useState<Discipline[]>(DEFAULT_DISCIPLINES);
   const [selectedMode, setSelectedMode] = useState<string>("auto");
@@ -97,10 +118,12 @@ export default function ChatInterfaceSimple() {
   // Cargar catálogo de disciplinas y recuperar modo persistente
   useEffect(() => {
     let mounted = true;
+    const storedMode = getStoredDisciplineMode();
+    setSelectedMode(storedMode);
+    if (!isAuthenticated) return () => { mounted = false; };
+
     (async () => {
       try {
-        const storedMode = getStoredDisciplineMode();
-        setSelectedMode(storedMode);
         const list = await fetchDisciplines();
         if (mounted && list.length > 0) {
           setDisciplines(list);
@@ -110,7 +133,7 @@ export default function ChatInterfaceSimple() {
       }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [isAuthenticated]);
 
   const handleSelectDiscipline = (disc: Discipline) => {
     setSelectedMode(disc.id);
@@ -136,6 +159,8 @@ export default function ChatInterfaceSimple() {
   // Cargar índice de la biblioteca para autocompletado
   useEffect(() => {
     let mounted = true;
+    if (!isAuthenticated) return () => { mounted = false; };
+
     (async () => {
       try {
         const docs = await getLibraryIndex();
@@ -147,7 +172,7 @@ export default function ChatInterfaceSimple() {
       }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [isAuthenticated]);
 
   const MAX_IN_MEMORY = 200;
 
@@ -247,6 +272,16 @@ export default function ChatInterfaceSimple() {
     let mounted = true;
     (async () => {
       try {
+        if (!isAuthenticated) {
+          // Sin JWT: restaurar historial local de IndexedDB sin disparar 401 innecesarios al arranque
+          const saved = await loadConversation("default");
+          if (mounted && saved?.messages) {
+            const msgs = Array.isArray(saved.messages) ? saved.messages : [];
+            setMessages(msgs.slice(-MAX_IN_MEMORY));
+          }
+          return;
+        }
+
         // 1. Obtener / crear sessionId en el backend
         const sessionId = await initSession();
 
@@ -297,7 +332,7 @@ export default function ChatInterfaceSimple() {
     })();
 
     return () => { mounted = false; };
-  }, []);
+  }, [isAuthenticated]);
 
   // Save conversation
   useEffect(() => {
@@ -576,6 +611,10 @@ export default function ChatInterfaceSimple() {
   };
 
   const handleVoiceRecorded = async (audioBlob: Blob, durationSeconds: number) => {
+    if (!getAuthSession().isAuthenticated) {
+      openOperatorLoginModal("Iniciá sesión como operador para enviar mensajes de voz a JarBees.");
+      return;
+    }
     stopSpeaking();
     setIsTyping(true);
     const startTime = performance.now();
@@ -657,6 +696,11 @@ export default function ChatInterfaceSimple() {
     const trimmedInput = inputValue.trim();
 
     if (!trimmedInput && !attachedFile) return;
+
+    if (!getAuthSession().isAuthenticated) {
+      openOperatorLoginModal("Iniciá sesión como operador para consultar a JarBees.");
+      return;
+    }
 
     // Pausar inmediatamente cualquier dictado/respuesta de voz en curso
     stopSpeaking();
@@ -1177,6 +1221,34 @@ export default function ChatInterfaceSimple() {
           </div>
 
           <div className="flex items-center gap-2">
+            {isAuthenticated ? (
+              <div className="flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span className="max-w-[90px] truncate font-medium">
+                  {authOperator || "operador"}
+                </span>
+                <button
+                  type="button"
+                  onClick={clearAuthSession}
+                  className="ml-1 rounded p-0.5 text-emerald-300/80 transition hover:bg-emerald-500/20 hover:text-white"
+                  title="Cerrar sesión de operador"
+                  aria-label="Cerrar sesión de operador"
+                >
+                  <LogOut className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openOperatorLoginModal()}
+                className="flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-500/25 hover:text-white shadow-sm"
+                title="Iniciar sesión de operador (JWT)"
+              >
+                <Lock className="h-3.5 w-3.5" />
+                <span>Iniciar sesión</span>
+              </button>
+            )}
+
             <button
               onClick={() => router.push("/reader")}
               className="flex items-center gap-1.5 rounded-lg border border-white/[0.12] bg-[#1c1c1c] px-3 py-1.5 text-xs font-medium text-[#d4d4d4] transition hover:bg-[#282828] hover:border-[#0078d7] hover:text-white shadow-sm"
@@ -1296,6 +1368,28 @@ export default function ChatInterfaceSimple() {
                   <p className="mt-1.5 text-xs text-[#9e9e9e] max-w-sm leading-relaxed">
                     {activeDiscipline.description}
                   </p>
+
+                  {!isAuthenticated && (
+                    <div className="mt-4 w-full rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-left">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-xs font-semibold text-amber-200">
+                            🔒 Sesión de operador requerida
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-amber-100/80">
+                            Iniciá sesión contra <code className="font-mono">/api/auth/login</code> para cargar disciplinas, biblioteca y chatear.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openOperatorLoginModal()}
+                          className="shrink-0 rounded-xl bg-[#0078d7] px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-[#106ebe]"
+                        >
+                          Conectar
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Suggested Prompt Card */}
                   {activeDiscipline.suggestedPrompt && (

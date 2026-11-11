@@ -1,6 +1,10 @@
-import { BACKEND_URL } from "./preguntas.api";
+import {
+  buildBackendHeaders,
+  handleUnauthorizedResponse,
+  resolveBackendBaseUrl,
+} from "./auth.api";
 
-const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
+const getBaseUrl = () => resolveBackendBaseUrl();
 
 export interface BalanceQuestion {
   id: number;
@@ -53,15 +57,15 @@ export interface BalanceReport {
 }
 
 export async function startBalanceSession(type = "manual"): Promise<BalanceSessionResponse> {
-  const res = await fetch(`${BASE_URL}/api/balance/start`, {
+  const url = `${getBaseUrl()}/api/balance/start`;
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildBackendHeaders({ json: true, accept: true, targetUrl: url }),
     body: JSON.stringify({ type }),
   });
   if (!res.ok) {
-    throw new Error(`Error al iniciar balance: ${await res.text()}`);
+    handleUnauthorizedResponse(res);
+    throw new Error(`Error al iniciar balance (${res.status}): ${await res.text()}`);
   }
   return res.json();
 }
@@ -71,54 +75,54 @@ export async function submitBalanceAnswer(
   questionId: number,
   answer: string
 ): Promise<SubmitAnswerResponse> {
-  const res = await fetch(`${BASE_URL}/api/balance/${sessionId}/answer`, {
+  const url = `${getBaseUrl()}/api/balance/${sessionId}/answer`;
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildBackendHeaders({ json: true, accept: true, targetUrl: url }),
     body: JSON.stringify({ questionId, answer }),
   });
   if (!res.ok) {
-    throw new Error(`Error al enviar respuesta: ${await res.text()}`);
+    handleUnauthorizedResponse(res);
+    throw new Error(`Error al enviar respuesta (${res.status}): ${await res.text()}`);
   }
   return res.json();
 }
 
 export async function finishBalanceSession(sessionId: number): Promise<BalanceReport> {
-  const res = await fetch(`${BASE_URL}/api/balance/${sessionId}/finish`, {
+  const url = `${getBaseUrl()}/api/balance/${sessionId}/finish`;
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: buildBackendHeaders({ json: true, accept: true, targetUrl: url }),
   });
   if (!res.ok) {
-    throw new Error(`Error al finalizar balance: ${await res.text()}`);
+    handleUnauthorizedResponse(res);
+    throw new Error(`Error al finalizar balance (${res.status}): ${await res.text()}`);
   }
   return res.json();
 }
 
 export async function getLatestBalance(): Promise<BalanceReport | { message: string }> {
-  const res = await fetch(`${BASE_URL}/api/balance/latest`, {
+  const url = `${getBaseUrl()}/api/balance/latest`;
+  const res = await fetch(url, {
     method: "GET",
-    headers: {
-      "Accept": "application/json",
-    },
+    headers: buildBackendHeaders({ accept: true, targetUrl: url }),
   });
   if (!res.ok) {
-    throw new Error(`Error al obtener el último balance: ${await res.text()}`);
+    handleUnauthorizedResponse(res);
+    throw new Error(`Error al obtener el último balance (${res.status}): ${await res.text()}`);
   }
   return res.json();
 }
 
 export async function getBalanceHistory(): Promise<unknown[]> {
-  const res = await fetch(`${BASE_URL}/api/balance/history`, {
+  const url = `${getBaseUrl()}/api/balance/history`;
+  const res = await fetch(url, {
     method: "GET",
-    headers: {
-      "Accept": "application/json",
-    },
+    headers: buildBackendHeaders({ accept: true, targetUrl: url }),
   });
   if (!res.ok) {
-    throw new Error(`Error al obtener historial de balances: ${await res.text()}`);
+    handleUnauthorizedResponse(res);
+    throw new Error(`Error al obtener historial de balances (${res.status}): ${await res.text()}`);
   }
   return res.json();
 }

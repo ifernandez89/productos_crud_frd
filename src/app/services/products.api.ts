@@ -1,25 +1,27 @@
 //funciones que piden al backend
-export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-// Use logical OR so an empty string secret falls back to the default localhost URL
-const BASE_URL = BACKEND_URL || "http://localhost:4000";
-const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
+import {
+  buildBackendHeaders,
+  handleUnauthorizedResponse,
+  resolveBackendBaseUrl,
+} from "./auth.api";
 
-const buildHeaders = (hasJson = false) => {
-  const headers: Record<string, string> = {};
-  if (hasJson) headers["Content-Type"] = "application/json";
-  if (API_TOKEN) headers["Authorization"] = `Bearer ${API_TOKEN}`;
-  return headers;
-};
+export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const getBaseUrl = () => resolveBackendBaseUrl();
+
+const buildHeaders = (hasJson = false, targetUrl?: string) =>
+  buildBackendHeaders({ json: hasJson, accept: true, targetUrl });
 
 export async function getProducts() {
   try {
-    const res = await fetch(`${BASE_URL}/api/products`, {
+    const url = `${getBaseUrl()}/api/products`;
+    const res = await fetch(url, {
       method: "GET",
       cache: "no-store",
-      headers: buildHeaders(false),
+      headers: buildHeaders(false, url),
     });
 
     if (!res.ok) {
+      handleUnauthorizedResponse(res);
       console.error("Error al obtener productos:", res.status, res.statusText);
       return []; // retornar un array vacío para evitar que falle el map()
     }
@@ -32,40 +34,48 @@ export async function getProducts() {
 }
 
 export async function getProduct(id: string) {
-  const data = await fetch(`${BASE_URL}/api/products/${id}`, {
+  const url = `${getBaseUrl()}/api/products/${id}`;
+  const res = await fetch(url, {
     method: "GET",
     cache: "no-store",
-    headers: buildHeaders(false),
+    headers: buildHeaders(false, url),
   });
-  return await data.json(); //debe esperar hasta que se resuelva la respuesta antes de retornarla
+  if (!res.ok) handleUnauthorizedResponse(res);
+  return await res.json(); //debe esperar hasta que se resuelva la respuesta antes de retornarla
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProduct(productData: any) {
-  const res = await fetch(`${BASE_URL}/api/products`, {
+  const url = `${getBaseUrl()}/api/products`;
+  const res = await fetch(url, {
     method: "POST",
-    headers: buildHeaders(true),
+    headers: buildHeaders(true, url),
     body: JSON.stringify(productData),
   });
   const data = await res.json();
   if (!res.ok) {
+    handleUnauthorizedResponse(res);
     throw new Error(data.message || 'Error al crear el producto');
   }
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateProduct(id: string, newProduct: any) {
-  const res = await fetch(`${BASE_URL}/api/products/${id}`, {
+  const url = `${getBaseUrl()}/api/products/${id}`;
+  const res = await fetch(url, {
     method: "PATCH",
-    headers: buildHeaders(true),
+    headers: buildHeaders(true, url),
     body: JSON.stringify(newProduct),
     cache: "no-store",
   });
+  if (!res.ok) handleUnauthorizedResponse(res);
   return await res.json(); //debe esperar que se resuelva antes de retornarla
 }
 
 export async function deleteProduct(id: string) {
-  const res = await fetch(`${BASE_URL}/api/products/${id}`, {
+  const url = `${getBaseUrl()}/api/products/${id}`;
+  const res = await fetch(url, {
     method: "DELETE",
-    headers: buildHeaders(false),
+    headers: buildHeaders(false, url),
   });
+  if (!res.ok) handleUnauthorizedResponse(res);
   return await res.json(); //debe esperar que se resuelva antes de retornarla
 }

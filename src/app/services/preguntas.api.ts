@@ -1,9 +1,14 @@
 // app/services/preguntas.api.ts
 
 import { MAX_MESSAGE_LENGTH } from "@/lib/utils";
+import {
+  buildBackendHeaders,
+  handleUnauthorizedResponse,
+  resolveBackendBaseUrl,
+} from "./auth.api";
 
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
+const getBaseUrl = () => resolveBackendBaseUrl();
 
 // ─── Keys localStorage ────────────────────────────────────────────────────────
 const JARBEES_SESSION_KEY        = "jarbees_session_id";
@@ -156,6 +161,7 @@ type GeoCache  = GeoCoords & { timestamp: number };
 
 // ─── Mensajes de error ────────────────────────────────────────────────────────
 export const SERVICE_ERRORS = {
+  auth_required:       "🔒 Sesión de operador requerida o expirada (401). Iniciá sesión arriba para usar JarBees.",
   backend_unreachable: "⚠️ No pude conectarme al servidor. Verificá que el backend esté corriendo.",
   ollama_down:         "⚠️ El modelo de IA (Ollama) no está disponible en este momento. Intentá más tarde.",
   timeout:             "⚠️ La respuesta tardó demasiado. El servidor puede estar bajo carga, intentá de nuevo.",
@@ -168,6 +174,15 @@ export function classifyError(error: unknown): string {
   if (!(error instanceof Error)) return SERVICE_ERRORS.unknown;
   const msg = error.message.toLowerCase();
 
+  if (
+    msg.includes("401") ||
+    msg.includes("unauthorized") ||
+    msg.includes("sesión de operador") ||
+    msg.includes("operador autenticado") ||
+    msg.includes("jwt")
+  ) {
+    return SERVICE_ERRORS.auth_required;
+  }
   if (
     msg.includes("failed to fetch") ||
     msg.includes("networkerror") ||
@@ -286,24 +301,15 @@ const resolveGeoCoords = async (message: string): Promise<GeoCoords | null> => {
 };
 
 // ─── Headers helper ───────────────────────────────────────────────────────────
-const buildHeaders = (targetUrl?: string): Record<string, string> => {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const isNgrok = targetUrl ? targetUrl.includes("ngrok") : (BASE_URL && BASE_URL.includes("ngrok"));
-  if (isNgrok) {
-    headers["ngrok-skip-browser-warning"] = "69420";
-  }
-  return headers;
-};
+const buildHeaders = (targetUrl?: string): Record<string, string> =>
+  buildBackendHeaders({ json: true, accept: true, targetUrl });
 
 // ─── Catálogo Dinámico de Especialistas / Disciplinas ─────────────────────────
 export async function fetchDisciplines(): Promise<Discipline[]> {
+  const baseUrl = getBaseUrl();
   const endpoints = [
-    `${BASE_URL}/api/aichat/disciplines`,
-    `${BASE_URL}/aichat/disciplines`,
-    `${BASE_URL}/api/jarbees/disciplines`,
-    `${BASE_URL}/jarbees/disciplines`,
+    `${baseUrl}/api/aichat/disciplines`,
+    `${baseUrl}/api/jarbees/disciplines`,
   ];
 
   for (const url of endpoints) {
@@ -312,6 +318,11 @@ export async function fetchDisciplines(): Promise<Discipline[]> {
         method: "GET",
         headers: buildHeaders(url),
       });
+
+      if (res.status === 401) {
+        handleUnauthorizedResponse(res);
+        break;
+      }
 
       if (res.ok) {
         const data = await res.json();
@@ -345,13 +356,17 @@ export async function fetchDisciplines(): Promise<Discipline[]> {
  */
 export async function initSession(): Promise<string | null> {
   try {
+    const baseUrl = getBaseUrl();
     const stored = getStoredSessionId();
     const url = stored
-      ? `${BASE_URL}/api/jarbees/session?sessionId=${stored}`
-      : `${BASE_URL}/api/jarbees/session`;
+      ? `${baseUrl}/api/jarbees/session?sessionId=${stored}`
+      : `${baseUrl}/api/jarbees/session`;
 
     const res = await fetch(url, { method: "GET", headers: buildHeaders(url) });
-    if (!res.ok) return stored;
+    if (!res.ok) {
+      handleUnauthorizedResponse(res);
+      return stored;
+    }
 
     const data = (await res.json()) as { sessionId: string };
     storeSessionId(data.sessionId);
@@ -367,9 +382,12 @@ export async function initSession(): Promise<string | null> {
  */
 export async function fetchHistory(sessionId: string): Promise<HistoryMessage[]> {
   try {
-    const url = `${BASE_URL}/api/jarbees/history?sessionId=${sessionId}`;
+    const url = `${getBaseUrl()}/api/jarbees/history?sessionId=${sessionId}`;
     const res = await fetch(url, { method: "GET", headers: buildHeaders(url) });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      handleUnauthorizedResponse(res);
+      return [];
+    }
     const data = (await res.json()) as { messages: HistoryMessage[] };
     return Array.isArray(data.messages) ? data.messages : [];
   } catch {
@@ -385,8 +403,9 @@ export async function clearBackendHistory(sessionId?: string): Promise<boolean> 
   const sid = sessionId || getStoredSessionId();
   if (!sid) return false;
   try {
-    const url = `${BASE_URL}/api/jarbees/history?sessionId=${sid}`;
+    const url = `${getBaseUrl()}/api/jarbees/history?sessionId=${sid}`;
     const res = await fetch(url, { method: "DELETE", headers: buildHeaders(url) });
+    if (!res.ok) handleUnauthorizedResponse(res);
     return res.ok;
   } catch {
     return false;
@@ -417,6 +436,7 @@ export async function hacerPregunta(
   }
 
   try {
+    const baseUrl = getBaseUrl();
     const sessionId = getStoredSessionId();
     const mode = options?.mode || getStoredDisciplineMode();
 
@@ -445,33 +465,48 @@ export async function hacerPregunta(
     }
 
     // Intentar primero con el endpoint principal de consulta
-    const url = `${BASE_URL}/api/jarbees/query`;
+    const url = `${baseUrl}/api/jarbees/query`;
     let res = await fetch(url, {
       method: "POST",
       headers: buildHeaders(url),
       body: JSON.stringify(body),
     });
 
+    if (res.status === 401) {
+      handleUnauthorizedResponse(res);
+      throw new Error("Sesión de operador requerida (401): iniciá sesión para consultar a JarBees.");
+    }
+
     if (!res.ok) {
-      // Fallback a /aichat/preguntar
+      // Fallback a /api/aichat/preguntar (con prefijo /api)
       try {
-        const altUrl = `${BASE_URL}/aichat/preguntar`;
+        const altUrl = `${baseUrl}/api/aichat/preguntar`;
         const altRes = await fetch(altUrl, {
           method: "POST",
           headers: buildHeaders(altUrl),
           body: JSON.stringify(body),
         });
+        if (altRes.status === 401) {
+          handleUnauthorizedResponse(altRes);
+          throw new Error("Sesión de operador requerida (401): iniciá sesión para consultar a JarBees.");
+        }
         if (altRes.ok) {
           res = altRes;
         }
-      } catch {
+      } catch (fallbackErr) {
+        if (fallbackErr instanceof Error && fallbackErr.message.includes("401")) {
+          throw fallbackErr;
+        }
         // mantener el error original si falla fallback
       }
     }
 
     if (!res.ok) {
+      if (res.status === 401) {
+        handleUnauthorizedResponse(res);
+      }
       const errorBody = await res.text();
-      throw new Error(`Error en la API: ${errorBody}`);
+      throw new Error(`Error en la API (${res.status}): ${errorBody}`);
     }
 
     const data = (await res.json()) as JarBeesResponse;

@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import RegisterSW from "@/components/RegisterSW";
 import InstallPWA from "@/components/InstallPWA";
+import OperatorLoginModal from "@/components/auth/OperatorLoginModal";
 
 const fontSans = FontSans({
   variable: "--font-sans",
@@ -44,6 +45,7 @@ export default function RootLayout({
         )}
       >
         {children}
+        <OperatorLoginModal />
         <RegisterSW />
         <InstallPWA />
         <script

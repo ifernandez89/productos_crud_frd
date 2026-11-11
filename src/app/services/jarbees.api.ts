@@ -1,17 +1,14 @@
-export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-const BASE_URL = BACKEND_URL ?? "http://localhost:4000";
-const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
+import {
+  buildBackendHeaders,
+  handleUnauthorizedResponse,
+  resolveBackendBaseUrl,
+} from "./auth.api";
 
-const buildHeaders = (hasJson = false, targetUrl?: string) => {
-  const headers: Record<string, string> = {};
-  const isNgrok = targetUrl ? targetUrl.includes("ngrok") : (BASE_URL && BASE_URL.includes("ngrok"));
-  if (isNgrok) {
-    headers["ngrok-skip-browser-warning"] = "69420";
-  }
-  if (hasJson) headers["Content-Type"] = "application/json";
-  if (API_TOKEN) headers["Authorization"] = `Bearer ${API_TOKEN}`;
-  return headers;
-};
+export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const getBaseUrl = () => resolveBackendBaseUrl();
+
+const buildHeaders = (hasJson = false, targetUrl?: string) =>
+  buildBackendHeaders({ json: hasJson, targetUrl });
 
 // ─── Vision: analizar imagen en el chat ──────────────────────────────────────
 export type VisionMode = "general" | "ocr" | "error" | "diagram" | "document";
@@ -33,16 +30,18 @@ export async function analyzeImage(
   form.append("mode", options?.mode ?? "general");
   if (options?.sessionId) form.append("sessionId", options.sessionId);
 
-  const headers = buildHeaders(false, BASE_URL);
-  const res = await fetch(`${BASE_URL}/api/jarbees/vision/analyze`, {
+  const baseUrl = getBaseUrl();
+  const headers = buildHeaders(false, baseUrl);
+  const res = await fetch(`${baseUrl}/api/jarbees/vision/analyze`, {
     method: "POST",
     headers,
     body: form,
   });
 
   if (!res.ok) {
+    handleUnauthorizedResponse(res);
     const text = await res.text();
-    throw new Error(`Vision analyze fallido: ${text}`);
+    throw new Error(`Vision analyze fallido (${res.status}): ${text}`);
   }
 
   return (await res.json()) as VisionResponse;
@@ -69,16 +68,18 @@ export async function ingestPdf(
   if (options?.question) form.append("question", options.question);
   if (options?.sessionId) form.append("sessionId", options.sessionId);
 
-  const headers = buildHeaders(false, BASE_URL);
-  const res = await fetch(`${BASE_URL}/api/jarbees/library/document/pdf`, {
+  const baseUrl = getBaseUrl();
+  const headers = buildHeaders(false, baseUrl);
+  const res = await fetch(`${baseUrl}/api/jarbees/library/document/pdf`, {
     method: "POST",
     headers,
     body: form,
   });
 
   if (!res.ok) {
+    handleUnauthorizedResponse(res);
     const text = await res.text();
-    throw new Error(`Ingestión PDF fallida: ${text}`);
+    throw new Error(`Ingestión PDF fallida (${res.status}): ${text}`);
   }
 
   return (await res.json()) as PdfIngestResponse;
@@ -93,15 +94,18 @@ export type IngestResponse = {
 };
 
 export async function ingestUrl(url: string, category?: string): Promise<IngestResponse> {
-  const res = await fetch(`${BASE_URL}/api/jarbees/library/document/url`, {
+  const baseUrl = getBaseUrl();
+  const targetUrl = `${baseUrl}/api/jarbees/library/document/url`;
+  const res = await fetch(targetUrl, {
     method: "POST",
-    headers: buildHeaders(true, BASE_URL),
+    headers: buildHeaders(true, targetUrl),
     body: JSON.stringify({ url, category }),
   });
 
   if (!res.ok) {
+    handleUnauthorizedResponse(res);
     const text = await res.text();
-    throw new Error(`Ingestión fallida: ${text}`);
+    throw new Error(`Ingestión fallida (${res.status}): ${text}`);
   }
 
   return (await res.json()) as IngestResponse;
@@ -116,15 +120,18 @@ export type FeedbackBody = {
 };
 
 export async function sendFeedback(body: FeedbackBody): Promise<{ success: boolean }> {
-  const res = await fetch(`${BASE_URL}/api/jarbees/feedback`, {
+  const baseUrl = getBaseUrl();
+  const targetUrl = `${baseUrl}/api/jarbees/feedback`;
+  const res = await fetch(targetUrl, {
     method: "POST",
-    headers: buildHeaders(true, BASE_URL),
+    headers: buildHeaders(true, targetUrl),
     body: JSON.stringify(body),
   });
 
   if (!res.ok) {
+    handleUnauthorizedResponse(res);
     const text = await res.text();
-    throw new Error(`Feedback fallido: ${text}`);
+    throw new Error(`Feedback fallido (${res.status}): ${text}`);
   }
 
   return (await res.json()) as { success: boolean };
@@ -141,15 +148,18 @@ export type PlannerResponse = {
 };
 
 export async function createPlanner(objective: string, sessionId?: string): Promise<PlannerResponse> {
-  const res = await fetch(`${BASE_URL}/api/jarbees/planner`, {
+  const baseUrl = getBaseUrl();
+  const targetUrl = `${baseUrl}/api/jarbees/planner`;
+  const res = await fetch(targetUrl, {
     method: "POST",
-    headers: buildHeaders(true, BASE_URL),
+    headers: buildHeaders(true, targetUrl),
     body: JSON.stringify({ objective, sessionId }),
   });
 
   if (!res.ok) {
+    handleUnauthorizedResponse(res);
     const text = await res.text();
-    throw new Error(`Planner fallido: ${text}`);
+    throw new Error(`Planner fallido (${res.status}): ${text}`);
   }
 
   return (await res.json()) as PlannerResponse;
@@ -171,27 +181,32 @@ export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
   const customUrl = typeof window !== "undefined" ? window.localStorage.getItem("jarbees_backend_url") : null;
   const lanHost = typeof window !== "undefined" && window.location.hostname !== "localhost" && !window.location.hostname.includes("ngrok") ? `http://${window.location.hostname}:4000` : null;
 
-  const urlsToTry = [
-    customUrl,
-    BASE_URL,
-    lanHost,
-    "http://localhost:4000",
-    "http://127.0.0.1:4000",
-  ].filter((u): u is string => Boolean(u && u.trim().length > 0));
+  const urlsToTry = Array.from(
+    new Set(
+      [
+        customUrl,
+        getBaseUrl(),
+        lanHost,
+        "http://localhost:4000",
+        "http://127.0.0.1:4000",
+      ]
+        .filter((u): u is string => Boolean(u && u.trim().length > 0))
+        .map((u) => u.trim().replace(/\/+$/, ""))
+    )
+  );
 
-  for (const url of urlsToTry) {
-    if (!url) continue;
-    const cleanUrl = url.replace(/\/$/, "");
+  for (const cleanUrl of urlsToTry) {
     try {
-      const headers: Record<string, string> = { "Accept": "application/json" };
-      if (cleanUrl.includes("ngrok")) {
-        headers["ngrok-skip-browser-warning"] = "69420";
-      }
-
+      const headers = buildBackendHeaders({ accept: true, targetUrl: cleanUrl });
       const res = await fetch(`${cleanUrl}/api/reader`, {
         method: "GET",
         headers,
       });
+
+      if (res.status === 401) {
+        handleUnauthorizedResponse(res);
+        return [];
+      }
 
       if (res.ok) {
         const data = await res.json();
@@ -206,19 +221,18 @@ export async function getLibraryIndex(): Promise<LibraryIndexItem[]> {
   }
 
   // Intentar endpoint alternativo /api/jarbees/library/index
-  for (const url of urlsToTry) {
-    if (!url) continue;
-    const cleanUrl = url.replace(/\/$/, "");
+  for (const cleanUrl of urlsToTry) {
     try {
-      const headers: Record<string, string> = { "Accept": "application/json" };
-      if (cleanUrl.includes("ngrok")) {
-        headers["ngrok-skip-browser-warning"] = "69420";
-      }
-
+      const headers = buildBackendHeaders({ accept: true, targetUrl: cleanUrl });
       const res = await fetch(`${cleanUrl}/api/jarbees/library/index`, {
         method: "GET",
         headers,
       });
+
+      if (res.status === 401) {
+        handleUnauthorizedResponse(res);
+        return [];
+      }
 
       if (res.ok) {
         const data = await res.json();
@@ -248,27 +262,32 @@ export async function getReaderDocument(documentId: string | number): Promise<Re
   const customUrl = typeof window !== "undefined" ? window.localStorage.getItem("jarbees_backend_url") : null;
   const lanHost = typeof window !== "undefined" && window.location.hostname !== "localhost" && !window.location.hostname.includes("ngrok") ? `http://${window.location.hostname}:4000` : null;
 
-  const urlsToTry = [
-    customUrl,
-    BASE_URL,
-    lanHost,
-    "http://localhost:4000",
-    "http://127.0.0.1:4000",
-  ].filter((u): u is string => Boolean(u && u.trim().length > 0));
+  const urlsToTry = Array.from(
+    new Set(
+      [
+        customUrl,
+        getBaseUrl(),
+        lanHost,
+        "http://localhost:4000",
+        "http://127.0.0.1:4000",
+      ]
+        .filter((u): u is string => Boolean(u && u.trim().length > 0))
+        .map((u) => u.trim().replace(/\/+$/, ""))
+    )
+  );
 
-  for (const url of urlsToTry) {
-    if (!url) continue;
-    const cleanUrl = url.replace(/\/$/, "");
+  for (const cleanUrl of urlsToTry) {
     try {
-      const headers: Record<string, string> = { "Accept": "application/json" };
-      if (cleanUrl.includes("ngrok")) {
-        headers["ngrok-skip-browser-warning"] = "69420";
-      }
-
+      const headers = buildBackendHeaders({ accept: true, targetUrl: cleanUrl });
       const res = await fetch(`${cleanUrl}/api/reader/${encodeURIComponent(documentId)}`, {
         method: "GET",
         headers,
       });
+
+      if (res.status === 401) {
+        handleUnauthorizedResponse(res);
+        throw new Error("Sesión de operador requerida (401) para abrir el documento.");
+      }
 
       if (res.ok) {
         const data = await res.json();
@@ -276,7 +295,8 @@ export async function getReaderDocument(documentId: string | number): Promise<Re
           return data as ReaderDocumentResponse;
         }
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("401")) throw err;
       // Probar siguiente
     }
   }
@@ -307,57 +327,59 @@ export async function sendVoiceChat(
   if (options?.questionHint) form.append("question", options.questionHint);
 
   const customUrl = typeof window !== "undefined" ? window.localStorage.getItem("jarbees_backend_url") : null;
-  const urlsToTry = [
-    customUrl,
-    BASE_URL,
-    "http://localhost:4000",
-    "http://127.0.0.1:4000",
-  ].filter((u): u is string => Boolean(u && u.trim().length > 0));
+  const urlsToTry = Array.from(
+    new Set(
+      [
+        customUrl,
+        getBaseUrl(),
+        "http://localhost:4000",
+        "http://127.0.0.1:4000",
+      ]
+        .filter((u): u is string => Boolean(u && u.trim().length > 0))
+        .map((u) => u.trim().replace(/\/+$/, ""))
+    )
+  );
 
   let lastError: Error | null = null;
 
-  for (const url of urlsToTry) {
-    if (!url) continue;
-    const cleanUrl = url.replace(/\/$/, "");
+  for (const cleanUrl of urlsToTry) {
     const headers = buildHeaders(false, cleanUrl);
+    const endpoint = `${cleanUrl}/api/jarbees/voice/chat`;
 
-    // Intentar /api/jarbees/voice/chat y /jarbees/voice/chat
-    const endpoints = [
-      `${cleanUrl}/api/jarbees/voice/chat`,
-      `${cleanUrl}/jarbees/voice/chat`,
-      `${cleanUrl}/api/voice/chat`,
-    ];
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: form,
+      });
 
-    for (const endpoint of endpoints) {
-      try {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers,
-          body: form,
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          return {
-            transcription:
-              data?.transcription ||
-              data?.transcript ||
-              data?.pregunta ||
-              data?.text ||
-              "Mensaje de voz",
-            answer:
-              data?.answer ||
-              data?.response ||
-              data?.reply ||
-              data?.respuesta ||
-              "",
-            audioUrl: data?.audioUrl,
-            durationSeconds: data?.durationSeconds,
-          };
-        }
-      } catch (err) {
-        lastError = err as Error;
+      if (res.status === 401) {
+        handleUnauthorizedResponse(res);
+        throw new Error("Sesión de operador requerida (401) para voz.");
       }
+
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          transcription:
+            data?.transcription ||
+            data?.transcript ||
+            data?.pregunta ||
+            data?.text ||
+            "Mensaje de voz",
+          answer:
+            data?.answer ||
+            data?.response ||
+            data?.reply ||
+            data?.respuesta ||
+            "",
+          audioUrl: data?.audioUrl,
+          durationSeconds: data?.durationSeconds,
+        };
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("401")) throw err;
+      lastError = err as Error;
     }
   }
 
@@ -371,7 +393,7 @@ export async function sendVoiceChat(
 
 export function connectGoogle(): void {
   if (typeof window === "undefined") return;
-  window.location.assign(`${BASE_URL}/api/jarbees/google/login`);
+  window.location.assign(`${getBaseUrl()}/api/jarbees/google/login`);
 }
 
 const jarbeesApi = { ingestUrl, sendFeedback, createPlanner, connectGoogle, getLibraryIndex, getReaderDocument, sendVoiceChat };
